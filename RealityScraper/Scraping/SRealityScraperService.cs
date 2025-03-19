@@ -52,13 +52,14 @@ public class SRealityScraperService : IRealityScraperService
 			var shadowHost = driver.FindElements(By.CssSelector(".szn-cmp-dialog-container"));
 			if (shadowHost.Count > 0)
 			{
-				//var shadowRoot = (ShadowRoot)((IJavaScriptExecutor)driver).ExecuteScript("return arguments[0].shadowRoot", shadowHost.First());
 				var shadowRoot = shadowHost.First().GetShadowRoot();
 
 				// Najít tlačítko s data-testid="cw-button-agree-with-ads"
 				var agreeButtons = shadowRoot.FindElements(By.CssSelector("button[data-testid='cw-button-agree-with-ads']"));
+
 				// Kliknout na tlačítko
 				agreeButtons.First().Click();
+
 				// Čekání na dokončení JavaScriptu (pokud je potřeba)
 				await Task.Delay(5000);
 			}
@@ -69,7 +70,6 @@ public class SRealityScraperService : IRealityScraperService
 			{
 				// Získání seznamu inzerátů
 				var listingElements = driver.FindElements(By.CssSelector(configuration["ScraperSettings:ListingSelector"]));
-				//var listingElements = driver.FindElements(By.CssSelector("ul.MuiGrid2-direction-xs-row[data-e2e='estates-list']>li"));
 				logger.LogInformation("Nalezeno {count} inzerátů na stránce.", listingElements.Count);
 
 				foreach (var element in listingElements)
@@ -78,12 +78,19 @@ public class SRealityScraperService : IRealityScraperService
 					{
 						// Extrahování ID inzerátu
 						string listingNumber = null;
-						var linkElement = element.FindElement(By.CssSelector("a")); // tady to padá
+						var linkElement = element.FindElement(By.CssSelector("a"));
 						var innerUrl = linkElement.GetAttribute("href");
 						if (!string.IsNullOrEmpty(innerUrl))
 						{
 							var uri = new Uri(innerUrl);
-							listingNumber = Path.GetFileName(uri.AbsolutePath);
+							//if (uri.Host.Equals("c.seznam.cz"))
+							//{
+							//	var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+
+							//	uri = new Uri(new Uri(query.Get("adurl")).GetComponents(UriComponents.Scheme | UriComponents.Host | UriComponents.Path, UriFormat.Unescaped));
+							//}
+
+							listingNumber = uri.Segments.Last();
 						}
 
 						if (string.IsNullOrEmpty(listingNumber)
@@ -95,11 +102,8 @@ public class SRealityScraperService : IRealityScraperService
 						}
 
 						var title = element.FindElement(By.CssSelector(configuration["ScraperSettings:TitleSelector"])).Text;
-						//var title = element.FindElement(By.CssSelector("p:nth-of-type(1)")).Text;
 						var priceVal = element.FindElement(By.CssSelector(configuration["ScraperSettings:PriceSelector"])).Text;
-						//var price = element.FindElement(By.CssSelector("p:nth-of-type(3)")).Text;
 						var location = element.FindElement(By.CssSelector(configuration["ScraperSettings:LocationSelector"])).Text;
-						//var location = element.FindElement(By.CssSelector("p:nth-of-type(2)")).Text;
 
 						decimal.TryParse(priceVal.Replace("Kč", "").Replace(" ", ""), out decimal price);
 
@@ -107,7 +111,6 @@ public class SRealityScraperService : IRealityScraperService
 						try
 						{
 							var imgElement = element.FindElement(By.CssSelector(configuration["ScraperSettings:ImageSelector"]));
-							//var imgElement = element.FindElement(By.CssSelector("ul li:nth-of-type(1) img:nth-of-type(2)"));
 							imageUrl = imgElement.GetAttribute("src");
 						}
 						catch
@@ -121,26 +124,6 @@ public class SRealityScraperService : IRealityScraperService
 						rawListings.Add(location);
 						rawListings.Add(imageUrl);
 						rawListings.Add("---------------------------");
-
-						// Extrahování dat - upravit selektory dle konkrétního webu
-						//var innerUrl = element.FindElement(By.CssSelector("a")).GetAttribute("href");
-
-						//// Získání URL obrázku
-						//var imageUrl = "";
-						//try
-						//{
-						//	var imgElement = element.FindElement(By.CssSelector(configuration["ScraperSettings:ImageSelector"]));
-						//	imageUrl = imgElement.GetAttribute("src");
-						//	if (string.IsNullOrEmpty(imageUrl))
-						//	{
-						//		// Některé weby používají data-src pro lazy loading
-						//		imageUrl = imgElement.GetAttribute("data-src");
-						//	}
-						//}
-						//catch
-						//{
-						//	// Obrázek není povinný
-						//}
 
 						var listing = new Listing
 						{
