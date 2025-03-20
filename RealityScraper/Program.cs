@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using RealityScraper.Data;
 using RealityScraper.Mailing;
+using RealityScraper.Scheduler;
 using RealityScraper.Scraping;
 using RealityScraper.Scraping.Scrapers;
 
@@ -10,10 +11,24 @@ internal static class Program
 {
 	private static async Task Main(string[] args)
 	{
-		var builder = Host.CreateDefaultBuilder(args)
+		await CreateHostBuilder(args)
+			.RunConsoleAsync();
+	}
+
+	public static IHostBuilder CreateHostBuilder(string[] args)
+		=> Host.CreateDefaultBuilder(args)
 			.ConfigureServices((hostContext, services) =>
 			{
-				services.AddHostedService<ScraperService>();
+				// Registrace služeb pro dependency injection
+				services.AddSingleton<ISchedulerRegistry, SchedulerRegistry>();
+				services.AddSingleton<IJobFactory, JobFactory>();
+
+				// Registrace hostitele služby plánovače jako hosted service
+				services.AddHostedService<SchedulerHostedService>();
+
+				// registrace úloh
+				services.AddTransient<ScraperServiceJob>();
+
 				services.AddDbContext<RealityDbContext>(options =>
 					options.UseSqlite(hostContext.Configuration.GetConnectionString("DefaultConnection")));
 				services.AddTransient<IListingRepository, ListingRepository>();
@@ -22,10 +37,4 @@ internal static class Program
 				services.AddTransient<IEmailService, SendGridEmailService>();
 				services.AddSingleton<IWebDriverFactory, ChromeDriverFactory>();
 			});
-
-		await builder.RunConsoleAsync();
-	}
-
-	// todo: reuse webdrivers/paralelizace scrapování
-	// todo: vyřešit zpracování duplicit v nových inzerátech
 }
