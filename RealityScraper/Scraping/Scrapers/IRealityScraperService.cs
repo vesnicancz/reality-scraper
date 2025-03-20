@@ -1,6 +1,6 @@
 ﻿using RealityScraper.Model;
 
-namespace RealityScraper.Scraping;
+namespace RealityScraper.Scraping.Scrapers;
 
 public interface IRealityScraperService
 {

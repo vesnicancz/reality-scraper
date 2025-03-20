@@ -88,7 +88,7 @@ namespace RealityScraper.Mailing
 			{
 				body.AppendLine("<div class='listing'>");
 				body.AppendLine($"<h2>{listing.Title}</h2>");
-				body.AppendLine($"<p><strong>Cena:</strong> {listing.Price}</p>");
+				body.AppendLine($"<p><strong>Cena:</strong> {listing.Price?.ToString("C0")}</p>");
 				body.AppendLine($"<p><strong>Lokalita:</strong> {listing.Location}</p>");
 
 				if (!string.IsNullOrEmpty(listing.ImageUrl))

@@ -1,6 +1,7 @@
 ﻿using RealityScraper.Data;
 using RealityScraper.Mailing;
 using RealityScraper.Model;
+using RealityScraper.Scraping.Scrapers;
 
 namespace RealityScraper.Scraping;
 
@@ -33,13 +34,19 @@ public class ScraperService : BackgroundService
 				// Vytvoříme scope pro DI
 				using (var scope = serviceProvider.CreateScope())
 				{
-					var scraperService = scope.ServiceProvider.GetRequiredService<IRealityScraperService>();
+					var scraperServices = scope.ServiceProvider.GetServices<IRealityScraperService>();
 					var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
 					var dbContext = scope.ServiceProvider.GetRequiredService<RealityDbContext>();
 					var realityListingRepository = scope.ServiceProvider.GetRequiredService<IListingRepository>();
 
 					// Načtení a zpracování dat
-					var listings = await scraperService.ScrapeListingsAsync();
+					var listings = new List<Listing>();
+					foreach (var scraperService in scraperServices)
+					{
+						logger.LogInformation("Spouštím scraper: {scraperName}", scraperService.GetType().Name);
+						listings.AddRange(await scraperService.ScrapeListingsAsync());
+					}
+
 					var newListings = new List<Listing>();
 
 					foreach (var listing in listings)
