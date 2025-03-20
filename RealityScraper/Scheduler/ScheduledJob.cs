@@ -20,6 +20,6 @@ public class ScheduledJob
 
 	public void CalculateNextRun()
 	{
-		NextRun = CronSchedule.GetNextOccurrence(DateTime.UtcNow, TimeZoneInfo.Local);
+		NextRun = CronSchedule.GetNextOccurrence(DateTime.Now, TimeZoneInfo.Local);
 	}
 }
