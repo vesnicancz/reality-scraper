@@ -178,6 +178,7 @@ public class SRealityScraperService : IRealityScraperService
 			driver?.Dispose();
 		}
 
+		rawListings.Add($"{listings.Count} items found");
 		File.WriteAllLines("d:/temp/listings.txt", rawListings);
 
 		return listings;

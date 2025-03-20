@@ -151,6 +151,7 @@ public class RealityIdnesScraperService : IRealityScraperService
 			driver?.Dispose();
 		}
 
+		rawListings.Add($"{listings.Count} items found");
 		File.WriteAllLines("d:/temp/listings2.txt", rawListings);
 
 		return listings;
