@@ -1,4 +1,4 @@
-﻿using RealityScraper.Model;
+﻿using RealityScraper.Scraping.Model;
 using SendGrid;
 using SendGrid.Helpers.Mail;
 
@@ -20,7 +20,7 @@ namespace RealityScraper.Mailing
 			this.htmlMailBodyGenerator = htmlMailBodyGenerator;
 		}
 
-		public async Task SendEmailNotificationAsync(List<Listing> listings)
+		public async Task SendEmailNotificationAsync(ScrapingReport scrapingReport)
 		{
 			var apiKey = configuration["SendGridSettings:ApiKey"];
 			var fromEmail = configuration["SendGridSettings:FromEmail"];
@@ -44,7 +44,7 @@ namespace RealityScraper.Mailing
 				var client = new SendGridClient(apiKey);
 				var from = new EmailAddress(fromEmail, fromName);
 				var subject = $"Nové realitní nabídky ({DateTime.Now:dd.MM.yyyy})";
-				var htmlContent = htmlMailBodyGenerator.GenerateHtmlBody(listings);
+				var htmlContent = htmlMailBodyGenerator.GenerateHtmlBody(scrapingReport);
 
 				// Create a message for each recipient (or use BCC for multiple recipients)
 				foreach (var recipientEmail in recipientEmails)

@@ -1,7 +1,8 @@
-﻿using RealityScraper.Model;
+﻿using RealityScraper.Scraping.Model;
 
 namespace RealityScraper.Mailing;
+
 public interface IEmailService
 {
-	Task SendEmailNotificationAsync(List<Listing> listings);
+	Task SendEmailNotificationAsync(ScrapingReport scrapingReport);
 }

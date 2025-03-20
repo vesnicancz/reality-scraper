@@ -1,8 +1,10 @@
-﻿using RealityScraper.Model;
+﻿using RealityScraper.Scraping.Model;
 
 namespace RealityScraper.Scraping.Scrapers;
 
 public interface IRealityScraperService
 {
-	Task<List<Listing>> ScrapeListingsAsync();
+	string SiteName { get; }
+
+	Task<List<ListingItem>> ScrapeListingsAsync();
 }

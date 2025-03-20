@@ -1,10 +1,10 @@
-﻿using RealityScraper.Model;
+﻿using RealityScraper.Scraping.Model;
 
 namespace RealityScraper.Mailing;
 
 public class HtmlMailGenerator : IHtmlMailGenerator
 {
-	public string GenerateHtmlBody(List<Listing> listings)
+	public string GenerateHtmlBody(ScrapingReport scrapingReport)
 	{
 		var body = new System.Text.StringBuilder();
 		body.AppendLine("<!DOCTYPE html>");
@@ -19,22 +19,29 @@ public class HtmlMailGenerator : IHtmlMailGenerator
 		body.AppendLine("<body>");
 		body.AppendLine("<h1>Nové realitní nabídky</h1>");
 		body.AppendLine($"<p>Datum: {DateTime.Now:dd.MM.yyyy HH:mm}</p>");
-		body.AppendLine($"<p>Celkem nalezeno: {listings.Count} nových nabídek</p>");
+		body.AppendLine($"<p>Celkem nalezeno: {scrapingReport.NewListingCount} nových nabídek</p>");
 
-		foreach (var listing in listings)
+		foreach (var result in scrapingReport.Results.Where(i => i.NewListingCount > 0))
 		{
-			body.AppendLine("<div class='listing'>");
-			body.AppendLine($"<h2>{listing.Title}</h2>");
-			body.AppendLine($"<p><strong>Cena:</strong> {listing.Price?.ToString("C0")}</p>");
-			body.AppendLine($"<p><strong>Lokalita:</strong> {listing.Location}</p>");
+			body.AppendLine("<h2>" + result.SiteName + "</h2>");
+			body.AppendLine($"<p>Celkem nalezeno: {result.TotalListingCount} nabídek</p>");
+			body.AppendLine($"<p>Celkem nových: {result.NewListingCount}</p>");
 
-			if (!string.IsNullOrEmpty(listing.ImageUrl))
+			foreach (var listing in result.NewListings)
 			{
-				body.AppendLine($"<p><img src='{listing.ImageUrl}' alt='{listing.Title}'></p>");
-			}
+				body.AppendLine("<div class='listing'>");
+				body.AppendLine($"<h2>{listing.Title}</h2>");
+				body.AppendLine($"<p><strong>Cena:</strong> {listing.Price?.ToString("C0")}</p>");
+				body.AppendLine($"<p><strong>Lokalita:</strong> {listing.Location}</p>");
 
-			body.AppendLine($"<p><a href='{listing.Url}' target='_blank'>Zobrazit detail nabídky</a></p>");
-			body.AppendLine("</div>");
+				if (!string.IsNullOrEmpty(listing.ImageUrl))
+				{
+					body.AppendLine($"<p><img src='{listing.ImageUrl}' alt='{listing.Title}'></p>");
+				}
+
+				body.AppendLine($"<p><a href='{listing.Url}' target='_blank'>Zobrazit detail nabídky</a></p>");
+				body.AppendLine("</div>");
+			}
 		}
 
 		body.AppendLine("</body>");

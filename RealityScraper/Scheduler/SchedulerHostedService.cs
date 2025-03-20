@@ -30,7 +30,11 @@ public class SchedulerHostedService : BackgroundService
 		using (var scope = serviceProvider.CreateScope())
 		{
 			var registry = scope.ServiceProvider.GetRequiredService<ISchedulerRegistry>();
+#if DEBUG
+			registry.AddJob<ScraperServiceJob>("*/5 * * * *", "Scraping realit");
+#else
 			registry.AddJob<ScraperServiceJob>("0 6,12,18 * * *", "Scraping realit");
+#endif
 		}
 
 		while (!stoppingToken.IsCancellationRequested)
@@ -61,7 +65,6 @@ public class SchedulerHostedService : BackgroundService
 						{
 							try
 							{
-								using var scope = serviceProvider.CreateScope();
 								await job.Job.ExecuteAsync(cancellationToken);
 								logger.LogInformation($"Úloha {job.Name} byla dokončena.");
 							}
