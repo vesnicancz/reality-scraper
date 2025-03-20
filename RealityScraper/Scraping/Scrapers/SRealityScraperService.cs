@@ -2,7 +2,7 @@
 using OpenQA.Selenium.Support.Extensions;
 using RealityScraper.Model;
 
-namespace RealityScraper.Scraping;
+namespace RealityScraper.Scraping.Scrapers;
 
 // Služba pro scrapování dat se Selenium
 public class SRealityScraperService : IRealityScraperService
@@ -24,8 +24,8 @@ public class SRealityScraperService : IRealityScraperService
 	public async Task<List<Listing>> ScrapeListingsAsync()
 	{
 		var listings = new List<Listing>();
-		var url = configuration["ScraperSettings:RealityUrl"];
-		var parameters = configuration.GetSection("ScraperSettings:SearchParameters").Get<Dictionary<string, string>>();
+		var url = configuration["SRealityScraper:RealityUrl"];
+		var searchParameters = configuration.GetSection("SRealityScraper:SearchParameters").Get<Dictionary<string, string>>();
 
 		var rawListings = new List<string>();
 
@@ -33,7 +33,7 @@ public class SRealityScraperService : IRealityScraperService
 		try
 		{
 			// Vytvoření URL s parametry
-			var urlWithParams = BuildUrlWithParameters(url, parameters);
+			var urlWithParams = BuildUrlWithParameters(url, searchParameters);
 
 			// Inicializace Selenium driveru
 			driver = webDriverFactory.CreateDriver();
@@ -69,17 +69,19 @@ public class SRealityScraperService : IRealityScraperService
 			while (load)
 			{
 				// Získání seznamu inzerátů
-				var listingElements = driver.FindElements(By.CssSelector(configuration["ScraperSettings:ListingSelector"]));
+				var listingElements = driver.FindElements(By.CssSelector(configuration["SRealityScraper:ListingSelector"]));
 				logger.LogInformation("Nalezeno {count} inzerátů na stránce.", listingElements.Count);
 
 				foreach (var element in listingElements)
 				{
 					try
 					{
-						// Extrahování ID inzerátu
+						// url inzerátu
 						string listingNumber = null;
 						var linkElement = element.FindElement(By.CssSelector("a"));
 						var innerUrl = linkElement.GetAttribute("href");
+
+						// id inzerátu
 						if (!string.IsNullOrEmpty(innerUrl))
 						{
 							var uri = new Uri(innerUrl);
@@ -96,21 +98,22 @@ public class SRealityScraperService : IRealityScraperService
 						if (string.IsNullOrEmpty(listingNumber)
 							|| !long.TryParse(listingNumber, out long listingId))
 						{
+							// TODO: PM - revidovat
 							rawListings.Add("-- " + innerUrl);
 							rawListings.Add("---------------------------");
 							continue;
 						}
 
-						var title = element.FindElement(By.CssSelector(configuration["ScraperSettings:TitleSelector"])).Text;
-						var priceVal = element.FindElement(By.CssSelector(configuration["ScraperSettings:PriceSelector"])).Text;
-						var location = element.FindElement(By.CssSelector(configuration["ScraperSettings:LocationSelector"])).Text;
+						var title = element.FindElement(By.CssSelector(configuration["SRealityScraper:TitleSelector"])).Text;
+						var priceVal = element.FindElement(By.CssSelector(configuration["SRealityScraper:PriceSelector"])).Text;
+						var location = element.FindElement(By.CssSelector(configuration["SRealityScraper:LocationSelector"])).Text;
 
 						decimal.TryParse(priceVal.Replace("Kč", "").Replace(" ", ""), out decimal price);
 
 						var imageUrl = string.Empty;
 						try
 						{
-							var imgElement = element.FindElement(By.CssSelector(configuration["ScraperSettings:ImageSelector"]));
+							var imgElement = element.FindElement(By.CssSelector(configuration["SRealityScraper:ImageSelector"]));
 							imageUrl = imgElement.GetAttribute("src");
 						}
 						catch
@@ -127,7 +130,7 @@ public class SRealityScraperService : IRealityScraperService
 
 						var listing = new Listing
 						{
-							ExternalId = listingId,
+							ExternalId = listingNumber,
 							Title = title,
 							Price = price,
 							Location = location,
@@ -150,8 +153,9 @@ public class SRealityScraperService : IRealityScraperService
 					}
 				}
 
-				// tlačítko pro další stránku
-				var nextButton = driver.FindElements(By.CssSelector("button[data-e2e='show-more-btn']"));
+				// načtení další strany
+				//var nextButton = driver.FindElements(By.CssSelector("button[data-e2e='show-more-btn']"));
+				var nextButton = driver.FindElements(By.CssSelector(configuration["SRealityScraper:NextPageSelector"]));
 				if (nextButton.Count > 0)
 				{
 					nextButton.First().Click();

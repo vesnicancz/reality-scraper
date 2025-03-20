@@ -12,7 +12,7 @@ public class ListingRepository : IListingRepository
 		this.realityDbContext = realityDbContext;
 	}
 
-	public async Task<Listing> GetByExternalIdAsync(long externalId)
+	public async Task<Listing> GetByExternalIdAsync(string externalId)
 	{
 		return await realityDbContext.Listings
 			.Where(l => l.ExternalId == externalId)
