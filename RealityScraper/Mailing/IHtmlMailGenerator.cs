@@ -1,8 +1,8 @@
-﻿using RealityScraper.Model;
+﻿using RealityScraper.Scraping.Model;
 
 namespace RealityScraper.Mailing;
 
 public interface IHtmlMailGenerator
 {
-	string GenerateHtmlBody(List<Listing> listings);
+	string GenerateHtmlBody(ScrapingReport scrapingReport);
 }

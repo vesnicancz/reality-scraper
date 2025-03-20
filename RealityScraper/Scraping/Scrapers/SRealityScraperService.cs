@@ -1,6 +1,6 @@
 ﻿using OpenQA.Selenium;
 using OpenQA.Selenium.Support.Extensions;
-using RealityScraper.Model;
+using RealityScraper.Scraping.Model;
 
 namespace RealityScraper.Scraping.Scrapers;
 
@@ -21,9 +21,11 @@ public class SRealityScraperService : IRealityScraperService
 		this.webDriverFactory = webDriverFactory;
 	}
 
-	public async Task<List<Listing>> ScrapeListingsAsync()
+	public string SiteName => "SReality";
+
+	public async Task<List<ListingItem>> ScrapeListingsAsync()
 	{
-		var listings = new List<Listing>();
+		var listings = new List<ListingItem>();
 		var url = configuration["SRealityScraper:RealityUrl"];
 		var searchParameters = configuration.GetSection("SRealityScraper:SearchParameters").Get<Dictionary<string, string>>();
 
@@ -128,16 +130,7 @@ public class SRealityScraperService : IRealityScraperService
 						rawListings.Add(imageUrl);
 						rawListings.Add("---------------------------");
 
-						var listing = new Listing
-						{
-							ExternalId = listingNumber,
-							Title = title,
-							Price = price,
-							Location = location,
-							Url = innerUrl,
-							ImageUrl = imageUrl,
-							DiscoveredAt = DateTime.UtcNow
-						};
+						var listing = new ListingItem(title, default, price, location, innerUrl, imageUrl, listingNumber);
 
 						listings.Add(listing);
 					}

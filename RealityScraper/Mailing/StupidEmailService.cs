@@ -1,5 +1,5 @@
 ﻿using System.Net.Mail;
-using RealityScraper.Model;
+using RealityScraper.Scraping.Model;
 
 namespace RealityScraper.Mailing;
 
@@ -20,7 +20,7 @@ public class StupidEmailService : IEmailService
 		this.htmlMailBodyGenerator = htmlMailBodyGenerator;
 	}
 
-	public async Task SendEmailNotificationAsync(List<Listing> listings)
+	public async Task SendEmailNotificationAsync(ScrapingReport scrapingReport)
 	{
 		var smtpSettings = configuration.GetSection("SmtpSettings");
 		var recipientEmails = configuration.GetSection("EmailSettings:Recipients").Get<List<string>>();
@@ -45,7 +45,7 @@ public class StupidEmailService : IEmailService
 					From = new MailAddress(smtpSettings["FromAddress"], smtpSettings["FromName"]),
 					Subject = $"Nové realitní nabídky ({DateTime.Now:dd.MM.yyyy})",
 					IsBodyHtml = true,
-					Body = htmlMailBodyGenerator.GenerateHtmlBody(listings)
+					Body = htmlMailBodyGenerator.GenerateHtmlBody(scrapingReport)
 				};
 
 				foreach (var recipient in recipientEmails)

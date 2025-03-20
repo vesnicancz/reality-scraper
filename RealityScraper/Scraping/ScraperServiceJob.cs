@@ -2,6 +2,7 @@
 using RealityScraper.Mailing;
 using RealityScraper.Model;
 using RealityScraper.Scheduler;
+using RealityScraper.Scraping.Model;
 using RealityScraper.Scraping.Scrapers;
 
 namespace RealityScraper.Scraping;
@@ -10,64 +11,72 @@ namespace RealityScraper.Scraping;
 public class ScraperServiceJob : IJob
 {
 	private readonly ILogger<ScraperServiceJob> logger;
-	private readonly IServiceProvider serviceProvider;
-	private readonly IConfiguration configuration;
 	private readonly IEnumerable<IRealityScraperService> scraperServices;
 	private readonly IEmailService emailService;
-	private readonly RealityDbContext realityDbContext;
-	private readonly IListingRepository listingRepository;
+	private readonly IServiceProvider serviceProvider;
 
 	public ScraperServiceJob(
 		ILogger<ScraperServiceJob> logger,
-		IServiceProvider serviceProvider,
-		IConfiguration configuration,
 		IEnumerable<IRealityScraperService> scraperServices,
 		IEmailService emailService,
-		RealityDbContext realityDbContext,
-		IListingRepository listingRepository
+		IServiceProvider serviceProvider
 		)
 	{
 		this.logger = logger;
-		this.serviceProvider = serviceProvider;
-		this.configuration = configuration;
 		this.scraperServices = scraperServices;
 		this.emailService = emailService;
-		this.realityDbContext = realityDbContext;
-		this.listingRepository = listingRepository;
+		this.serviceProvider = serviceProvider;
 	}
 
 	public async Task ExecuteAsync(CancellationToken cancellationToken)
 	{
 		// Načtení a zpracování dat
-		var listings = new List<Listing>();
+		var report = new ScrapingReport();
+
+		using var scope = serviceProvider.CreateScope();
+		var realityDbContext = scope.ServiceProvider.GetRequiredService<RealityDbContext>();
+		var listingRepository = scope.ServiceProvider.GetRequiredService<IListingRepository>();
+
 		foreach (var scraperService in scraperServices)
 		{
-			logger.LogInformation("Spouštím scraper: {scraperName}", scraperService.GetType().Name);
-			listings.AddRange(await scraperService.ScrapeListingsAsync());
+			logger.LogInformation("Spouštím scraper: {scraperName}", scraperService.SiteName);
+			var listings = await scraperService.ScrapeListingsAsync();
+
+			var scraperResult = new ScraperResult(scraperService.SiteName, listings.Count);
+			report.Results.Add(scraperResult);
+
+			foreach (var listing in listings)
+			{
+				var existingListing = await listingRepository.GetByExternalIdAsync(listing.ExternalId);
+				if (existingListing == null)
+				{
+					var newListing = new Listing
+					{
+						Title = listing.Title,
+						Price = listing.Price,
+						Location = listing.Location,
+						Url = listing.Url,
+						ImageUrl = listing.ImageUrl,
+						ExternalId = listing.ExternalId,
+						DiscoveredAt = DateTime.UtcNow
+					};
+
+					scraperResult.NewListings.Add(listing);
+
+					realityDbContext.Listings.Add(newListing);
+				}
+				else
+				{
+					existingListing.LastSeenAt = DateTime.UtcNow;
+				}
+			}
 		}
 
-		var newListings = new List<Listing>();
-
-		foreach (var listing in listings)
+		if (report.NewListingCount > 0)
 		{
-			var existingListing = await listingRepository.GetByExternalIdAsync(listing.ExternalId);
-			if (existingListing == null)
-			{
-				listing.DiscoveredAt = DateTime.UtcNow;
-				newListings.Add(listing);
-				realityDbContext.Listings.Add(listing);
-			}
-			else
-			{
-				existingListing.LastSeenAt = DateTime.UtcNow;
-			}
-		}
-
-		if (newListings.Any())
-		{
-			logger.LogInformation("Nalezeno {count} nových inzerátů.", newListings.Count);
+			logger.LogInformation("Nalezeno {count} nových inzerátů.", report.NewListingCount);
 			await realityDbContext.SaveChangesAsync(cancellationToken);
-			await emailService.SendEmailNotificationAsync(newListings);
+			await emailService.SendEmailNotificationAsync(report);
 		}
 		else
 		{
