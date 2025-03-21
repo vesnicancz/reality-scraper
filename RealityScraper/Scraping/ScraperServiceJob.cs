@@ -108,7 +108,7 @@ public class ScraperServiceJob : IJob
 
 		if (report.NewListingCount > 0 || report.PriceChangedListingsCount > 0)
 		{
-			logger.LogInformation("Nalezeno {count} nových inzerátů a {count} upravených cen.", report.NewListingCount, report.PriceChangedListingsCount);
+			logger.LogInformation("Nalezeno {newCount} nových inzerátů a {priceChangedCount} upravených cen.", report.NewListingCount, report.PriceChangedListingsCount);
 			await emailService.SendEmailNotificationAsync(report);
 		}
 		else
