@@ -50,6 +50,7 @@ public class ScraperServiceJob : IJob
 				var existingListing = await listingRepository.GetByExternalIdAsync(listing.ExternalId);
 				if (existingListing == null)
 				{
+					// Nový inzerát
 					var newListing = new Listing
 					{
 						Title = listing.Title,
@@ -58,29 +59,59 @@ public class ScraperServiceJob : IJob
 						Url = listing.Url,
 						ImageUrl = listing.ImageUrl,
 						ExternalId = listing.ExternalId,
-						DiscoveredAt = DateTime.UtcNow
+						DiscoveredAt = DateTime.UtcNow,
+						LastSeenAt = DateTime.UtcNow,
+						PriceFrom = DateTime.UtcNow,
 					};
 
 					scraperResult.NewListings.Add(listing);
 
 					realityDbContext.Listings.Add(newListing);
 				}
+				else if (listing.Price != existingListing.Price)
+				{
+					// Změna ceny
+					var oldPrice = existingListing.Price;
+
+					existingListing.PriceHistories.Add(new PriceHistory
+					{
+						Price = existingListing.Price,
+						RecordedAt = existingListing.PriceFrom
+					});
+					existingListing.Price = listing.Price;
+					existingListing.LastSeenAt = DateTime.UtcNow;
+					existingListing.PriceFrom = DateTime.UtcNow;
+
+					scraperResult.PriceChangedListings.Add(new ListingItemWithNewPrice(
+						listing.Title,
+						listing.Description,
+						listing.Price,
+						listing.Location,
+						listing.Url,
+						listing.ImageUrl,
+						listing.ExternalId,
+						oldPrice
+					));
+				}
 				else
 				{
+					// Inzerát již existuje
 					existingListing.LastSeenAt = DateTime.UtcNow;
 				}
 			}
 		}
 
-		if (report.NewListingCount > 0)
+		if (report.NewListingCount > 0 || report.PriceChangedListingsCount > 0)
 		{
 			logger.LogInformation("Nalezeno {count} nových inzerátů.", report.NewListingCount);
-			await realityDbContext.SaveChangesAsync(cancellationToken);
 			await emailService.SendEmailNotificationAsync(report);
 		}
 		else
 		{
 			logger.LogInformation("Žádné nové inzeráty nebyly nalezeny.");
 		}
+
+		// Uložení změn do databáze
+		await realityDbContext.SaveChangesAsync(cancellationToken);
 	}
 }

@@ -19,5 +19,12 @@ public class RealityDbContext : DbContext
 		// Konfigurace entity
 		modelBuilder.Entity<Listing>()
 			.HasIndex(e => e.ExternalId);
+
+		modelBuilder.Entity<Listing>()
+			.HasMany(l => l.PriceHistories)
+			.WithOne(p => p.Listing)
+			.HasForeignKey(p => p.ListingId);
+
+		base.OnModelCreating(modelBuilder);
 	}
 }

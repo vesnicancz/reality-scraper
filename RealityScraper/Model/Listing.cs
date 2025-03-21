@@ -24,5 +24,7 @@ public class Listing
 
 	public DateTime LastSeenAt { get; set; }
 
-	public List<PriceHistory> PriceHistories { get; set; }
+	public DateTime PriceFrom { get; set; }
+
+	public List<PriceHistory> PriceHistories { get; set; } = new List<PriceHistory>();
 }

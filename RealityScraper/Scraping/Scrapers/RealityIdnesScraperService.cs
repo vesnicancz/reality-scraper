@@ -78,7 +78,8 @@ public class RealityIdnesScraperService : IRealityScraperService
 						var location = element.FindElement(By.CssSelector(configuration["RealityIdnesScraper:LocationSelector"])).Text;
 						//var location = element.FindElement(By.CssSelector("p.c-products__info")).Text;
 
-						decimal.TryParse(priceVal.Replace("Kč", "").Replace(" ", ""), out decimal price);
+						//decimal.TryParse(priceVal.Replace("Kč", "").Replace(" ", ""), out decimal price);
+						var price = ParseNullableDecimal(priceVal.Replace("Kč", "").Replace(" ", ""));
 
 						var imageUrl = string.Empty;
 						try
@@ -148,5 +149,14 @@ public class RealityIdnesScraperService : IRealityScraperService
 		File.WriteAllLines("d:/temp/listings2.txt", rawListings);
 
 		return listings;
+	}
+
+	public static decimal? ParseNullableDecimal(string value)
+	{
+		if (decimal.TryParse(value, out decimal result))
+		{
+			return result;
+		}
+		return null;
 	}
 }
