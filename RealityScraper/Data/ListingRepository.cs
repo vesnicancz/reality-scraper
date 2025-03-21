@@ -16,6 +16,7 @@ public class ListingRepository : IListingRepository
 	{
 		return await realityDbContext.Listings
 			.Where(l => l.ExternalId == externalId)
+			.Include(i => i.PriceHistories)
 			.FirstOrDefaultAsync();
 	}
 }

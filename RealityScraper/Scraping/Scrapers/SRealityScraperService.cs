@@ -110,7 +110,8 @@ public class SRealityScraperService : IRealityScraperService
 						var priceVal = element.FindElement(By.CssSelector(configuration["SRealityScraper:PriceSelector"])).Text;
 						var location = element.FindElement(By.CssSelector(configuration["SRealityScraper:LocationSelector"])).Text;
 
-						decimal.TryParse(priceVal.Replace("Kč", "").Replace(" ", ""), out decimal price);
+						//decimal.TryParse(priceVal.Replace("Kč", "").Replace(" ", ""), out decimal price);
+						var price = ParseNullableDecimal(priceVal.Replace("Kč", "").Replace(" ", ""));
 
 						var imageUrl = string.Empty;
 						try
@@ -194,5 +195,14 @@ public class SRealityScraperService : IRealityScraperService
 
 		uriBuilder.Query = query.ToString();
 		return uriBuilder.ToString();
+	}
+
+	public static decimal? ParseNullableDecimal(string value)
+	{
+		if (decimal.TryParse(value, out decimal result))
+		{
+			return result;
+		}
+		return null;
 	}
 }
