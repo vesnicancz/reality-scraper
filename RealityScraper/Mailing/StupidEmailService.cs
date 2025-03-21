@@ -8,12 +8,12 @@ public class StupidEmailService : IEmailService
 {
 	private readonly ILogger<StupidEmailService> logger;
 	private readonly IConfiguration configuration;
-	private readonly IHtmlMailGenerator htmlMailBodyGenerator;
+	private readonly IEmailGenerator htmlMailBodyGenerator;
 
 	public StupidEmailService(
 		ILogger<StupidEmailService> logger,
 		IConfiguration configuration,
-		IHtmlMailGenerator htmlMailBodyGenerator)
+		IEmailGenerator htmlMailBodyGenerator)
 	{
 		this.logger = logger;
 		this.configuration = configuration;
@@ -45,7 +45,7 @@ public class StupidEmailService : IEmailService
 					From = new MailAddress(smtpSettings["FromAddress"], smtpSettings["FromName"]),
 					Subject = $"Nové realitní nabídky ({DateTime.Now:dd.MM.yyyy})",
 					IsBodyHtml = true,
-					Body = htmlMailBodyGenerator.GenerateHtmlBody(scrapingReport)
+					Body = await htmlMailBodyGenerator.GenerateHtmlBodyAsync(scrapingReport)
 				};
 
 				foreach (var recipient in recipientEmails)

@@ -8,12 +8,12 @@ namespace RealityScraper.Mailing
 	{
 		private readonly ILogger<SendGridEmailService> logger;
 		private readonly IConfiguration configuration;
-		private readonly IHtmlMailGenerator htmlMailBodyGenerator;
+		private readonly IEmailGenerator htmlMailBodyGenerator;
 
 		public SendGridEmailService(
 			ILogger<SendGridEmailService> logger,
 			IConfiguration configuration,
-			IHtmlMailGenerator htmlMailBodyGenerator)
+			IEmailGenerator htmlMailBodyGenerator)
 		{
 			this.logger = logger;
 			this.configuration = configuration;
@@ -44,7 +44,7 @@ namespace RealityScraper.Mailing
 				var client = new SendGridClient(apiKey);
 				var from = new EmailAddress(fromEmail, fromName);
 				var subject = $"Nové realitní nabídky ({DateTime.Now:dd.MM.yyyy})";
-				var htmlContent = htmlMailBodyGenerator.GenerateHtmlBody(scrapingReport);
+				var htmlContent = await htmlMailBodyGenerator.GenerateHtmlBodyAsync(scrapingReport);
 
 				// Create a message for each recipient (or use BCC for multiple recipients)
 				foreach (var recipientEmail in recipientEmails)

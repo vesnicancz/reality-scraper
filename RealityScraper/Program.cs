@@ -35,7 +35,8 @@ internal static class Program
 				services.AddTransient<IRealityScraperService, SRealityScraperService>();
 				services.AddTransient<IRealityScraperService, RealityIdnesScraperService>();
 				services.AddTransient<IEmailService, SendGridEmailService>();
-				services.AddTransient<IHtmlMailGenerator, HtmlMailGenerator>();
+				//services.AddTransient<IEmailGenerator, HtmlEmailGenerator>();
+				services.AddTransient<IEmailGenerator, RazorEmailGenerator>();
 				services.AddSingleton<IWebDriverFactory, ChromeDriverFactory>();
 			});
 }

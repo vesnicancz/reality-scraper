@@ -1,0 +1,359 @@
+﻿<!DOCTYPE html>
+<html lang="cs">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Notifikace změn na realitních serverech</title>
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+		}
+
+		body {
+			font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+			line-height: 1.5;
+			color: #1f2937;
+			max-width: 800px;
+			margin: 0 auto;
+			padding: 20px;
+			background-color: #edeef0;
+		}
+
+		.header {
+			text-align: center;
+			margin-bottom: 24px;
+		}
+
+		.header h1 {
+			color: #2563eb;
+			font-size: 24px;
+			font-weight: 700;
+			margin-bottom: 8px;
+		}
+
+		.header p {
+			color: #6b7280;
+			font-size: 16px;
+		}
+
+		.summary {
+			background-color: white;
+			padding: 16px;
+			margin-bottom: 24px;
+			border-radius: 8px;
+			box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+			border-left: 4px solid #3b82f6;
+		}
+
+		.portal-section {
+			background-color: white;
+			margin-bottom: 24px;
+			border-radius: 8px;
+			overflow: hidden;
+			box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+		}
+
+		.portal-header {
+			display: flex;
+			align-items: center;
+			padding: 16px;
+			background-color: #3b82f6;
+			background: linear-gradient(to right, #3b82f6, #2563eb);
+			color: white;
+			justify-content: space-between;
+		}
+
+		.portal-header h2 {
+			font-size: 18px;
+			font-weight: 600;
+		}
+
+		.portal-header .count {
+			background-color: white;
+			color: #3b82f6;
+			font-size: 14px;
+			border-radius: 16px;
+			padding: 2px 10px;
+		}
+
+		.section-header {
+			padding: 14px 16px;
+			background-color: #f3f4f6;
+			font-weight: 600;
+			font-size: 16px;
+			border-bottom: 1px solid rgba(0,0,0,0.05);
+			color: #1f2937;
+			display: flex;
+			justify-content: space-between;
+		}
+
+		.section-header .count {
+			background-color: #3b82f6;
+			color: white;
+			font-size: 14px;
+			border-radius: 16px;
+			padding: 2px 10px;
+		}
+
+		.property-list {
+			padding: 0;
+			margin: 0;
+			list-style: none;
+		}
+
+		.property-item {
+			padding: 16px;
+			border-bottom: 1px solid rgba(0,0,0,0.05);
+		}
+
+		.property-item:last-child {
+			border-bottom: none;
+		}
+
+		.property-content {
+			display: grid;
+			grid-template-columns: 160px 1fr;
+			gap: 16px;
+		}
+
+		.property-image-container {
+			position: relative;
+			overflow: hidden;
+			border-radius: 8px;
+			height: 120px;
+		}
+
+		.property-image {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+			transition: transform 0.3s ease;
+		}
+
+		.property-image:hover {
+			transform: scale(1.05);
+		}
+
+		.property-info {
+			display: flex;
+			flex-direction: column;
+		}
+
+		.property-title {
+			font-weight: 600;
+			font-size: 16px;
+			margin-bottom: 8px;
+			color: #1f2937;
+		}
+
+		.property-price {
+			font-weight: 700;
+			font-size: 18px;
+			color: #2563eb;
+			margin-bottom: 8px;
+			display: flex;
+			align-items: center;
+		}
+
+		.price-change {
+			margin-left: 8px;
+			font-size: 14px;
+			font-weight: 500;
+			padding: 2px 8px;
+			border-radius: 4px;
+		}
+
+		.price-down {
+			background-color: rgba(16, 185, 129, 0.1);
+			color: #10b981;
+		}
+
+		.price-up {
+			background-color: rgba(239, 68, 68, 0.1);
+			color: #ef4444;
+		}
+
+		.property-link {
+			display: inline-flex;
+			align-items: center;
+			background-color: #3b82f6;
+			color: white !important;
+			text-decoration: none;
+			padding: 8px 16px;
+			border-radius: 8px;
+			font-weight: 500;
+			font-size: 14px;
+			transition: background-color 0.2s;
+			margin-top: auto;
+			align-self: flex-start;
+		}
+
+		.property-link:hover {
+			background-color: #2563eb;
+		}
+
+		.footer {
+			text-align: center;
+			color: #6b7280;
+			font-size: 14px;
+			margin-top: 16px;
+		}
+
+		.footer a {
+			color: #3b82f6;
+			text-decoration: none;
+		}
+
+		.footer a:hover {
+			text-decoration: underline;
+		}
+
+		@@media only screen and (max-width: 600px) {
+			body {
+				padding: 12px;
+			}
+
+			.property-content {
+				grid-template-columns: 1fr;
+			}
+
+			.property-image-container {
+				height: 180px;
+				margin-bottom: 8px;
+			}
+		}
+	</style>
+</head>
+<body>
+	<div class="header">
+		<h1>Notifikace realitních nabídek</h1>
+		<p>Přehled změn ze dne @Model.ReportDate.ToString("dd.MM.yyyy HH:mm")</p>
+	</div>
+
+	<div class="summary">
+		<p>Souhrn změn: @GetPluralForm(Model.NewListingCount, "nalezena", "nalezeny", "nalezeno")
+			<strong>@GetPluralFormWithNumber(Model.NewListingCount, "nová nabídka", "nové nabídky", "nových nabídek")</strong>
+			a <strong>@GetPluralFormWithNumber(@Model.PriceChangedListingsCount, "změna ceny", "změny ceny", "změn cen")</strong>
+			napříč sledovanými portály.
+		</p>
+	</div>
+
+	@foreach (var result in Model.GetNotEmptyResults())
+	{
+		<div class="portal-section">
+			<div class="portal-header">
+				<h2>@result.SiteName</h2>
+				<span class="count">@result.TotalListingCount</span>
+			</div>
+
+			@if (result.NewListingCount > 0)
+			{
+				<!-- Nové nabídky -->
+				<div class="section-header">
+					<span>Nové nabídky</span>
+					<span class="count">@result.NewListingCount</span>
+				</div>
+				<ul class="property-list">
+
+					@foreach (var listing in result.NewListings)
+					{
+						<li class="property-item">
+							<div class="property-content">
+								<div class="property-image-container">
+									<img src="@listing.ImageUrl" alt="@listing.Location" class="property-image">
+								</div>
+								<div class="property-info">
+									<div class="property-title">@listing.Location</div>
+									<div class="property-price">@(listing.Price?.ToString("C0") ?? "Neuvedeno")</div>
+									<a href="@listing.Url" class="property-link">Zobrazit detail</a>
+								</div>
+							</div>
+						</li>
+					}
+				</ul>
+			}
+
+			@if (result.PriceChangedListingsCount > 0)
+			{
+				<!-- Změny cen -->
+				<div class="section-header">
+					<span>Změny cen</span>
+					<span class="count">@result.PriceChangedListingsCount</span>
+				</div>
+				<ul class="property-list">
+
+					@foreach (var listing in result.PriceChangedListings)
+					{
+						<li class="property-item">
+							<div class="property-content">
+								<div class="property-image-container">
+									<img src="@listing.ImageUrl" alt="@listing.Location" class="property-image">
+								</div>
+								<div class="property-info">
+									<div class="property-title">@listing.Location</div>
+									<div class="property-price">
+										@(listing.Price?.ToString("C0") ?? "neuvedeno")
+										@if (listing.PriceDiff < 0)
+										{
+											<span class="price-change price-down">↓ @listing.PriceDiff.ToString("C0")</span>
+										}
+										else if (listing.PriceDiff > 0)
+										{
+											<span class="price-change price-up">↑ +@listing.PriceDiff.ToString("C0")</span>
+										}
+										else
+										{
+											<text>(původně @(listing.OldPrice?.ToString("C0") ?? "neuvedeno"))</text>
+										}
+									</div>
+									<a href="@listing.Url" class="property-link">Zobrazit detail</a>
+								</div>
+							</div>
+						</li>
+					}
+				</ul>
+			}
+		</div>
+	}
+
+	<div class="footer">
+		<p>Toto je automaticky generovaná zpráva z vašeho realitního monitoringu.</p>
+	</div>
+</body>
+</html>
+
+@{
+	string GetPluralForm(int count, string form1, string form2to4, string form5plus)
+	{
+		if (count == 1)
+		{
+			return form1;
+		}
+		else if (count >= 2 && count <= 4)
+		{
+			return form2to4;
+		}
+		else
+		{
+			return form5plus;
+		}
+	}
+
+	string GetPluralFormWithNumber(int count, string form1, string form2to4, string form5plus)
+	{
+		if (count == 1)
+		{
+			return $"{count} {form1}";
+		}
+		else if (count >= 2 && count <= 4)
+		{
+			return $"{count} {form2to4}";
+		}
+		else
+		{
+			return $"{count} {form5plus}";
+		}
+	}
+}

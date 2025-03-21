@@ -1,13 +1,16 @@
 ﻿namespace RealityScraper.Scraping.Model;
 
-public record ListingItem(string Title, string Description, decimal? Price, string Location, string Url, string ImageUrl, string ExternalId);
-
-public record ListingItemWithNewPrice : ListingItem
+public record ListingItem
 {
-	public decimal? OldPrice { get; init; }
+	public string Title { get; init; }
 
-	public ListingItemWithNewPrice(string Title, string Description, decimal? Price, string Location, string Url, string ImageUrl, string ExternalId, decimal? OldPrice) : base(Title, Description, Price, Location, Url, ImageUrl, ExternalId)
-	{
-		this.OldPrice = OldPrice;
-	}
+	public decimal? Price { get; init; }
+
+	public string Location { get; init; }
+
+	public string Url { get; init; }
+
+	public string ImageUrl { get; init; }
+
+	public string ExternalId { get; init; }
 }

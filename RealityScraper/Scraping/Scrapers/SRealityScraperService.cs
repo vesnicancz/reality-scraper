@@ -131,7 +131,15 @@ public class SRealityScraperService : IRealityScraperService
 						rawListings.Add(imageUrl);
 						rawListings.Add("---------------------------");
 
-						var listing = new ListingItem(title, default, price, location, innerUrl, imageUrl, listingNumber);
+						var listing = new ListingItem
+						{
+							Title = title,
+							Price = price,
+							Location = location,
+							Url = innerUrl,
+							ImageUrl = imageUrl,
+							ExternalId = listingNumber
+						};
 
 						listings.Add(listing);
 					}

@@ -2,9 +2,9 @@
 
 namespace RealityScraper.Mailing;
 
-public class HtmlMailGenerator : IHtmlMailGenerator
+public class HtmlEmailGenerator : IEmailGenerator
 {
-	public string GenerateHtmlBody(ScrapingReport scrapingReport)
+	public Task<string> GenerateHtmlBodyAsync(ScrapingReport scrapingReport)
 	{
 		var body = new System.Text.StringBuilder();
 		body.AppendLine("<!DOCTYPE html>");
@@ -19,12 +19,12 @@ public class HtmlMailGenerator : IHtmlMailGenerator
 		body.AppendLine("<body>");
 		body.AppendLine("<h1>Nové realitní nabídky</h1>");
 		body.AppendLine($"<p>Datum: {DateTime.Now:dd.MM.yyyy HH:mm}</p>");
-		body.AppendLine($"<p>Celkem nalezeno: {scrapingReport.NewListingCount} nových nabídek</p>");
+		body.AppendLine($"<p>Celkem nalezeno: {GetPluralForm(scrapingReport.NewListingCount, "nová nabídka", "nové nabídky", "nových nabídek")}</p>");
 
 		foreach (var result in scrapingReport.Results.Where(i => i.NewListingCount > 0 || i.PriceChangedListingsCount > 0))
 		{
 			body.AppendLine("<h2>" + result.SiteName + "</h2>");
-			body.AppendLine($"<p>Celkem nalezeno: {result.TotalListingCount} nabídek</p>");
+			body.AppendLine($"<p>Celkem nalezeno: {GetPluralForm(result.TotalListingCount, "nabídka", "nabídky", "nabídek")}</p>");
 
 			if (result.NewListingCount > 0)
 			{
@@ -51,7 +51,7 @@ public class HtmlMailGenerator : IHtmlMailGenerator
 				body.AppendLine("<p>Žádné nové nabídky.</p>");
 			}
 
-			if (result.PriceChangedListings.Count > 0)
+			if (result.PriceChangedListingsCount > 0)
 			{
 				body.AppendLine($"<p>Celkem změn ceny: {result.PriceChangedListingsCount}</p>");
 
@@ -74,6 +74,22 @@ public class HtmlMailGenerator : IHtmlMailGenerator
 
 		body.AppendLine("</body>");
 		body.AppendLine("</html>");
-		return body.ToString();
+		return Task.FromResult(body.ToString());
+	}
+
+	public static string GetPluralForm(int count, string form1, string form2to4, string form5plus)
+	{
+		if (count == 1)
+		{
+			return $"{count} {form1}";
+		}
+		else if (count >= 2 && count <= 4)
+		{
+			return $"{count} {form2to4}";
+		}
+		else
+		{
+			return $"{count} {form5plus}";
+		}
 	}
 }
