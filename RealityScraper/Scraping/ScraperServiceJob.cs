@@ -42,7 +42,11 @@ public class ScraperServiceJob : IJob
 			logger.LogInformation("Spouštím scraper: {scraperName}", scraperService.SiteName);
 			var listings = await scraperService.ScrapeListingsAsync();
 
-			var scraperResult = new ScraperResult(scraperService.SiteName, listings.Count);
+			var scraperResult = new ScraperResult
+			{
+				SiteName = scraperService.SiteName,
+				TotalListingCount = listings.Count
+			};
 			report.Results.Add(scraperResult);
 
 			foreach (var listing in listings)
@@ -82,16 +86,17 @@ public class ScraperServiceJob : IJob
 					existingListing.LastSeenAt = DateTime.UtcNow;
 					existingListing.PriceFrom = DateTime.UtcNow;
 
-					scraperResult.PriceChangedListings.Add(new ListingItemWithNewPrice(
-						listing.Title,
-						listing.Description,
-						listing.Price,
-						listing.Location,
-						listing.Url,
-						listing.ImageUrl,
-						listing.ExternalId,
-						oldPrice
-					));
+					scraperResult.PriceChangedListings.Add(
+						new ListingItemWithNewPrice
+						{
+							Title = listing.Title,
+							Price = listing.Price,
+							Location = listing.Location,
+							Url = listing.Url,
+							ImageUrl = listing.ImageUrl,
+							ExternalId = listing.ExternalId,
+							OldPrice = oldPrice
+						});
 				}
 				else
 				{
@@ -103,7 +108,7 @@ public class ScraperServiceJob : IJob
 
 		if (report.NewListingCount > 0 || report.PriceChangedListingsCount > 0)
 		{
-			logger.LogInformation("Nalezeno {count} nových inzerátů.", report.NewListingCount);
+			logger.LogInformation("Nalezeno {count} nových inzerátů a {count} upravených cen.", report.NewListingCount, report.PriceChangedListingsCount);
 			await emailService.SendEmailNotificationAsync(report);
 		}
 		else

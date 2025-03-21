@@ -14,6 +14,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RealityScraper.Tests", "RealityScraper.Tests\RealityScraper.Tests.csproj", "{7E65A358-3C6F-4964-A2BC-0A2F6C748DBE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,6 +26,10 @@ Global
 		{44DB05CA-55EE-4C98-9466-D57FA9A45C91}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{44DB05CA-55EE-4C98-9466-D57FA9A45C91}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{44DB05CA-55EE-4C98-9466-D57FA9A45C91}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7E65A358-3C6F-4964-A2BC-0A2F6C748DBE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E65A358-3C6F-4964-A2BC-0A2F6C748DBE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E65A358-3C6F-4964-A2BC-0A2F6C748DBE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E65A358-3C6F-4964-A2BC-0A2F6C748DBE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
