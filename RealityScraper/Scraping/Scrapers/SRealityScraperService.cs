@@ -1,4 +1,5 @@
 ﻿using OpenQA.Selenium;
+using RealityScraper.Scheduler.Configuration;
 using RealityScraper.Scraping.Model;
 
 namespace RealityScraper.Scraping.Scrapers;
@@ -22,18 +23,16 @@ public class SRealityScraperService : IRealityScraperService
 
 	public string SiteName => "SReality";
 
-	public async Task<List<ListingItem>> ScrapeListingsAsync()
+	public ScrapersEnum ScrapersEnum => ScrapersEnum.SReality;
+
+	public async Task<List<ListingItem>> ScrapeListingsAsync(ScraperConfiguration scraperConfiguration)
 	{
 		var listings = new List<ListingItem>();
-		var url = configuration["SRealityScraper:RealityUrl"];
-		var searchParameters = configuration.GetSection("SRealityScraper:SearchParameters").Get<Dictionary<string, string>>();
+		var url = scraperConfiguration.Url;
 
 		IWebDriver driver = null;
 		try
 		{
-			// Vytvoření URL s parametry
-			var urlWithParams = BuildUrlWithParameters(url, searchParameters);
-
 			// Inicializace Selenium driveru
 			driver = webDriverFactory.CreateDriver();
 
@@ -41,8 +40,8 @@ public class SRealityScraperService : IRealityScraperService
 			driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(30);
 
 			// Načtení stránky
-			logger.LogInformation("Načítám stránku: {url}", urlWithParams);
-			driver.Navigate().GoToUrl(urlWithParams);
+			logger.LogInformation("Načítám stránku: {url}", url);
+			driver.Navigate().GoToUrl(url);
 
 			// Čekání na dokončení JavaScriptu (pokud je potřeba)
 			await Task.Delay(2000);
@@ -166,25 +165,6 @@ public class SRealityScraperService : IRealityScraperService
 		}
 
 		return listings;
-	}
-
-	private string BuildUrlWithParameters(string baseUrl, Dictionary<string, string> parameters)
-	{
-		if (parameters == null || !parameters.Any())
-		{
-			return baseUrl;
-		}
-
-		var uriBuilder = new UriBuilder(baseUrl);
-		var query = System.Web.HttpUtility.ParseQueryString(uriBuilder.Query);
-
-		foreach (var param in parameters)
-		{
-			query[param.Key] = param.Value;
-		}
-
-		uriBuilder.Query = query.ToString();
-		return uriBuilder.ToString();
 	}
 
 	public static decimal? ParseNullableDecimal(string value)

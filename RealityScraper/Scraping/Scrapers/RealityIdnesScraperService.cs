@@ -1,4 +1,5 @@
 ﻿using OpenQA.Selenium;
+using RealityScraper.Scheduler.Configuration;
 using RealityScraper.Scraping.Model;
 
 namespace RealityScraper.Scraping.Scrapers;
@@ -21,10 +22,12 @@ public class RealityIdnesScraperService : IRealityScraperService
 
 	public string SiteName => "Reality Idnes";
 
-	public async Task<List<ListingItem>> ScrapeListingsAsync()
+	public ScrapersEnum ScrapersEnum => ScrapersEnum.RealityIdnes;
+
+	public async Task<List<ListingItem>> ScrapeListingsAsync(ScraperConfiguration scraperConfiguration)
 	{
 		var listings = new List<ListingItem>();
-		var url = configuration["RealityIdnesScraper:RealityUrl"];
+		var url = scraperConfiguration.Url;
 
 		IWebDriver driver = null;
 

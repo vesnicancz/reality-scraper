@@ -21,12 +21,11 @@ namespace RealityScraper.Mailing
 			this.logger = logger;
 		}
 
-		public async Task SendEmailNotificationAsync(ScrapingReport scrapingReport)
+		public async Task SendEmailNotificationAsync(ScrapingReport scrapingReport, List<string> recipients)
 		{
 			var apiKey = configuration["SendGridSettings:ApiKey"];
 			var fromEmail = configuration["SendGridSettings:FromEmail"];
 			var fromName = configuration["SendGridSettings:FromName"];
-			var recipientEmails = configuration.GetSection("EmailSettings:Recipients").Get<List<string>>();
 
 			if (string.IsNullOrEmpty(apiKey))
 			{
@@ -34,7 +33,7 @@ namespace RealityScraper.Mailing
 				return;
 			}
 
-			if (recipientEmails == null || recipientEmails.Count == 0)
+			if (recipients == null || recipients.Count == 0)
 			{
 				logger.LogWarning("Nejsou nastaveni žádní příjemci e-mailů.");
 				return;
@@ -48,7 +47,7 @@ namespace RealityScraper.Mailing
 				var htmlContent = await htmlMailBodyGenerator.GenerateHtmlBodyAsync(scrapingReport);
 
 				// Create a message for each recipient (or use BCC for multiple recipients)
-				foreach (var recipientEmail in recipientEmails)
+				foreach (var recipientEmail in recipients)
 				{
 					var to = new EmailAddress(recipientEmail);
 					var msg = MailHelper.CreateSingleEmail(from, to, subject, "", htmlContent);

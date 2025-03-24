@@ -1,115 +1,112 @@
-﻿using RealityScraper.Scraping;
+﻿using Cronos;
+using Microsoft.Extensions.Options;
+using RealityScraper.Scheduler.Configuration;
+using RealityScraper.Scraping;
 
 namespace RealityScraper.Scheduler;
 
-// Hosted service pro běh plánovače
+// Hlavní worker service
 public class SchedulerHostedService : BackgroundService
 {
-	private readonly List<Task> runningTasks = new List<Task>();
-	private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
-
-	private readonly ISchedulerRegistry schedulerRegistry;
-	private readonly ILogger<SchedulerHostedService> logger;
 	private readonly IServiceProvider serviceProvider;
+	private readonly ILogger<SchedulerHostedService> logger;
+	private readonly SchedulerSettings settings;
+
+	private readonly List<ScheduledTaskInfo> scheduledTasks = new List<ScheduledTaskInfo>();
+	private readonly TimeSpan taskRunTimeSpan = TimeSpan.FromSeconds(15);
 
 	public SchedulerHostedService(
-		ISchedulerRegistry schedulerRegistry,
-		ILogger<SchedulerHostedService> logger,
-		IServiceProvider serviceProvider)
+		IServiceProvider serviceProvider,
+		IOptions<SchedulerSettings> options,
+		ILogger<SchedulerHostedService> logger)
 	{
-		this.schedulerRegistry = schedulerRegistry;
-		this.logger = logger;
 		this.serviceProvider = serviceProvider;
+		this.logger = logger;
+		settings = options.Value;
+
+		// Inicializace plánovaných úloh
+		InitializeScheduledTasks();
+	}
+
+	private void InitializeScheduledTasks()
+	{
+		foreach (var taskConfig in settings.Tasks.Where(t => t.Enabled))
+		{
+			try
+			{
+				var cronExpression = CronExpression.Parse(taskConfig.CronExpression);
+
+				scheduledTasks.Add(new ScheduledTaskInfo
+				{
+					Name = taskConfig.Name,
+					CronExpression = cronExpression,
+					ScrapingConfiguration = taskConfig.ScrapingConfiguration,
+					NextRunTime = cronExpression.GetNextOccurrence(DateTime.UtcNow, TimeZoneInfo.Local)
+				});
+
+				logger.LogInformation("Task '{Name}' scheduled with cron expression '{CronExpression}'", taskConfig.Name, taskConfig.CronExpression);
+			}
+			catch (Exception ex)
+			{
+				logger.LogError(ex, "Failed to schedule task '{Name}' with cron expression '{CronExpression}'", taskConfig.Name, taskConfig.CronExpression);
+			}
+		}
 	}
 
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 	{
-		logger.LogInformation("Služba plánovače úloh byla spuštěna.");
-
-		// Registrace úloh (v reálném použití by mohla být načtena z konfigurace)
-		using (var scope = serviceProvider.CreateScope())
-		{
-			var registry = scope.ServiceProvider.GetRequiredService<ISchedulerRegistry>();
-#if DEBUG
-			registry.AddJob<ScraperServiceJob>("*/5 * * * *", "Scraping realit");
-#else
-			registry.AddJob<ScraperServiceJob>("0 6,12,18 * * *", "Scraping realit");
-#endif
-		}
+		logger.LogInformation("Worker service started at: {Time}", DateTimeOffset.Now);
 
 		while (!stoppingToken.IsCancellationRequested)
 		{
-			await CheckAndRunScheduledJobsAsync(stoppingToken);
-			await Task.Delay(TimeSpan.FromSeconds(15), stoppingToken); // Kontrola každých 15 sekund
-		}
+			await CheckAndExecuteScheduledTasksAsync(stoppingToken);
 
-		logger.LogInformation("Služba plánovače úloh byla zastavena.");
+			// Krátká pauza mezi kontrolami naplánovaných úloh
+			await Task.Delay(taskRunTimeSpan, stoppingToken);
+		}
 	}
 
-	private async Task CheckAndRunScheduledJobsAsync(CancellationToken cancellationToken)
+	private async Task CheckAndExecuteScheduledTasksAsync(CancellationToken stoppingToken)
 	{
+		foreach (var taskInfo in scheduledTasks.Where(t => !t.IsRunning && t.NextRunTime.HasValue && t.NextRunTime <= DateTime.UtcNow))
+		{
+			await ExecuteTaskAsync(taskInfo, stoppingToken);
+		}
+	}
+
+	private async Task ExecuteTaskAsync(ScheduledTaskInfo taskInfo, CancellationToken stoppingToken)
+	{
+		// Označení úlohy jako běžící
+		taskInfo.IsRunning = true;
+
 		try
 		{
-			var scheduledJobs = schedulerRegistry.GetScheduledJobs();
+			logger.LogInformation("Starting task '{Name}'", taskInfo.Name);
 
-			foreach (var job in scheduledJobs)
-			{
-				if (job.NextRun.HasValue && job.NextRun.Value <= DateTime.UtcNow)
-				{
-					await semaphore.WaitAsync(cancellationToken);
-					try
-					{
-						// Spuštění úlohy v asynchronním režimu
-						logger.LogInformation($"Spouštění úlohy: {job.Name}");
-						var jobTask = Task.Run(async () =>
-						{
-							try
-							{
-								await job.Job.ExecuteAsync(cancellationToken);
-								logger.LogInformation($"Úloha {job.Name} byla dokončena.");
-							}
-							catch (Exception ex)
-							{
-								logger.LogError(ex, $"Chyba při provádění úlohy {job.Name}: {ex.Message}");
-							}
-						}, cancellationToken);
+			// Získání instance úlohy
+			var task = (IScheduledTask)serviceProvider.GetRequiredService(typeof(ScraperServiceJob));
 
-						CleanupCompletedTasks();
-						runningTasks.Add(jobTask);
+			// Spuštění úlohy
+			await task.ExecuteAsync(taskInfo.ScrapingConfiguration, stoppingToken);
 
-						// Výpočet dalšího spuštění
-						job.CalculateNextRun();
-					}
-					finally
-					{
-						semaphore.Release();
-					}
-				}
-			}
+			// Aktualizace času posledního spuštění
+			taskInfo.LastRunTime = DateTime.UtcNow;
+
+			logger.LogInformation("Task '{Name}' completed successfully", taskInfo.Name);
 		}
 		catch (Exception ex)
 		{
-			logger.LogError(ex, $"Chyba při kontrole naplánovaných úloh: {ex.Message}");
+			logger.LogError(ex, "Error executing task '{Name}'", taskInfo.Name);
 		}
-	}
-
-	private void CleanupCompletedTasks()
-	{
-		var completedTasks = runningTasks.Where(t => t.IsCompleted).ToList();
-		foreach (var task in completedTasks)
+		finally
 		{
-			runningTasks.Remove(task);
+			// Výpočet dalšího času spuštění
+			taskInfo.NextRunTime = taskInfo.CronExpression.GetNextOccurrence(DateTime.UtcNow, TimeZoneInfo.Local);
+
+			logger.LogInformation("Task '{Name}' next run time: {NextRunTime}", taskInfo.Name, taskInfo.NextRunTime);
+
+			// Označení úlohy jako neběžící
+			taskInfo.IsRunning = false;
 		}
-	}
-
-	public override async Task StopAsync(CancellationToken cancellationToken)
-	{
-		logger.LogInformation("Zastavování služby plánovače úloh...");
-
-		// Počkání na dokončení všech běžících úloh
-		await Task.WhenAll(runningTasks);
-
-		await base.StopAsync(cancellationToken);
-		logger.LogInformation("Služba plánovače úloh byla úspěšně zastavena.");
 	}
 }
