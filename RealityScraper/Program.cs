@@ -29,9 +29,11 @@ internal static class Program
 				// registrace úloh
 				services.AddTransient<ScraperServiceJob>();
 
+				services.AddHttpClient();
 				services.AddDbContext<RealityDbContext>(options =>
 					options.UseSqlite(hostContext.Configuration.GetConnectionString("DefaultConnection")));
 				services.AddTransient<IListingRepository, ListingRepository>();
+				services.AddTransient<IImageDownloadService, ImageDownloadService>();
 				services.AddTransient<IRealityScraperService, SRealityScraperService>();
 				services.AddTransient<IRealityScraperService, RealityIdnesScraperService>();
 				services.AddTransient<IEmailService, SendGridEmailService>();
