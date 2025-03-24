@@ -47,9 +47,9 @@ public class ScraperServiceJob : IScheduledTask
 
 		foreach (var scraperConfiguration in configuration.Scrapers)
 		{
-			if (!scrapersDictionary.TryGetValue(scraperConfiguration.Name, out var scraperService))
+			if (!scrapersDictionary.TryGetValue(scraperConfiguration.ScraperType, out var scraperService))
 			{
-				logger.LogWarning("Scraper '{scraperName}' not found.", scraperConfiguration.Name);
+				logger.LogWarning("Scraper '{scraperName}' not found.", scraperConfiguration.ScraperType);
 				continue;
 			}
 

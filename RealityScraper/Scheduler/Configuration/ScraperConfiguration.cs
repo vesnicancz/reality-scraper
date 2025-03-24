@@ -4,7 +4,7 @@ namespace RealityScraper.Scheduler.Configuration;
 
 public class ScraperConfiguration
 {
-	public ScrapersEnum Name { get; set; }
+	public ScrapersEnum ScraperType { get; set; }
 
 	public string Url { get; set; }
 }
