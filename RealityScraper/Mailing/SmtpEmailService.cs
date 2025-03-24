@@ -4,16 +4,16 @@ using RealityScraper.Scraping.Model;
 namespace RealityScraper.Mailing;
 
 // Služba pro odesílání e-mailů (beze změny)
-public class StupidEmailService : IEmailService
+public class SmtpEmailService : IEmailService
 {
 	private readonly IConfiguration configuration;
 	private readonly IEmailGenerator htmlMailBodyGenerator;
-	private readonly ILogger<StupidEmailService> logger;
+	private readonly ILogger<SmtpEmailService> logger;
 
-	public StupidEmailService(
+	public SmtpEmailService(
 		IConfiguration configuration,
 		IEmailGenerator htmlMailBodyGenerator,
-		ILogger<StupidEmailService> logger
+		ILogger<SmtpEmailService> logger
 		)
 	{
 		this.configuration = configuration;
@@ -21,12 +21,11 @@ public class StupidEmailService : IEmailService
 		this.logger = logger;
 	}
 
-	public async Task SendEmailNotificationAsync(ScrapingReport scrapingReport)
+	public async Task SendEmailNotificationAsync(ScrapingReport scrapingReport, List<string> recipients)
 	{
 		var smtpSettings = configuration.GetSection("SmtpSettings");
-		var recipientEmails = configuration.GetSection("EmailSettings:Recipients").Get<List<string>>();
 
-		if (recipientEmails == null || !recipientEmails.Any())
+		if (recipients == null || !recipients.Any())
 		{
 			logger.LogWarning("Nejsou nastaveni žádní příjemci e-mailů.");
 			return;
@@ -49,7 +48,7 @@ public class StupidEmailService : IEmailService
 					Body = await htmlMailBodyGenerator.GenerateHtmlBodyAsync(scrapingReport)
 				};
 
-				foreach (var recipient in recipientEmails)
+				foreach (var recipient in recipients)
 				{
 					mailMessage.To.Add(recipient);
 				}

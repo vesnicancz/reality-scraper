@@ -2,13 +2,14 @@
 using RealityScraper.Mailing;
 using RealityScraper.Model;
 using RealityScraper.Scheduler;
+using RealityScraper.Scheduler.Configuration;
 using RealityScraper.Scraping.Model;
 using RealityScraper.Scraping.Scrapers;
 
 namespace RealityScraper.Scraping;
 
 // Hlavní služba běžící na pozadí
-public class ScraperServiceJob : IJob
+public class ScraperServiceJob : IScheduledTask
 {
 	private readonly IEnumerable<IRealityScraperService> scraperServices;
 	private readonly IEmailService emailService;
@@ -31,7 +32,7 @@ public class ScraperServiceJob : IJob
 		this.logger = logger;
 	}
 
-	public async Task ExecuteAsync(CancellationToken cancellationToken)
+	public async Task ExecuteAsync(ScrapingConfiguration configuration, CancellationToken cancellationToken)
 	{
 		// Načtení a zpracování dat
 		var report = new ScrapingReport();
@@ -42,10 +43,18 @@ public class ScraperServiceJob : IJob
 
 		var listingsToDownload = new List<Listing>();
 
-		foreach (var scraperService in scraperServices)
+		var scrapersDictionary = scraperServices.ToDictionary(i => i.ScrapersEnum);
+
+		foreach (var scraperConfiguration in configuration.Scrapers)
 		{
+			if (!scrapersDictionary.TryGetValue(scraperConfiguration.Name, out var scraperService))
+			{
+				logger.LogWarning("Scraper '{scraperName}' not found.", scraperConfiguration.Name);
+				continue;
+			}
+
 			logger.LogInformation("Spouštím scraper: {scraperName}", scraperService.SiteName);
-			var listings = await scraperService.ScrapeListingsAsync();
+			var listings = await scraperService.ScrapeListingsAsync(scraperConfiguration);
 
 			var scraperResult = new ScraperResult
 			{
@@ -115,7 +124,7 @@ public class ScraperServiceJob : IJob
 		if (report.NewListingCount > 0 || report.PriceChangedListingsCount > 0)
 		{
 			logger.LogInformation("Nalezeno {newCount} nových inzerátů a {priceChangedCount} upravených cen.", report.NewListingCount, report.PriceChangedListingsCount);
-			await emailService.SendEmailNotificationAsync(report);
+			await emailService.SendEmailNotificationAsync(report, configuration.EmailRecipients);
 		}
 		else
 		{

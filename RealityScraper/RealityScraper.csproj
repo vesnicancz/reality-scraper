@@ -35,7 +35,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="App_Data\Images\" />
+	  <Folder Include="App_Data\" />
 	</ItemGroup>
 	
 </Project>

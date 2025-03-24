@@ -2,6 +2,7 @@
 using RealityScraper.Data;
 using RealityScraper.Mailing;
 using RealityScraper.Scheduler;
+using RealityScraper.Scheduler.Configuration;
 using RealityScraper.Scraping;
 using RealityScraper.Scraping.Scrapers;
 
@@ -21,9 +22,9 @@ internal static class Program
 			{
 				services.AddHttpClient();
 
-				// Registrace služeb pro dependency injection
-				services.AddSingleton<ISchedulerRegistry, SchedulerRegistry>();
-				services.AddSingleton<IJobFactory, JobFactory>();
+				// Registrace konfigurace
+				services.Configure<SchedulerSettings>(
+					hostContext.Configuration.GetSection("SchedulerSettings"));
 
 				// registrace úloh
 				services.AddTransient<ScraperServiceJob>();

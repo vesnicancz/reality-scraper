@@ -4,5 +4,5 @@ namespace RealityScraper.Mailing;
 
 public interface IEmailService
 {
-	Task SendEmailNotificationAsync(ScrapingReport scrapingReport);
+	Task SendEmailNotificationAsync(ScrapingReport scrapingReport, List<string> recipients);
 }
