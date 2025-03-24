@@ -13,18 +13,21 @@ public class ScraperServiceJob : IJob
 	private readonly ILogger<ScraperServiceJob> logger;
 	private readonly IEnumerable<IRealityScraperService> scraperServices;
 	private readonly IEmailService emailService;
+	private readonly IImageDownloadService imageDownloadService;
 	private readonly IServiceProvider serviceProvider;
 
 	public ScraperServiceJob(
 		ILogger<ScraperServiceJob> logger,
 		IEnumerable<IRealityScraperService> scraperServices,
 		IEmailService emailService,
+		IImageDownloadService imageDownloadService,
 		IServiceProvider serviceProvider
 		)
 	{
 		this.logger = logger;
 		this.scraperServices = scraperServices;
 		this.emailService = emailService;
+		this.imageDownloadService = imageDownloadService;
 		this.serviceProvider = serviceProvider;
 	}
 
@@ -36,6 +39,8 @@ public class ScraperServiceJob : IJob
 		using var scope = serviceProvider.CreateScope();
 		var realityDbContext = scope.ServiceProvider.GetRequiredService<RealityDbContext>();
 		var listingRepository = scope.ServiceProvider.GetRequiredService<IListingRepository>();
+
+		var listingsToDownload = new List<Listing>();
 
 		foreach (var scraperService in scraperServices)
 		{
@@ -69,8 +74,8 @@ public class ScraperServiceJob : IJob
 					};
 
 					scraperResult.NewListings.Add(listing);
-
 					realityDbContext.Listings.Add(newListing);
+					listingsToDownload.Add(newListing);
 				}
 				else if (listing.Price != existingListing.Price)
 				{
@@ -106,6 +111,7 @@ public class ScraperServiceJob : IJob
 			}
 		}
 
+		// Odeslání notifikace
 		if (report.NewListingCount > 0 || report.PriceChangedListingsCount > 0)
 		{
 			logger.LogInformation("Nalezeno {newCount} nových inzerátů a {priceChangedCount} upravených cen.", report.NewListingCount, report.PriceChangedListingsCount);
@@ -118,5 +124,11 @@ public class ScraperServiceJob : IJob
 
 		// Uložení změn do databáze
 		await realityDbContext.SaveChangesAsync(cancellationToken);
+
+		// Stáhnutí obrázků
+		foreach (var listing in listingsToDownload)
+		{
+			await imageDownloadService.DownloadImageAsync(listing, cancellationToken);
+		}
 	}
 }
