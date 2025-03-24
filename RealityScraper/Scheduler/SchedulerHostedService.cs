@@ -85,11 +85,6 @@ public class SchedulerHostedService : BackgroundService
 
 			// Získání instance úlohy
 			var task = (IScheduledTask)serviceProvider.GetRequiredService(typeof(ScraperServiceJob));
-			if (task == null)
-			{
-				logger.LogWarning("Task '{Name}' not found in registry", taskInfo.Name);
-				return;
-			}
 
 			// Spuštění úlohy
 			await task.ExecuteAsync(taskInfo.ScrapingConfiguration, stoppingToken);
