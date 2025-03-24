@@ -6,8 +6,11 @@ namespace RealityScraper.Scheduler;
 public class ScheduledJob
 {
 	public IJob Job { get; }
+
 	public CronExpression CronSchedule { get; }
+
 	public string Name { get; }
+
 	public DateTime? NextRun { get; private set; }
 
 	public ScheduledJob(IJob job, CronExpression cronSchedule, string name)

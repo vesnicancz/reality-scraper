@@ -6,18 +6,19 @@ namespace RealityScraper.Mailing;
 // Služba pro odesílání e-mailů (beze změny)
 public class StupidEmailService : IEmailService
 {
-	private readonly ILogger<StupidEmailService> logger;
 	private readonly IConfiguration configuration;
 	private readonly IEmailGenerator htmlMailBodyGenerator;
+	private readonly ILogger<StupidEmailService> logger;
 
 	public StupidEmailService(
-		ILogger<StupidEmailService> logger,
 		IConfiguration configuration,
-		IEmailGenerator htmlMailBodyGenerator)
+		IEmailGenerator htmlMailBodyGenerator,
+		ILogger<StupidEmailService> logger
+		)
 	{
-		this.logger = logger;
 		this.configuration = configuration;
 		this.htmlMailBodyGenerator = htmlMailBodyGenerator;
+		this.logger = logger;
 	}
 
 	public async Task SendEmailNotificationAsync(ScrapingReport scrapingReport)

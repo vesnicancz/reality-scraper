@@ -1,5 +1,4 @@
 ﻿using OpenQA.Selenium;
-using OpenQA.Selenium.Support.Extensions;
 using RealityScraper.Scraping.Model;
 
 namespace RealityScraper.Scraping.Scrapers;
@@ -28,8 +27,6 @@ public class SRealityScraperService : IRealityScraperService
 		var listings = new List<ListingItem>();
 		var url = configuration["SRealityScraper:RealityUrl"];
 		var searchParameters = configuration.GetSection("SRealityScraper:SearchParameters").Get<Dictionary<string, string>>();
-
-		var rawListings = new List<string>();
 
 		IWebDriver driver = null;
 		try
@@ -100,9 +97,6 @@ public class SRealityScraperService : IRealityScraperService
 						if (string.IsNullOrEmpty(listingNumber)
 							|| !long.TryParse(listingNumber, out long listingId))
 						{
-							// TODO: PM - revidovat
-							rawListings.Add("-- " + innerUrl);
-							rawListings.Add("---------------------------");
 							continue;
 						}
 
@@ -110,7 +104,6 @@ public class SRealityScraperService : IRealityScraperService
 						var priceVal = element.FindElement(By.CssSelector(configuration["SRealityScraper:PriceSelector"])).Text;
 						var location = element.FindElement(By.CssSelector(configuration["SRealityScraper:LocationSelector"])).Text;
 
-						//decimal.TryParse(priceVal.Replace("Kč", "").Replace(" ", ""), out decimal price);
 						var price = ParseNullableDecimal(priceVal.Replace("Kč", "").Replace(" ", ""));
 
 						var imageUrl = string.Empty;
@@ -123,13 +116,6 @@ public class SRealityScraperService : IRealityScraperService
 						{
 							// Obrázek není povinný
 						}
-
-						rawListings.Add(innerUrl + "+" + listingNumber);
-						rawListings.Add(title);
-						rawListings.Add(priceVal);
-						rawListings.Add(location);
-						rawListings.Add(imageUrl);
-						rawListings.Add("---------------------------");
 
 						var listing = new ListingItem
 						{
@@ -147,16 +133,15 @@ public class SRealityScraperService : IRealityScraperService
 					{
 						logger.LogWarning(ex, "Chyba při zpracování inzerátu");
 
-						var screenshot = driver.TakeScreenshot();
-						screenshot.SaveAsFile("D:/temp/screenshot.png");
+						//var screenshot = driver.TakeScreenshot();
+						//screenshot.SaveAsFile("D:/temp/screenshot.png");
 
-						var html = driver.PageSource;
-						File.WriteAllText("D:/temp/page_source.html", html);
+						//var html = driver.PageSource;
+						//File.WriteAllText("D:/temp/page_source.html", html);
 					}
 				}
 
 				// načtení další strany
-				//var nextButton = driver.FindElements(By.CssSelector("button[data-e2e='show-more-btn']"));
 				var nextButton = driver.FindElements(By.CssSelector(configuration["SRealityScraper:NextPageSelector"]));
 				if (nextButton.Count > 0)
 				{
@@ -179,9 +164,6 @@ public class SRealityScraperService : IRealityScraperService
 			driver?.Quit();
 			driver?.Dispose();
 		}
-
-		rawListings.Add($"{listings.Count} items found");
-		File.WriteAllLines("d:/temp/listings.txt", rawListings);
 
 		return listings;
 	}

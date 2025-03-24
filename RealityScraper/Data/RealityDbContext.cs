@@ -8,7 +8,8 @@ public class RealityDbContext : DbContext
 {
 	public DbSet<Listing> Listings { get; set; }
 
-	public RealityDbContext(DbContextOptions<RealityDbContext> options) : base(options)
+	public RealityDbContext(DbContextOptions<RealityDbContext> options)
+		: base(options)
 	{
 		// Automatické vytvoření databáze při prvním spuštění
 		Database.EnsureCreated();

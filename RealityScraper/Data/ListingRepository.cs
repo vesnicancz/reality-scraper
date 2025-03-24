@@ -5,18 +5,23 @@ namespace RealityScraper.Data;
 
 public class ListingRepository : IListingRepository
 {
-	private readonly RealityDbContext realityDbContext;
+	private readonly DbSet<Listing> listingDbSet;
 
 	public ListingRepository(RealityDbContext realityDbContext)
 	{
-		this.realityDbContext = realityDbContext;
+		listingDbSet = realityDbContext.Set<Listing>();
 	}
 
-	public async Task<Listing> GetByExternalIdAsync(string externalId)
+	public async Task<Listing> GetByExternalIdAsync(string externalId, CancellationToken cancellationToken)
 	{
-		return await realityDbContext.Listings
+		return await listingDbSet
 			.Where(l => l.ExternalId == externalId)
 			.Include(i => i.PriceHistories)
-			.FirstOrDefaultAsync();
+			.FirstOrDefaultAsync(cancellationToken);
+	}
+
+	public async Task AddAsync(Listing listing, CancellationToken cancellationToken)
+	{
+		await listingDbSet.AddAsync(listing, cancellationToken);
 	}
 }

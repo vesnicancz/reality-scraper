@@ -10,25 +10,25 @@ namespace RealityScraper.Scraping;
 // Hlavní služba běžící na pozadí
 public class ScraperServiceJob : IJob
 {
-	private readonly ILogger<ScraperServiceJob> logger;
 	private readonly IEnumerable<IRealityScraperService> scraperServices;
 	private readonly IEmailService emailService;
 	private readonly IImageDownloadService imageDownloadService;
 	private readonly IServiceProvider serviceProvider;
+	private readonly ILogger<ScraperServiceJob> logger;
 
 	public ScraperServiceJob(
-		ILogger<ScraperServiceJob> logger,
 		IEnumerable<IRealityScraperService> scraperServices,
 		IEmailService emailService,
 		IImageDownloadService imageDownloadService,
-		IServiceProvider serviceProvider
+		IServiceProvider serviceProvider,
+		ILogger<ScraperServiceJob> logger
 		)
 	{
-		this.logger = logger;
 		this.scraperServices = scraperServices;
 		this.emailService = emailService;
 		this.imageDownloadService = imageDownloadService;
 		this.serviceProvider = serviceProvider;
+		this.logger = logger;
 	}
 
 	public async Task ExecuteAsync(CancellationToken cancellationToken)
@@ -37,8 +37,8 @@ public class ScraperServiceJob : IJob
 		var report = new ScrapingReport();
 
 		using var scope = serviceProvider.CreateScope();
-		var realityDbContext = scope.ServiceProvider.GetRequiredService<RealityDbContext>();
 		var listingRepository = scope.ServiceProvider.GetRequiredService<IListingRepository>();
+		var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
 		var listingsToDownload = new List<Listing>();
 
@@ -56,7 +56,7 @@ public class ScraperServiceJob : IJob
 
 			foreach (var listing in listings)
 			{
-				var existingListing = await listingRepository.GetByExternalIdAsync(listing.ExternalId);
+				var existingListing = await listingRepository.GetByExternalIdAsync(listing.ExternalId, cancellationToken);
 				if (existingListing == null)
 				{
 					// Nový inzerát
@@ -74,7 +74,7 @@ public class ScraperServiceJob : IJob
 					};
 
 					scraperResult.NewListings.Add(listing);
-					realityDbContext.Listings.Add(newListing);
+					await listingRepository.AddAsync(newListing, cancellationToken);
 					listingsToDownload.Add(newListing);
 				}
 				else if (listing.Price != existingListing.Price)
@@ -123,7 +123,7 @@ public class ScraperServiceJob : IJob
 		}
 
 		// Uložení změn do databáze
-		await realityDbContext.SaveChangesAsync(cancellationToken);
+		await unitOfWork.SaveChangesAsync(cancellationToken);
 
 		// Stáhnutí obrázků
 		foreach (var listing in listingsToDownload)
