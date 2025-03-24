@@ -7,15 +7,15 @@ namespace RealityScraper.Scraping;
 // Implementace továrny pro Chrome
 public class ChromeDriverFactory : IWebDriverFactory, IDisposable
 {
-	private readonly ILogger<ChromeDriverFactory> logger;
 	private readonly IConfiguration configuration;
+	private readonly ILogger<ChromeDriverFactory> logger;
 	private readonly string driverPath;
 
-	public ChromeDriverFactory(ILogger<ChromeDriverFactory> logger, IConfiguration configuration)
+	public ChromeDriverFactory(IConfiguration configuration, ILogger<ChromeDriverFactory> logger)
 	{
-		this.logger = logger;
 		this.configuration = configuration;
-		driverPath = this.configuration.GetValue("SeleniumSettings:DriverPath", "./drivers");
+		this.logger = logger;
+		this.driverPath = this.configuration.GetValue("SeleniumSettings:DriverPath", "./drivers");
 
 		// Zajistíme, že adresář pro driver existuje
 		Directory.CreateDirectory(driverPath);
@@ -66,7 +66,7 @@ public class ChromeDriverFactory : IWebDriverFactory, IDisposable
 					seleniumHubUrl = "http://localhost:4444/wd/hub"; // Výchozí URL pro Selenium v Docker compose
 				}
 
-				logger.LogInformation("Připojuji se k Selenium hub na {SeleniumHubUrl}", seleniumHubUrl);
+				logger.LogInformation("Připojuji se k Selenium hub na {seleniumHubUrl}", seleniumHubUrl);
 				return new RemoteWebDriver(new Uri(seleniumHubUrl), options);
 			}
 			else

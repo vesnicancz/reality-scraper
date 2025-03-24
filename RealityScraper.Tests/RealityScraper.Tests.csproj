@@ -26,4 +26,10 @@
     <ProjectReference Include="..\RealityScraper\RealityScraper.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Data\" />
+    <Folder Include="Scheduler\" />
+    <Folder Include="Scraping\Scrapers\" />
+  </ItemGroup>
+
 </Project>

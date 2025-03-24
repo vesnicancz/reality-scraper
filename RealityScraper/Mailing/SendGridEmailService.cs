@@ -6,18 +6,19 @@ namespace RealityScraper.Mailing
 {
 	public class SendGridEmailService : IEmailService
 	{
-		private readonly ILogger<SendGridEmailService> logger;
 		private readonly IConfiguration configuration;
 		private readonly IEmailGenerator htmlMailBodyGenerator;
+		private readonly ILogger<SendGridEmailService> logger;
 
 		public SendGridEmailService(
-			ILogger<SendGridEmailService> logger,
 			IConfiguration configuration,
-			IEmailGenerator htmlMailBodyGenerator)
+			IEmailGenerator htmlMailBodyGenerator,
+			ILogger<SendGridEmailService> logger
+			)
 		{
-			this.logger = logger;
 			this.configuration = configuration;
 			this.htmlMailBodyGenerator = htmlMailBodyGenerator;
+			this.logger = logger;
 		}
 
 		public async Task SendEmailNotificationAsync(ScrapingReport scrapingReport)
@@ -56,11 +57,11 @@ namespace RealityScraper.Mailing
 					if (response.StatusCode == System.Net.HttpStatusCode.Accepted ||
 						response.StatusCode == System.Net.HttpStatusCode.OK)
 					{
-						logger.LogInformation($"Email sent successfully to {recipientEmail}");
+						logger.LogInformation("Email sent successfully to {recipientEmail}", recipientEmail);
 					}
 					else
 					{
-						logger.LogWarning($"Failed to send email to {recipientEmail}: {response.StatusCode}");
+						logger.LogWarning("Failed to send email to {recipientEmail}: {statusCode}", recipientEmail, response.StatusCode);
 					}
 				}
 
