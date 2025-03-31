@@ -1,5 +1,6 @@
 ﻿using RealityScraper.Application.Features.Scheduling.Configuration;
 using RealityScraper.Application.Features.Scraping.Model;
+using RealityScraper.Domain.Enums;
 
 namespace RealityScraper.Application.Features.Scraping.Scrapers;
 
