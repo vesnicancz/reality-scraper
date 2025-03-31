@@ -1,6 +1,6 @@
 ﻿using OpenQA.Selenium;
 
-namespace RealityScraper.Application.Interfaces.Scraping;
+namespace RealityScraper.Infrastructure.Utilities.Scraping;
 
 // Rozhraní pro továrnu na WebDriver
 public interface IWebDriverFactory

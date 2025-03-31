@@ -29,10 +29,6 @@ public static class DependencyInjection
 		// registrace úloh
 		services.AddTransient<ScraperServiceTask>();
 
-		// scrapers
-		services.AddTransient<IRealityScraperService, SRealityScraperService>();
-		services.AddTransient<IRealityScraperService, RealityIdnesScraperService>();
-
 		// mailing
 		services.AddTransient<IMailerService, MailerService>();
 

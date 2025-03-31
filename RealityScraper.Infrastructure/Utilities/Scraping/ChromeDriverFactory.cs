@@ -3,9 +3,8 @@ using Microsoft.Extensions.Logging;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Remote;
-using RealityScraper.Application.Interfaces.Scraping;
 
-namespace RealityScraper.Infrastructure.Utilities;
+namespace RealityScraper.Infrastructure.Utilities.Scraping;
 
 // Implementace továrny pro Chrome
 public class ChromeDriverFactory : IWebDriverFactory, IDisposable

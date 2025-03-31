@@ -3,19 +3,19 @@ using Microsoft.Extensions.Logging;
 using OpenQA.Selenium;
 using RealityScraper.Application.Features.Scheduling.Configuration;
 using RealityScraper.Application.Features.Scraping.Model;
-using RealityScraper.Application.Interfaces.Scraping;
+using RealityScraper.Application.Features.Scraping.Scrapers;
+using RealityScraper.Domain.Enums;
 
-namespace RealityScraper.Application.Features.Scraping.Scrapers;
+namespace RealityScraper.Infrastructure.Utilities.Scraping;
 
-// Služba pro scrapování dat se Selenium
-public class SRealityScraperService : IRealityScraperService
+public class RealityIdnesScraperService : IRealityScraperService
 {
-	private readonly ILogger<SRealityScraperService> logger;
+	private readonly ILogger<RealityIdnesScraperService> logger;
 	private readonly IConfiguration configuration;
 	private readonly IWebDriverFactory webDriverFactory;
 
-	public SRealityScraperService(
-		ILogger<SRealityScraperService> logger,
+	public RealityIdnesScraperService(
+		ILogger<RealityIdnesScraperService> logger,
 		IConfiguration configuration,
 		IWebDriverFactory webDriverFactory)
 	{
@@ -24,16 +24,17 @@ public class SRealityScraperService : IRealityScraperService
 		this.webDriverFactory = webDriverFactory;
 	}
 
-	public string SiteName => "SReality";
+	public string SiteName => "Reality Idnes";
 
-	public ScrapersEnum ScrapersEnum => ScrapersEnum.SReality;
+	public ScrapersEnum ScrapersEnum => ScrapersEnum.RealityIdnes;
 
 	public async Task<List<ListingItem>> ScrapeListingsAsync(ScraperConfiguration scraperConfiguration)
 	{
 		var listings = new List<ListingItem>();
 		var url = scraperConfiguration.Url;
 
-		IWebDriver? driver = null;
+		IWebDriver driver = null;
+
 		try
 		{
 			// Inicializace Selenium driveru
@@ -49,28 +50,12 @@ public class SRealityScraperService : IRealityScraperService
 			// Čekání na dokončení JavaScriptu (pokud je potřeba)
 			await Task.Delay(2000);
 
-			// Příklad přístupu k shadow DOM elementu
-			var shadowHost = driver.FindElements(By.CssSelector(".szn-cmp-dialog-container"));
-			if (shadowHost.Count > 0)
-			{
-				var shadowRoot = shadowHost.First().GetShadowRoot();
-
-				// Najít tlačítko s data-testid="cw-button-agree-with-ads"
-				var agreeButtons = shadowRoot.FindElements(By.CssSelector("button[data-testid='cw-button-agree-with-ads']"));
-
-				// Kliknout na tlačítko
-				agreeButtons.First().Click();
-
-				// Čekání na dokončení JavaScriptu (pokud je potřeba)
-				await Task.Delay(5000);
-			}
-
 			var load = true;
 
 			while (load)
 			{
 				// Získání seznamu inzerátů
-				var listingElements = driver.FindElements(By.CssSelector(configuration["SRealityScraper:ListingSelector"]));
+				var listingElements = driver.FindElements(By.CssSelector(configuration["RealityIdnesScraper:ListingSelector"]));
 				logger.LogInformation("Nalezeno {count} inzerátů na stránce.", listingElements.Count);
 
 				foreach (var element in listingElements)
@@ -78,41 +63,28 @@ public class SRealityScraperService : IRealityScraperService
 					try
 					{
 						// url inzerátu
-						string listingNumber = null;
 						var linkElement = element.FindElement(By.CssSelector("a"));
 						var innerUrl = linkElement.GetAttribute("href");
 
 						// id inzerátu
+						string listingNumber = null;
 						if (!string.IsNullOrEmpty(innerUrl))
 						{
 							var uri = new Uri(innerUrl);
-							//if (uri.Host.Equals("c.seznam.cz"))
-							//{
-							//	var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
-
-							//	uri = new Uri(new Uri(query.Get("adurl")).GetComponents(UriComponents.Scheme | UriComponents.Host | UriComponents.Path, UriFormat.Unescaped));
-							//}
-
 							listingNumber = uri.Segments.Last();
 						}
 
-						if (string.IsNullOrEmpty(listingNumber)
-							|| !long.TryParse(listingNumber, out long listingId))
-						{
-							continue;
-						}
-
-						var title = element.FindElement(By.CssSelector(configuration["SRealityScraper:TitleSelector"])).Text;
-						var priceVal = element.FindElement(By.CssSelector(configuration["SRealityScraper:PriceSelector"])).Text;
-						var location = element.FindElement(By.CssSelector(configuration["SRealityScraper:LocationSelector"])).Text;
+						var title = element.FindElement(By.CssSelector(configuration["RealityIdnesScraper:TitleSelector"])).Text;
+						var priceVal = element.FindElement(By.CssSelector(configuration["RealityIdnesScraper:PriceSelector"])).Text;
+						var location = element.FindElement(By.CssSelector(configuration["RealityIdnesScraper:LocationSelector"])).Text;
 
 						var price = ParseNullableDecimal(priceVal.Replace("Kč", "").Replace(" ", ""));
 
 						var imageUrl = string.Empty;
 						try
 						{
-							var imgElement = element.FindElement(By.CssSelector(configuration["SRealityScraper:ImageSelector"]));
-							imageUrl = imgElement.GetAttribute("src");
+							var imgElement = element.FindElement(By.CssSelector(configuration["RealityIdnesScraper:ImageSelector"]));
+							imageUrl = imgElement.GetAttribute("data-src");
 						}
 						catch
 						{
@@ -144,10 +116,12 @@ public class SRealityScraperService : IRealityScraperService
 				}
 
 				// načtení další strany
-				var nextButton = driver.FindElements(By.CssSelector(configuration["SRealityScraper:NextPageSelector"]));
+				var nextButton = driver.FindElements(By.CssSelector(configuration["RealityIdnesScraper:NextPageSelector"]));
+
 				if (nextButton.Count > 0)
 				{
-					nextButton.First().Click();
+					var nextPageLink = nextButton.First().GetAttribute("href");
+					driver.Navigate().GoToUrl(nextPageLink);
 					await Task.Delay(5000);
 				}
 				else
