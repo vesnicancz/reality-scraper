@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Remote;
+using RealityScraper.Application.Interfaces.Scraping;
 
 namespace RealityScraper.Application.Features.Scraping;
 

@@ -37,10 +37,6 @@ public static class DependencyInjection
 		services.AddTransient<IEmailGenerator, RazorEmailGenerator>();
 		//services.AddTransient<IEmailGenerator, HtmlEmailGenerator>();
 
-		// tools
-		services.AddTransient<IImageDownloadService, ImageDownloadService>();
-		services.AddSingleton<IWebDriverFactory, ChromeDriverFactory>();
-
 		return services;
 	}
 }

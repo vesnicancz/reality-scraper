@@ -1,6 +1,6 @@
 ﻿using RealityScraper.Domain.Entities.Realty;
 
-namespace RealityScraper.Application.Features.Scraping;
+namespace RealityScraper.Application.Interfaces.Scraping;
 
 public interface IImageDownloadService
 {

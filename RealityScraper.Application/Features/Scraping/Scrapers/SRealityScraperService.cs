@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using OpenQA.Selenium;
 using RealityScraper.Application.Features.Scheduling.Configuration;
 using RealityScraper.Application.Features.Scraping.Model;
+using RealityScraper.Application.Interfaces.Scraping;
 
 namespace RealityScraper.Application.Features.Scraping.Scrapers;
 
@@ -32,7 +33,7 @@ public class SRealityScraperService : IRealityScraperService
 		var listings = new List<ListingItem>();
 		var url = scraperConfiguration.Url;
 
-		IWebDriver driver = null;
+		IWebDriver? driver = null;
 		try
 		{
 			// Inicializace Selenium driveru
