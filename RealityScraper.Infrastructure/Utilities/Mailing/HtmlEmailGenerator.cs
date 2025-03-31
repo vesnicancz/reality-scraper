@@ -1,6 +1,7 @@
 ﻿using RealityScraper.Application.Features.Scraping.Model;
+using RealityScraper.Application.Interfaces.Mailing;
 
-namespace RealityScraper.Application.Services.Mailing;
+namespace RealityScraper.Infrastructure.Utilities.Mailing;
 
 public class HtmlEmailGenerator : IEmailGenerator
 {

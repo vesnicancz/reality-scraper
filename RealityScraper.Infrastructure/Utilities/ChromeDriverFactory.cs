@@ -5,7 +5,7 @@ using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Remote;
 using RealityScraper.Application.Interfaces.Scraping;
 
-namespace RealityScraper.Application.Features.Scraping;
+namespace RealityScraper.Infrastructure.Utilities;
 
 // Implementace továrny pro Chrome
 public class ChromeDriverFactory : IWebDriverFactory, IDisposable

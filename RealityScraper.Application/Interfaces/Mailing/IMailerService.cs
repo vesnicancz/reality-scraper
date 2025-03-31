@@ -1,6 +1,6 @@
 ﻿using RealityScraper.Application.Features.Scraping.Model;
 
-namespace RealityScraper.Application.Services.Mailing;
+namespace RealityScraper.Application.Interfaces.Mailing;
 
 public interface IMailerService
 {

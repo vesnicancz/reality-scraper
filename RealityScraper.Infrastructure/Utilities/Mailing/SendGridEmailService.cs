@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using RealityScraper.Application.Interfaces.Mailing;
-using RealityScraper.Application.Services.Mailing;
 using SendGrid;
 using SendGrid.Helpers.Mail;
 

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using RealityScraper.Application.Features.Scraping;
 using RealityScraper.Application.Features.Scraping.Scrapers;
+using RealityScraper.Application.Interfaces.Mailing;
 using RealityScraper.Application.Services.Mailing;
 
 namespace RealityScraper.Application;
@@ -34,8 +35,6 @@ public static class DependencyInjection
 
 		// mailing
 		services.AddTransient<IMailerService, MailerService>();
-		services.AddTransient<IEmailGenerator, RazorEmailGenerator>();
-		//services.AddTransient<IEmailGenerator, HtmlEmailGenerator>();
 
 		return services;
 	}
