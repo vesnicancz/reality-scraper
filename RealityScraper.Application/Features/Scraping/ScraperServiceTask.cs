@@ -6,6 +6,7 @@ using RealityScraper.Application.Features.Scraping.Model;
 using RealityScraper.Application.Features.Scraping.Scrapers;
 using RealityScraper.Application.Interfaces;
 using RealityScraper.Application.Interfaces.Repositories.Realty;
+using RealityScraper.Application.Interfaces.Scraping;
 using RealityScraper.Application.Services.Mailing;
 using RealityScraper.Domain.Entities.Realty;
 

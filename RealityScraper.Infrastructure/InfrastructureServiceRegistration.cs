@@ -1,7 +1,9 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RealityScraper.Application.Features.Scheduling.Configuration;
+using RealityScraper.Application.Features.Scraping;
 using RealityScraper.Application.Interfaces.Mailing;
+using RealityScraper.Application.Interfaces.Scraping;
 using RealityScraper.Infrastructure.BackgroundServices.Scheduler;
 using RealityScraper.Infrastructure.Utilities.Mailing;
 
@@ -20,6 +22,9 @@ public static class InfrastructureServiceRegistration
 		// mail settings
 		services.AddTransient<IEmailService, SendGridEmailService>();
 		//services.AddTransient<IEmailService, SmtpEmailService>();
+
+		services.AddTransient<IImageDownloadService, ImageDownloadService>();
+		services.AddTransient<IWebDriverFactory, ChromeDriverFactory>();
 
 		services.AddHostedService<SchedulerHostedService>();
 
