@@ -1,6 +1,7 @@
 ﻿using RealityScraper.Application.Features.Scraping.Model;
+using RealityScraper.Application.Interfaces.Mailing;
 
-namespace RealityScraper.Application.Services.Mailing;
+namespace RealityScraper.Infrastructure.Utilities.Mailing;
 
 public class RazorEmailGenerator : IEmailGenerator
 {
@@ -10,7 +11,7 @@ public class RazorEmailGenerator : IEmailGenerator
 	public RazorEmailGenerator()
 	{
 		razorEngine = new RazorEngineCore.RazorEngine();
-		templateDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Services", "Mailing", "Templates");
+		templateDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Utilities", "Mailing", "Templates");
 	}
 
 	public async Task<string> GenerateHtmlBodyAsync(ScrapingReport scrapingReport, CancellationToken cancellationToken)
