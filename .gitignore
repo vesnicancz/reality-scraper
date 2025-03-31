@@ -400,7 +400,7 @@ FodyWeavers.xsd
 *.sln.iml
 
 # Custom ignores
-/RealityScraper/appsettings.development.json
-/RealityScraper/appsettings.production.json
-/RealityScraper/App_Data
+/**/appsettings.development.json
+/**/appsettings.production.json
+/**/App_Data
 /**/Properties/launchSettings.json
