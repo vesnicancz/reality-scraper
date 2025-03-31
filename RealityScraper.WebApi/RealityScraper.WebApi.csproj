@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableSdkContainerDebugging>True</EnableSdkContainerDebugging>
+    <ContainerBaseImage>mcr.microsoft.com/dotnet/aspnet:9.0</ContainerBaseImage>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="App_Data\" />
+    <Folder Include="Controllers\" />
+    <Folder Include="Middleware\" />
+    <Folder Include="Extensions\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RealityScraper.Application\RealityScraper.Application.csproj" />
+    <ProjectReference Include="..\RealityScraper.Domain\RealityScraper.Domain.csproj" />
+    <ProjectReference Include="..\RealityScraper.Infrastructure\RealityScraper.Infrastructure.csproj" />
+    <ProjectReference Include="..\RealityScraper.Persistence\RealityScraper.Persistence.csproj" />
+  </ItemGroup>
+
+</Project>
