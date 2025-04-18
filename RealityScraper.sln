@@ -3,19 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.14.35906.104
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_Solution items", "_Solution items", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
-	ProjectSection(SolutionItems) = preProject
-		.dockerignore = .dockerignore
-		.editorconfig = .editorconfig
-		.gitignore = .gitignore
-		Dockerfile = Dockerfile
-		LICENSE = LICENSE
-		README.md = README.md
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Github actions", "Github actions", "{DE257424-EE9C-49EE-B2AB-87302E8C203A}"
-	ProjectSection(SolutionItems) = preProject
-		.github\workflows\dotnet.yml = .github\workflows\dotnet.yml
-	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RealityScraper.Client", "RealityScraper.Client\RealityScraper.Client.csproj", "{89362E60-E8D7-44F3-8634-9189BBC5F537}"
 EndProject
@@ -102,7 +89,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{DE257424-EE9C-49EE-B2AB-87302E8C203A} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{89362E60-E8D7-44F3-8634-9189BBC5F537} = {A717D115-F861-4A8F-86B9-FECBBBB785CF}
 		{46199709-0F04-4F72-B868-E0B7309CCBDC} = {52C18A51-747A-4672-8D5D-9D16FC9DDDE5}
 		{301B688A-DDDC-42ED-B436-5CCD547B9724} = {52C18A51-747A-4672-8D5D-9D16FC9DDDE5}
