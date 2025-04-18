@@ -1,7 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using RealityScraper.Application.Features.Scheduling;
-using RealityScraper.Application.Features.Scheduling.Configuration;
+using RealityScraper.Application.Features.Scraping.Configuration;
 using RealityScraper.Application.Features.Scraping.Model;
 using RealityScraper.Application.Features.Scraping.Scrapers;
 using RealityScraper.Application.Interfaces;
@@ -18,21 +17,24 @@ public class ScraperServiceTask : IScheduledTask
 	private readonly IEnumerable<IRealityScraperService> scraperServices;
 	private readonly IMailerService mailerService;
 	private readonly IImageDownloadService imageDownloadService;
-	private readonly IServiceProvider serviceProvider;
+	private readonly IListingRepository listingRepository;
+	private readonly IUnitOfWork unitOfWork;
 	private readonly ILogger<ScraperServiceTask> logger;
 
 	public ScraperServiceTask(
 		IEnumerable<IRealityScraperService> scraperServices,
 		IMailerService mailerService,
 		IImageDownloadService imageDownloadService,
-		IServiceProvider serviceProvider,
+		IListingRepository listingRepository,
+		IUnitOfWork unitOfWork,
 		ILogger<ScraperServiceTask> logger
 		)
 	{
 		this.scraperServices = scraperServices;
 		this.mailerService = mailerService;
 		this.imageDownloadService = imageDownloadService;
-		this.serviceProvider = serviceProvider;
+		this.listingRepository = listingRepository;
+		this.unitOfWork = unitOfWork;
 		this.logger = logger;
 	}
 
@@ -41,13 +43,11 @@ public class ScraperServiceTask : IScheduledTask
 		// Načtení a zpracování dat
 		var report = new ScrapingReport();
 
-		using var scope = serviceProvider.CreateScope();
-		var listingRepository = scope.ServiceProvider.GetRequiredService<IListingRepository>();
-		var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-
 		var listingsToDownload = new List<Listing>();
 
 		var scrapersDictionary = scraperServices.ToDictionary(i => i.ScrapersEnum);
+
+		var newListings = new HashSet<Tuple<Guid, string>>();
 
 		foreach (var scraperConfiguration in configuration.Scrapers)
 		{
@@ -69,9 +69,16 @@ public class ScraperServiceTask : IScheduledTask
 
 			foreach (var listing in listings)
 			{
-				var existingListing = await listingRepository.GetByExternalIdAsync(listing.ExternalId, cancellationToken);
+				var existingListing = await listingRepository.GetByExternalIdAsync(configuration.Id, listing.ExternalId, cancellationToken);
 				if (existingListing == null)
 				{
+					// Kontrola duplicitního inzerátu
+					var newListingKey = Tuple.Create(configuration.Id, listing.ExternalId);
+					if (newListings.Contains(newListingKey))
+					{
+						continue;
+					}
+
 					// Nový inzerát
 					var newListing = new Listing
 					{
@@ -80,6 +87,7 @@ public class ScraperServiceTask : IScheduledTask
 						Location = listing.Location,
 						Url = listing.Url,
 						ImageUrl = listing.ImageUrl,
+						ScraperTaskId = configuration.Id,
 						ExternalId = listing.ExternalId,
 						CreatedAt = DateTime.UtcNow,
 						LastSeenAt = DateTime.UtcNow,
@@ -89,6 +97,7 @@ public class ScraperServiceTask : IScheduledTask
 					scraperResult.NewListings.Add(listing);
 					await listingRepository.AddAsync(newListing, cancellationToken);
 					listingsToDownload.Add(newListing);
+					newListings.Add(newListingKey);
 				}
 				else if (listing.Price != existingListing.Price)
 				{

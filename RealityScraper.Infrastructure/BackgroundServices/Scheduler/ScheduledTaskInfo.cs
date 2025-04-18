@@ -1,10 +1,12 @@
 ﻿using Cronos;
-using RealityScraper.Application.Features.Scheduling.Configuration;
+using RealityScraper.Application.Features.Scraping.Configuration;
 
 namespace RealityScraper.Infrastructure.BackgroundServices.Scheduler;
 
 public class ScheduledTaskInfo
 {
+	public string Id { get; set; } // ID úlohy v databázi
+
 	public string Name { get; set; }
 
 	public CronExpression CronExpression { get; set; }

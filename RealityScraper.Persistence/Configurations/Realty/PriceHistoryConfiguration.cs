@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using RealityScraper.Domain.Entities.Realty;
 
-namespace RealityScraper.Persistence.Configurations;
+namespace RealityScraper.Persistence.Configurations.Realty;
 
 public class PriceHistoryConfiguration : IEntityTypeConfiguration<PriceHistory>
 {

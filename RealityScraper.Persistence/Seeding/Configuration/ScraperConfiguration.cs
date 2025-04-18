@@ -1,6 +1,6 @@
 ﻿using RealityScraper.Domain.Enums;
 
-namespace RealityScraper.Application.Features.Scheduling.Configuration;
+namespace RealityScraper.Persistence.Seeding.Configuration;
 
 public class ScraperConfiguration
 {
