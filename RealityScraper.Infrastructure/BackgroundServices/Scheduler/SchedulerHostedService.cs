@@ -14,55 +14,20 @@ namespace RealityScraper.Infrastructure.BackgroundServices.Scheduler;
 public class SchedulerHostedService : BackgroundService
 {
 	private readonly IServiceScopeFactory serviceScopeFactory;
-
-	//private readonly List<IConfigurationLoader> configurationLoaders;
 	private readonly ILogger<SchedulerHostedService> logger;
 
 	private readonly List<ScheduledTaskInfo> scheduledTasks = new List<ScheduledTaskInfo>();
 	private readonly TimeSpan taskRunTimeSpan = TimeSpan.FromSeconds(15);
-	private DateTime lastDbCheckTime = DateTime.MinValue;
 	private readonly TimeSpan dbRefreshInterval = TimeSpan.FromMinutes(5); // Interval obnovení úloh z DB
+	private DateTime lastDbCheckTime = DateTime.MinValue;
 
 	public SchedulerHostedService(
 		IServiceScopeFactory serviceScopeFactory,
-		//List<IConfigurationLoader> configurationLoaders,
 		ILogger<SchedulerHostedService> logger)
 	{
 		this.serviceScopeFactory = serviceScopeFactory;
-		//this.configurationLoaders = configurationLoaders;
 		this.logger = logger;
-
-		// Inicializace plánovaných úloh
-		//InitializeScheduledTasks();
 	}
-
-	//private void InitializeScheduledTasks()
-	//{
-	//	var configurationLoader = configurationLoaders.First();
-	//	var settings = configurationLoader.LoadConfigurationAsync(CancellationToken.None).GetAwaiter().GetResult();
-
-	//	foreach (var taskConfig in settings.Where(t => t.Enabled))
-	//	{
-	//		try
-	//		{
-	//			var cronExpression = CronExpression.Parse(taskConfig.CronExpression);
-
-	//			scheduledTasks.Add(new ScheduledTaskInfo
-	//			{
-	//				Name = taskConfig.Name,
-	//				CronExpression = cronExpression,
-	//				ScrapingConfiguration = taskConfig.ScrapingConfiguration,
-	//				NextRunTime = cronExpression.GetNextOccurrence(DateTime.UtcNow, TimeZoneInfo.Local)
-	//			});
-
-	//			logger.LogInformation("Task '{Name}' scheduled with cron expression '{CronExpression}'", taskConfig.Name, taskConfig.CronExpression);
-	//		}
-	//		catch (Exception ex)
-	//		{
-	//			logger.LogError(ex, "Failed to schedule task '{Name}' with cron expression '{CronExpression}'", taskConfig.Name, taskConfig.CronExpression);
-	//		}
-	//	}
-	//}
 
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 	{
@@ -218,8 +183,9 @@ public class SchedulerHostedService : BackgroundService
 				var taskRepository = scope.ServiceProvider.GetRequiredService<IScraperTaskRepository>();
 				var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
-				await taskRepository.UpdateLastRunTimeAsync(Guid.Parse(taskInfo.Id), DateTime.UtcNow, stoppingToken);
-				await taskRepository.UpdateNextRunTimeAsync(Guid.Parse(taskInfo.Id), taskInfo.NextRunTime, stoppingToken);
+				var taskId = Guid.Parse(taskInfo.Id);
+				await taskRepository.UpdateLastRunTimeAsync(taskId, DateTime.UtcNow, stoppingToken);
+				await taskRepository.UpdateNextRunTimeAsync(taskId, taskInfo.NextRunTime, stoppingToken);
 
 				await unitOfWork.SaveChangesAsync(stoppingToken);
 			}
