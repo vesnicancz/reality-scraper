@@ -14,6 +14,11 @@ public class ImageDownloadService : IImageDownloadService
 
 	public async Task DownloadImageAsync(Listing listing, CancellationToken cancellationToken)
 	{
+		if (string.IsNullOrEmpty(listing.ImageUrl))
+		{
+			return;
+		}
+
 		var imageUri = new Uri(listing.ImageUrl);
 		using var httpClient = httpClientFactory.CreateClient();
 		httpClient.BaseAddress = imageUri;

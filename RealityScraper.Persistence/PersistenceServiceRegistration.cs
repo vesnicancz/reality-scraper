@@ -3,9 +3,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RealityScraper.Application.Interfaces;
 using RealityScraper.Application.Interfaces.Repositories;
+using RealityScraper.Application.Interfaces.Repositories.Configuration;
 using RealityScraper.Application.Interfaces.Repositories.Realty;
 using RealityScraper.Persistence.Contexts;
 using RealityScraper.Persistence.Repositories;
+using RealityScraper.Persistence.Repositories.Configuration;
 using RealityScraper.Persistence.Repositories.Realty;
 
 namespace RealityScraper.Persistence;
@@ -30,7 +32,12 @@ public static class PersistenceServiceRegistration
 
 		// Registrace repozitářů
 		services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+
+		// Realitní repozitáře
 		services.AddScoped<IListingRepository, ListingRepository>();
+
+		// Konfigurační repozitáře
+		services.AddScoped<IScraperTaskRepository, ScraperTaskRepository>();
 
 		return services;
 	}

@@ -22,5 +22,7 @@ public class Listing : BaseEntity
 
 	public DateTime PriceFrom { get; set; }
 
+	public Guid? ScraperTaskId { get; set; }
+
 	public List<PriceHistory> PriceHistories { get; set; } = new List<PriceHistory>();
 }

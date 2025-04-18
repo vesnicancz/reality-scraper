@@ -5,5 +5,5 @@ namespace RealityScraper.Application.Interfaces.Repositories.Realty;
 public interface IListingRepository
 	: IRepository<Listing>
 {
-	Task<Listing?> GetByExternalIdAsync(string externalId, CancellationToken cancellationToken);
+	Task<Listing?> GetByExternalIdAsync(Guid scraperTaskId, string externalId, CancellationToken cancellationToken);
 }

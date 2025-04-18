@@ -7,13 +7,13 @@ namespace RealityScraper.Persistence.Repositories.Realty;
 
 public class ListingRepository : Repository<Listing>, IListingRepository
 {
-	public ListingRepository(RealityDbContext dbContext)
+	public ListingRepository(IDbContext dbContext)
 		: base(dbContext)
 	{
 	}
 
-	public Task<Listing?> GetByExternalIdAsync(string externalId, CancellationToken cancellationToken)
+	public Task<Listing?> GetByExternalIdAsync(Guid scraperTaskId, string externalId, CancellationToken cancellationToken)
 	{
-		return dbContext.Set<Listing>().FirstOrDefaultAsync(x => x.ExternalId == externalId, cancellationToken);
+		return dbContext.Set<Listing>().FirstOrDefaultAsync(x => x.ScraperTaskId == scraperTaskId && x.ExternalId == externalId, cancellationToken);
 	}
 }

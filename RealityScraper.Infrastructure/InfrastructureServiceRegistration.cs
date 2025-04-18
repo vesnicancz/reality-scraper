@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using RealityScraper.Application.Features.Scheduling.Configuration;
 using RealityScraper.Application.Features.Scraping.Scrapers;
 using RealityScraper.Application.Interfaces.Mailing;
 using RealityScraper.Application.Interfaces.Scraping;
@@ -19,7 +18,7 @@ public static class InfrastructureServiceRegistration
 	{
 		services.AddHttpClient();
 
-		services.Configure<SchedulerSettings>(configuration.GetSection("SchedulerSettings"));
+		//services.Configure<SchedulerSettings>(configuration.GetSection("SchedulerSettings"));
 
 		// mail settings
 		services.AddTransient<IEmailService, SendGridEmailService>();

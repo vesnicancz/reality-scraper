@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OpenQA.Selenium;
-using RealityScraper.Application.Features.Scheduling.Configuration;
+using RealityScraper.Application.Features.Scraping.Configuration;
 using RealityScraper.Application.Features.Scraping.Model;
 using RealityScraper.Application.Features.Scraping.Scrapers;
 using RealityScraper.Domain.Enums;

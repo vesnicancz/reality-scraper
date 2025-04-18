@@ -1,12 +1,13 @@
 ﻿using RealityScraper.Application;
 using RealityScraper.Infrastructure;
 using RealityScraper.Persistence;
+using RealityScraper.Persistence.Seeding;
 
 namespace RealityScraper.WebApi;
 
 public static class Program
 {
-	public static void Main(string[] args)
+	public static async Task Main(string[] args)
 	{
 		var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +24,8 @@ public static class Program
 
 		var app = builder.Build();
 
+		await DbSeeder.SeedTasksFromConfigurationAsync(app);
+
 		// Configure the HTTP request pipeline.
 		if (!app.Environment.IsDevelopment())
 		{
@@ -36,6 +39,7 @@ public static class Program
 		app.MapStaticAssets();
 		app.MapRazorPages()
 		   .WithStaticAssets();
+		app.MapControllers();
 
 		app.Run();
 	}
