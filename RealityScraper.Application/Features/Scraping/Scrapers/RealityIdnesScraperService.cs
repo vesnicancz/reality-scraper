@@ -3,11 +3,10 @@ using Microsoft.Extensions.Options;
 using RealityScraper.Application.Configuration;
 using RealityScraper.Application.Features.Scraping.Configuration;
 using RealityScraper.Application.Features.Scraping.Model;
-using RealityScraper.Application.Features.Scraping.Scrapers;
 using RealityScraper.Application.Interfaces.Scraping;
 using RealityScraper.Domain.Enums;
 
-namespace RealityScraper.Infrastructure.Utilities.Scraping;
+namespace RealityScraper.Application.Features.Scraping.Scrapers;
 
 public class RealityIdnesScraperService : IRealityScraperService
 {
@@ -79,7 +78,7 @@ public class RealityIdnesScraperService : IRealityScraperService
 						}
 
 						//var title = element.FindElement(By.CssSelector(configuration["RealityIdnesScraper:TitleSelector"])).Text;
-						var titleElement = (await element.FindElementAsync(options.TitleSelector, cancellationToken));
+						var titleElement = await element.FindElementAsync(options.TitleSelector, cancellationToken);
 						var title = await titleElement.GetTextAsync(cancellationToken);
 
 						//var priceVal = element.FindElement(By.CssSelector(configuration["RealityIdnesScraper:PriceSelector"])).Text;

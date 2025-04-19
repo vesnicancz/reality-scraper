@@ -2,11 +2,11 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using RealityScraper.Application.Features.Scheduling;
 using RealityScraper.Application.Features.Scraping;
 using RealityScraper.Application.Features.Scraping.Configuration;
 using RealityScraper.Application.Interfaces;
 using RealityScraper.Application.Interfaces.Repositories.Configuration;
+using RealityScraper.Application.Interfaces.Scheduler;
 using RealityScraper.Domain.Entities.Configuration;
 
 namespace RealityScraper.Infrastructure.BackgroundServices.Scheduler;
