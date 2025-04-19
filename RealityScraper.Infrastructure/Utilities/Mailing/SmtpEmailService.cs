@@ -52,7 +52,7 @@ public class SmtpEmailService : IEmailService
 				}
 
 				await client.SendMailAsync(mailMessage, cancellationToken);
-				logger.LogInformation("E-mail s novými nabídkami byl úspěšně odeslán.");
+				logger.LogTrace("E-mail s novými nabídkami byl úspěšně odeslán.");
 			}
 		}
 		catch (Exception ex)

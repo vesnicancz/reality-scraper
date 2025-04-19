@@ -1,25 +1,28 @@
-﻿using RealityScraper.Application.Features.Scraping.Model;
+﻿using Microsoft.Extensions.Logging;
+using RazorEngineCore;
+using RealityScraper.Application.Features.Scraping.Model;
 using RealityScraper.Application.Interfaces.Mailing;
 
 namespace RealityScraper.Infrastructure.Utilities.Mailing;
 
 public class RazorEmailGenerator : IEmailGenerator
 {
-	private readonly RazorEngineCore.RazorEngine razorEngine;
-	private readonly string templateDirectory;
+	private const string TemplateFileName = "ListingReport.cshtml";
 
-	public RazorEmailGenerator()
+	private readonly IRazorEngine razorEngine;
+	private readonly ILogger<RazorEmailGenerator> logger;
+
+	public RazorEmailGenerator(IRazorEngine razorEngine, ILogger<RazorEmailGenerator> logger)
 	{
-		razorEngine = new RazorEngineCore.RazorEngine();
-		templateDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Utilities", "Mailing", "Templates");
+		this.razorEngine = razorEngine;
+		this.logger = logger;
 	}
 
 	public async Task<string> GenerateHtmlBodyAsync(ScrapingReport scrapingReport, CancellationToken cancellationToken)
 	{
-		var templateFileName = "ListingReport.cshtml";
-
 		// Načtení šablony ze souboru
-		string templatePath = Path.Combine(templateDirectory, templateFileName);
+		string templatePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Utilities", "Mailing", "Templates", TemplateFileName);
+		logger.LogTrace("Loading template from {TemplatePath}", templatePath);
 		string templateContent = await File.ReadAllTextAsync(templatePath, cancellationToken);
 
 		// Kompilace šablony

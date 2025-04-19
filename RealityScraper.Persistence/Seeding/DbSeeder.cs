@@ -36,7 +36,7 @@ public static class DbSeeder
 		// Kontrola, zda jsou v databázi již nějaké úlohy
 		if (await context.Set<ScraperTask>().AnyAsync())
 		{
-			logger.LogInformation("Tasks already exist in the database. Skipping seeding.");
+			logger.LogTrace("Tasks already exist in the database. Skipping seeding.");
 			return;
 		}
 
@@ -44,7 +44,7 @@ public static class DbSeeder
 		var schedulerSettings = configuration.GetSection("SchedulerSettings").Get<SchedulerSettings>();
 		if (schedulerSettings?.Tasks == null || !schedulerSettings.Tasks.Any())
 		{
-			logger.LogInformation("No tasks found in configuration. Skipping seeding.");
+			logger.LogTrace("No tasks found in configuration. Skipping seeding.");
 			return;
 		}
 
@@ -78,6 +78,6 @@ public static class DbSeeder
 		await context.Set<ScraperTask>().AddRangeAsync(tasks);
 		await context.SaveChangesAsync();
 
-		logger.LogInformation("Successfully seeded {count} tasks from configuration.", tasks.Count);
+		logger.LogTrace("Successfully seeded {count} tasks from configuration.", tasks.Count);
 	}
 }

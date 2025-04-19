@@ -51,7 +51,7 @@ public class SendGridEmailService : IEmailService
 				if (response.StatusCode == System.Net.HttpStatusCode.Accepted ||
 					response.StatusCode == System.Net.HttpStatusCode.OK)
 				{
-					logger.LogInformation("Email sent successfully to {recipientEmail}", recipientEmail);
+					logger.LogTrace("Email sent successfully to {recipientEmail}", recipientEmail);
 				}
 				else
 				{
@@ -59,7 +59,7 @@ public class SendGridEmailService : IEmailService
 				}
 			}
 
-			logger.LogInformation("E-mail s novými nabídkami byl úspěšně odeslán.");
+			logger.LogTrace("E-mail s novými nabídkami byl úspěšně odeslán.");
 		}
 		catch (Exception ex)
 		{

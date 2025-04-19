@@ -5,12 +5,12 @@ public interface IWebDriver : IDisposable
 	/// <summary>
 	/// Přejde na zadanou URL
 	/// </summary>
-	Task NavigateToUrlAsync(string? url, CancellationToken cancellationToken);
+	Task NavigateToUrlAsync(string url, CancellationToken cancellationToken);
 
 	/// <summary>
 	/// Najde první element odpovídající selektoru
 	/// </summary>
-	Task<IWebDriverElement> FindElementAsync(string cssSelector, CancellationToken cancellationToken);
+	Task<IWebDriverElement?> FindElementAsync(string cssSelector, CancellationToken cancellationToken);
 
 	/// <summary>
 	/// Najde všechny elementy odpovídající selektoru
@@ -26,9 +26,4 @@ public interface IWebDriver : IDisposable
 	/// Získá zdrojový kód stránky
 	/// </summary>
 	Task<string> GetPageSourceAsync();
-
-	/// <summary>
-	/// Přistoupí k elementům v shadow DOM
-	/// </summary>
-	Task<IWebDriverElement> GetShadowRootAsync(IWebDriverElement element);
 }

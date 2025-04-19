@@ -1,4 +1,5 @@
-﻿using RealityScraper.Application.Interfaces.Scraping;
+﻿using Microsoft.Extensions.Logging;
+using RealityScraper.Application.Interfaces.Scraping;
 using RealityScraper.Domain.Entities.Realty;
 
 namespace RealityScraper.Infrastructure.Utilities;
@@ -6,10 +7,15 @@ namespace RealityScraper.Infrastructure.Utilities;
 public class ImageDownloadService : IImageDownloadService
 {
 	private readonly IHttpClientFactory httpClientFactory;
+	private readonly ILogger<ImageDownloadService> logger;
 
-	public ImageDownloadService(IHttpClientFactory httpClientFactory)
+	public ImageDownloadService(
+		IHttpClientFactory httpClientFactory,
+		ILogger<ImageDownloadService> logger
+		)
 	{
 		this.httpClientFactory = httpClientFactory;
+		this.logger = logger;
 	}
 
 	public async Task DownloadImageAsync(Listing listing, CancellationToken cancellationToken)
@@ -18,6 +24,8 @@ public class ImageDownloadService : IImageDownloadService
 		{
 			return;
 		}
+
+		logger.LogTrace("Downloading image for listing {ListingId} from {ImageUrl}", listing.Id, listing.ImageUrl);
 
 		var imageUri = new Uri(listing.ImageUrl);
 		using var httpClient = httpClientFactory.CreateClient();

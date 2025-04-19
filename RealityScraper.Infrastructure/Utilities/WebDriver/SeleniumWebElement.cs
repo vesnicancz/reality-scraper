@@ -8,7 +8,10 @@ public class SeleniumWebElement : IWebDriverElement
 	private readonly OpenQA.Selenium.IWebDriver webDriver;
 	private readonly IWebElement seleniumElement;
 
-	public SeleniumWebElement(OpenQA.Selenium.IWebDriver webDriver, IWebElement seleniumElement)
+	public SeleniumWebElement(
+		OpenQA.Selenium.IWebDriver webDriver,
+		IWebElement seleniumElement
+		)
 	{
 		this.webDriver = webDriver;
 		this.seleniumElement = seleniumElement;
@@ -19,7 +22,7 @@ public class SeleniumWebElement : IWebDriverElement
 		return Task.FromResult(seleniumElement.GetAttribute(attributeName));
 	}
 
-	public Task<string?> GetTextAsync(CancellationToken cancellationToken)
+	public Task<string> GetTextAsync(CancellationToken cancellationToken)
 	{
 		return Task.FromResult(seleniumElement.Text);
 	}
@@ -45,10 +48,10 @@ public class SeleniumWebElement : IWebDriverElement
 		return Task.FromResult(elements);
 	}
 
-	public Task<IWebDriverShadowRoot> GetShadowRootAsync(CancellationToken cancellationToken)
+	public Task<IWebDriverShadowRoot?> GetShadowRootAsync(CancellationToken cancellationToken)
 	{
 		var shadowRoot = seleniumElement.GetShadowRoot();
 		var result = new SeleniumShadowRoot(webDriver, shadowRoot);
-		return Task.FromResult<IWebDriverShadowRoot>(result);
+		return Task.FromResult<IWebDriverShadowRoot?>(result);
 	}
 }

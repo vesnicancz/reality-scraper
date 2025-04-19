@@ -66,7 +66,7 @@ public class SeleniumChromeDriverFactory : IWebDriverFactory
 			if (useRemoteDriver)
 			{
 				var seleniumHubUrl = options.SeleniumHubUrl;
-				logger.LogInformation("Připojuji se k Selenium hub na {seleniumHubUrl}", seleniumHubUrl);
+				logger.LogDebug("Připojuji se k Selenium hub na {seleniumHubUrl}", seleniumHubUrl);
 				driver = new RemoteWebDriver(new Uri(seleniumHubUrl), chromeOptions);
 			}
 			else
@@ -79,7 +79,7 @@ public class SeleniumChromeDriverFactory : IWebDriverFactory
 				service.HideCommandPromptWindow = true;
 
 				// Create the driver
-				logger.LogInformation("Vytvářím Chrome driver na {driverPath}", options.DriverPath);
+				logger.LogDebug("Vytvářím Chrome driver na {driverPath}", options.DriverPath);
 				driver = new ChromeDriver(service, chromeOptions);
 			}
 

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using RazorEngineCore;
 using RealityScraper.Application.Interfaces.Mailing;
 using RealityScraper.Application.Interfaces.Scraping;
 using RealityScraper.Infrastructure.BackgroundServices.Scheduler;
@@ -27,6 +28,7 @@ public static class InfrastructureServiceRegistration
 		services.AddTransient<IEmailService, SendGridEmailService>();
 		//services.AddTransient<IEmailService, SmtpEmailService>();
 
+		services.AddTransient<IRazorEngine, RazorEngine>();
 		services.AddTransient<IEmailGenerator, RazorEmailGenerator>();
 		//services.AddTransient<IEmailGenerator, HtmlEmailGenerator>();
 

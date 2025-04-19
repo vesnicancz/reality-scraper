@@ -10,7 +10,7 @@ public interface IWebDriverElement
 	/// <summary>
 	/// Získá textový obsah elementu.
 	/// </summary>
-	Task<string?> GetTextAsync(CancellationToken cancellationToken);
+	Task<string> GetTextAsync(CancellationToken cancellationToken);
 
 	/// <summary>
 	/// Klikne na element
@@ -27,5 +27,8 @@ public interface IWebDriverElement
 	/// </summary>
 	Task<IReadOnlyList<IWebDriverElement>> FindElementsAsync(string selector, CancellationToken cancellationToken);
 
-	Task<IWebDriverShadowRoot> GetShadowRootAsync(CancellationToken cancellationToken);
+	/// <summary>
+	/// Získá shadow root elementu.
+	/// </summary>
+	Task<IWebDriverShadowRoot?> GetShadowRootAsync(CancellationToken cancellationToken);
 }

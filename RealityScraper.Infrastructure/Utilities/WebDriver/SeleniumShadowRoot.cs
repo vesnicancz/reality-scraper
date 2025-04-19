@@ -8,16 +8,19 @@ public class SeleniumShadowRoot : IWebDriverShadowRoot
 	private readonly OpenQA.Selenium.IWebDriver webDriver;
 	private readonly ISearchContext seleniumElement;
 
-	public SeleniumShadowRoot(OpenQA.Selenium.IWebDriver webDriver, ISearchContext seleniumElement)
+	public SeleniumShadowRoot(
+		OpenQA.Selenium.IWebDriver webDriver,
+		ISearchContext seleniumElement
+		)
 	{
 		this.webDriver = webDriver;
 		this.seleniumElement = seleniumElement;
 	}
 
-	public Task<IWebDriverElement> FindElementAsync(string selector, CancellationToken cancellationToken)
+	public Task<IWebDriverElement?> FindElementAsync(string selector, CancellationToken cancellationToken)
 	{
 		var element = seleniumElement.FindElement(By.CssSelector(selector));
-		return Task.FromResult<IWebDriverElement>(new SeleniumWebElement(webDriver, element));
+		return Task.FromResult<IWebDriverElement?>(new SeleniumWebElement(webDriver, element));
 	}
 
 	public Task<IReadOnlyList<IWebDriverElement>> FindElementsAsync(string selector, CancellationToken cancellationToken)

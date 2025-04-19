@@ -41,7 +41,7 @@ public class SRealityScraperService : IRealityScraperService
 			driver = webDriverFactory.CreateDriver();
 
 			// Načtení stránky
-			logger.LogInformation("Načítám stránku: {url}", url);
+			logger.LogTrace("Načítám stránku: {url}", url);
 			await driver.NavigateToUrlAsync(url, cancellationToken);
 
 			// Čekání na dokončení JavaScriptu (pokud je potřeba)
