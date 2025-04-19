@@ -1,14 +1,14 @@
 ﻿using OpenQA.Selenium;
 using RealityScraper.Application.Interfaces.Scraping;
 
-namespace RealityScraper.Infrastructure.Utilities.Scraping;
+namespace RealityScraper.Infrastructure.Utilities.WebDriver;
 
 public class SeleniumWebElement : IWebDriverElement
 {
 	private readonly OpenQA.Selenium.IWebDriver webDriver;
-	private readonly OpenQA.Selenium.IWebElement seleniumElement;
+	private readonly IWebElement seleniumElement;
 
-	public SeleniumWebElement(OpenQA.Selenium.IWebDriver webDriver, OpenQA.Selenium.IWebElement seleniumElement)
+	public SeleniumWebElement(OpenQA.Selenium.IWebDriver webDriver, IWebElement seleniumElement)
 	{
 		this.webDriver = webDriver;
 		this.seleniumElement = seleniumElement;

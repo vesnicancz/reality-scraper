@@ -10,7 +10,9 @@ using RealityScraper.Domain.Entities.Realty;
 
 namespace RealityScraper.Application.Features.Scraping;
 
-// Hlavní služba běžící na pozadí
+/// <summary>
+/// Hlavní služba běžící na pozadí
+/// </summary>
 public class ScraperServiceTask : IScheduledTask
 {
 	private readonly IEnumerable<IRealityScraperService> scraperServices;
@@ -132,21 +134,32 @@ public class ScraperServiceTask : IScheduledTask
 			}
 		}
 
-		// Odeslání notifikace
-		if (report.NewListingCount > 0 || report.PriceChangedListingsCount > 0)
-		{
-			logger.LogInformation("Nalezeno {newCount} nových inzerátů a {priceChangedCount} upravených cen.", report.NewListingCount, report.PriceChangedListingsCount);
-			await mailerService.SendNewListingsAsync(report, configuration.EmailRecipients, cancellationToken);
-		}
-		else
-		{
-			logger.LogInformation("Žádné nové inzeráty nebyly nalezeny.");
-		}
+		// Odeslání notifikací
+		await SendNotificationsAsync(report, configuration.EmailRecipients, cancellationToken);
 
 		// Uložení změn do databáze
 		await unitOfWork.SaveChangesAsync(cancellationToken);
 
 		// Stáhnutí obrázků
+		await DownloadListingImagesAsync(listingsToDownload, cancellationToken);
+	}
+
+	private async Task SendNotificationsAsync(ScrapingReport report, List<string> recipients, CancellationToken cancellationToken)
+	{
+		// Odeslání notifikace
+		if (report.NewListingCount > 0 || report.PriceChangedListingsCount > 0)
+		{
+			logger.LogInformation("Nalezeno {newCount} nových inzerátů a {priceChangedCount} upravených cen.", report.NewListingCount, report.PriceChangedListingsCount);
+			await mailerService.SendNewListingsAsync(report, recipients, cancellationToken);
+		}
+		else
+		{
+			logger.LogInformation("Žádné nové inzeráty nebyly nalezeny.");
+		}
+	}
+
+	private async Task DownloadListingImagesAsync(List<Listing> listingsToDownload, CancellationToken cancellationToken)
+	{
 		foreach (var listing in listingsToDownload)
 		{
 			await imageDownloadService.DownloadImageAsync(listing, cancellationToken);

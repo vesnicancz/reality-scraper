@@ -4,7 +4,7 @@ public class SeleniumOptions
 {
 	public int PageLoadTimeoutSeconds { get; set; } = 30;
 
-	public string DriverPath { get; set; }
+	public string DriverPath { get; set; } = "./drivers";
 
 	public List<string>? BrowserArguments { get; set; }
 

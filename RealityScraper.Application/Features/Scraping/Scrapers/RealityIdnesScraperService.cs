@@ -40,12 +40,8 @@ public class RealityIdnesScraperService : IRealityScraperService
 			// Inicializace Selenium driveru
 			driver = webDriverFactory.CreateDriver();
 
-			// Nastavení timeoutu
-			//driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(30);
-
 			// Načtení stránky
 			logger.LogInformation("Načítám stránku: {url}", url);
-			//driver.Navigate().GoToUrl(url);
 			await driver.NavigateToUrlAsync(url, cancellationToken);
 
 			// Čekání na dokončení JavaScriptu (pokud je potřeba)
@@ -56,7 +52,6 @@ public class RealityIdnesScraperService : IRealityScraperService
 			while (load)
 			{
 				// Získání seznamu inzerátů
-				//var listingElements = driver.FindElements(By.CssSelector(configuration["RealityIdnesScraper:ListingSelector"]));
 				var listingElements = await driver.FindElementsAsync(options.ListingSelector, cancellationToken);
 				logger.LogInformation("Nalezeno {count} inzerátů na stránce.", listingElements.Count);
 
@@ -65,27 +60,23 @@ public class RealityIdnesScraperService : IRealityScraperService
 					try
 					{
 						// url inzerátu
-						//var linkElement = element.FindElement(By.CssSelector("a"));
-						var linkElement = await element.FindElementAsync("a", cancellationToken);
-						var innerUrl = await linkElement.GetAttributeAsync("href", cancellationToken);
+						var detailElement = await element.FindElementAsync(options.DetailLinkSelector, cancellationToken);
+						var detailUrl = await detailElement.GetAttributeAsync("href", cancellationToken);
 
 						// id inzerátu
-						string listingNumber = null;
-						if (!string.IsNullOrEmpty(innerUrl))
+						string? listingNumber = null;
+						if (!string.IsNullOrEmpty(detailUrl))
 						{
-							var uri = new Uri(innerUrl);
+							var uri = new Uri(detailUrl);
 							listingNumber = uri.Segments.Last();
 						}
 
-						//var title = element.FindElement(By.CssSelector(configuration["RealityIdnesScraper:TitleSelector"])).Text;
 						var titleElement = await element.FindElementAsync(options.TitleSelector, cancellationToken);
 						var title = await titleElement.GetTextAsync(cancellationToken);
 
-						//var priceVal = element.FindElement(By.CssSelector(configuration["RealityIdnesScraper:PriceSelector"])).Text;
 						var priceElement = await element.FindElementAsync(options.PriceSelector, cancellationToken);
 						var priceVal = await priceElement.GetTextAsync(cancellationToken);
 
-						//var location = element.FindElement(By.CssSelector(configuration["RealityIdnesScraper:LocationSelector"])).Text;
 						var locationElement = await element.FindElementAsync(options.LocationSelector, cancellationToken);
 						var location = await locationElement.GetTextAsync(cancellationToken);
 
@@ -94,7 +85,6 @@ public class RealityIdnesScraperService : IRealityScraperService
 						var imageUrl = string.Empty;
 						try
 						{
-							//var imgElement = element.FindElement(By.CssSelector(configuration["RealityIdnesScraper:ImageSelector"]));
 							var imgElement = await element.FindElementAsync(options.ImageSelector, cancellationToken);
 							imageUrl = await imgElement.GetAttributeAsync("data-src", cancellationToken);
 						}
@@ -108,7 +98,7 @@ public class RealityIdnesScraperService : IRealityScraperService
 							Title = title,
 							Price = price,
 							Location = location,
-							Url = innerUrl,
+							Url = detailUrl,
 							ImageUrl = imageUrl,
 							ExternalId = listingNumber
 						};
@@ -128,14 +118,11 @@ public class RealityIdnesScraperService : IRealityScraperService
 				}
 
 				// načtení další strany
-				//var nextButton = driver.FindElements(By.CssSelector(configuration["RealityIdnesScraper:NextPageSelector"]));
 				var nextButton = await driver.FindElementsAsync(options.NextPageSelector, cancellationToken);
-
 				if (nextButton.Count > 0)
 				{
 					var nextPageElement = nextButton.First();
 					var nextPageLink = await nextPageElement.GetAttributeAsync("href", cancellationToken);
-					//driver.Navigate().GoToUrl(nextPageLink);
 					await driver.NavigateToUrlAsync(nextPageLink, cancellationToken);
 				}
 				else

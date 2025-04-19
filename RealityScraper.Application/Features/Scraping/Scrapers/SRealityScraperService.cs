@@ -34,35 +34,28 @@ public class SRealityScraperService : IRealityScraperService
 		var listings = new List<ListingItem>();
 		var url = scraperConfiguration.Url;
 
-		//OpenQA.Selenium.IWebDriver? driver = null;
 		IWebDriver? driver = null;
 		try
 		{
 			// Inicializace Selenium driveru
 			driver = webDriverFactory.CreateDriver();
 
-			// Nastavení timeoutu
-			//driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(30);
-
 			// Načtení stránky
 			logger.LogInformation("Načítám stránku: {url}", url);
-			//driver.Navigate().GoToUrl(url);
 			await driver.NavigateToUrlAsync(url, cancellationToken);
 
 			// Čekání na dokončení JavaScriptu (pokud je potřeba)
 			await Task.Delay(2000);
 
-			// Příklad přístupu k shadow DOM elementu
-			//var shadowHost = driver.FindElements(By.CssSelector(".szn-cmp-dialog-container"));
-			var shadowHost = await driver.FindElementsAsync(".szn-cmp-dialog-container", cancellationToken);
-
+			// CPM dialog
+			var shadowHost = await driver.FindElementsAsync(options.CpmDialogContainerSelector, cancellationToken);
 			if (shadowHost.Count > 0)
 			{
+				// Získání shadow DOM
 				var shadowRoot = await shadowHost.First().GetShadowRootAsync(cancellationToken);
 
 				// Najít tlačítko s data-testid="cw-button-agree-with-ads"
-				//var agreeButtons = shadowRoot.FindElements(By.CssSelector("button[data-testid='cw-button-agree-with-ads']"));
-				var agreeButtons = await shadowRoot.FindElementsAsync("button[data-testid='cw-button-agree-with-ads']", cancellationToken);
+				var agreeButtons = await shadowRoot.FindElementsAsync(options.CpmAgreeButtonsSelector, cancellationToken);
 
 				// Kliknout na tlačítko
 				await agreeButtons.First().ClickAsync(cancellationToken);
@@ -76,7 +69,6 @@ public class SRealityScraperService : IRealityScraperService
 			while (load)
 			{
 				// Získání seznamu inzerátů
-				//var listingElements = driver.FindElements(By.CssSelector(configuration["SRealityScraper:ListingSelector"]));
 				var listingElements = await driver.FindElementsAsync(options.ListingSelector, cancellationToken);
 				logger.LogInformation("Nalezeno {count} inzerátů na stránce.", listingElements.Count);
 
@@ -86,15 +78,13 @@ public class SRealityScraperService : IRealityScraperService
 					{
 						// url inzerátu
 						string listingNumber = null;
-						//var linkElement = element.FindElement(By.CssSelector("a"));
-						var linkElement = await element.FindElementAsync("a", cancellationToken);
-
-						var innerUrl = await linkElement.GetAttributeAsync("href", cancellationToken);
+						var detailElement = await element.FindElementAsync(options.DetailLinkSelector, cancellationToken);
+						var detailUrl = await detailElement.GetAttributeAsync("href", cancellationToken);
 
 						// id inzerátu
-						if (!string.IsNullOrEmpty(innerUrl))
+						if (!string.IsNullOrEmpty(detailUrl))
 						{
-							var uri = new Uri(innerUrl);
+							var uri = new Uri(detailUrl);
 							//if (uri.Host.Equals("c.seznam.cz"))
 							//{
 							//	var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
@@ -111,15 +101,12 @@ public class SRealityScraperService : IRealityScraperService
 							continue;
 						}
 
-						//var title = element.FindElement(By.CssSelector(configuration["SRealityScraper:TitleSelector"])).Text;
 						var titleElement = await element.FindElementAsync(options.TitleSelector, cancellationToken);
 						var title = await titleElement.GetTextAsync(cancellationToken);
 
-						//var priceVal = element.FindElement(By.CssSelector(configuration["SRealityScraper:PriceSelector"])).Text;
 						var priceElement = await element.FindElementAsync(options.PriceSelector, cancellationToken);
 						var priceVal = await priceElement.GetTextAsync(cancellationToken);
 
-						//var location = element.FindElement(By.CssSelector(configuration["SRealityScraper:LocationSelector"])).Text;
 						var locationElement = await element.FindElementAsync(options.LocationSelector, cancellationToken);
 						var location = await locationElement.GetTextAsync(cancellationToken);
 
@@ -128,9 +115,7 @@ public class SRealityScraperService : IRealityScraperService
 						var imageUrl = string.Empty;
 						try
 						{
-							//var imgElement = element.FindElement(By.CssSelector(configuration["SRealityScraper:ImageSelector"]));
 							var imgElement = await element.FindElementAsync(options.ImageSelector, cancellationToken);
-
 							imageUrl = await imgElement.GetAttributeAsync("src", cancellationToken);
 						}
 						catch
@@ -143,7 +128,7 @@ public class SRealityScraperService : IRealityScraperService
 							Title = title,
 							Price = price,
 							Location = location,
-							Url = innerUrl,
+							Url = detailUrl,
 							ImageUrl = imageUrl,
 							ExternalId = listingNumber
 						};
@@ -163,7 +148,6 @@ public class SRealityScraperService : IRealityScraperService
 				}
 
 				// načtení další strany
-				//var nextButton = driver.FindElements(By.CssSelector(configuration["SRealityScraper:NextPageSelector"]));
 				var nextButton = await driver.FindElementsAsync(options.NextPageSelector, cancellationToken);
 
 				if (nextButton.Count > 0)

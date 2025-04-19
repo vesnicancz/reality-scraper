@@ -1,9 +1,9 @@
 ﻿using OpenQA.Selenium;
 using RealityScraper.Application.Interfaces.Scraping;
 
-namespace RealityScraper.Infrastructure.Utilities.Scraping;
+namespace RealityScraper.Infrastructure.Utilities.WebDriver;
 
-public class SeleniumWebDriver : RealityScraper.Application.Interfaces.Scraping.IWebDriver
+public class SeleniumWebDriver : Application.Interfaces.Scraping.IWebDriver
 {
 	private bool disposed;
 

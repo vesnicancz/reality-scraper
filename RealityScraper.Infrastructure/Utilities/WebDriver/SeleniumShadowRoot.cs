@@ -1,14 +1,14 @@
 ﻿using OpenQA.Selenium;
 using RealityScraper.Application.Interfaces.Scraping;
 
-namespace RealityScraper.Infrastructure.Utilities.Scraping;
+namespace RealityScraper.Infrastructure.Utilities.WebDriver;
 
 public class SeleniumShadowRoot : IWebDriverShadowRoot
 {
 	private readonly OpenQA.Selenium.IWebDriver webDriver;
 	private readonly ISearchContext seleniumElement;
 
-	public SeleniumShadowRoot(OpenQA.Selenium.IWebDriver webDriver, OpenQA.Selenium.ISearchContext seleniumElement)
+	public SeleniumShadowRoot(OpenQA.Selenium.IWebDriver webDriver, ISearchContext seleniumElement)
 	{
 		this.webDriver = webDriver;
 		this.seleniumElement = seleniumElement;

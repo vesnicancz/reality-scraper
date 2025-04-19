@@ -4,6 +4,8 @@ public class RealityIdnesScraperOptions
 {
 	public string ListingSelector { get; set; }
 
+	public string DetailLinkSelector { get; set; }
+
 	public string TitleSelector { get; set; }
 
 	public string PriceSelector { get; set; }

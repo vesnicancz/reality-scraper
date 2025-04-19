@@ -6,7 +6,7 @@ using RealityScraper.Infrastructure.BackgroundServices.Scheduler;
 using RealityScraper.Infrastructure.Configuration;
 using RealityScraper.Infrastructure.Utilities;
 using RealityScraper.Infrastructure.Utilities.Mailing;
-using RealityScraper.Infrastructure.Utilities.Scraping;
+using RealityScraper.Infrastructure.Utilities.WebDriver;
 
 namespace RealityScraper.Infrastructure;
 
@@ -31,7 +31,7 @@ public static class InfrastructureServiceRegistration
 		//services.AddTransient<IEmailGenerator, HtmlEmailGenerator>();
 
 		services.AddTransient<IImageDownloadService, ImageDownloadService>();
-		services.AddTransient<IWebDriverFactory, ChromeDriverFactory>();
+		services.AddTransient<IWebDriverFactory, SeleniumChromeDriverFactory>();
 
 		services.AddHostedService<SchedulerHostedService>();
 
