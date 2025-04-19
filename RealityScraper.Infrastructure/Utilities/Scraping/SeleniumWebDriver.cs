@@ -31,6 +31,7 @@ public class SeleniumWebDriver : RealityScraper.Application.Interfaces.Scraping.
 		catch (NoSuchElementException ex)
 		{
 			throw new NoSuchElementException($"Element with selector '{selector}' was not found.", ex);
+		}
 	}
 
 	public Task<IReadOnlyList<IWebDriverElement>> FindElementsAsync(string selector, CancellationToken cancellationToken)
