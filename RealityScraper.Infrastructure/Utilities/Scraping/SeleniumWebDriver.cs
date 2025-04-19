@@ -23,15 +23,8 @@ public class SeleniumWebDriver : RealityScraper.Application.Interfaces.Scraping.
 
 	public Task<IWebDriverElement> FindElementAsync(string selector, CancellationToken cancellationToken)
 	{
-		try
-		{
-			var element = driver.FindElement(By.CssSelector(selector));
-			return Task.FromResult<IWebDriverElement>(new SeleniumWebElement(driver, element));
-		}
-		catch (NoSuchElementException ex)
-		{
-			throw new NoSuchElementException($"Element with selector '{selector}' was not found.", ex);
-		}
+		var element = driver.FindElement(By.CssSelector(selector));
+		return Task.FromResult<IWebDriverElement>(new SeleniumWebElement(driver, element));
 	}
 
 	public Task<IReadOnlyList<IWebDriverElement>> FindElementsAsync(string selector, CancellationToken cancellationToken)
