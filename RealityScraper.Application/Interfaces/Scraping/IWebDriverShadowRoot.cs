@@ -5,7 +5,7 @@ public interface IWebDriverShadowRoot
 	/// <summary>
 	/// Najde první dceřiný element odpovídající selektoru.
 	/// </summary>
-	Task<IWebDriverElement> FindElementAsync(string selector, CancellationToken cancellationToken);
+	Task<IWebDriverElement?> FindElementAsync(string selector, CancellationToken cancellationToken);
 
 	/// <summary>
 	/// Najde všechny dceřiné elementy odpovídající selektoru.

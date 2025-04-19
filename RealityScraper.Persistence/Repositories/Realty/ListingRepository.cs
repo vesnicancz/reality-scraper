@@ -14,6 +14,8 @@ public class ListingRepository : Repository<Listing>, IListingRepository
 
 	public Task<Listing?> GetByExternalIdAsync(Guid scraperTaskId, string externalId, CancellationToken cancellationToken)
 	{
-		return dbContext.Set<Listing>().FirstOrDefaultAsync(x => x.ScraperTaskId == scraperTaskId && x.ExternalId == externalId, cancellationToken);
+		return dbContext
+			.Set<Listing>()
+			.FirstOrDefaultAsync(x => x.ScraperTaskId == scraperTaskId && x.ExternalId == externalId, cancellationToken);
 	}
 }

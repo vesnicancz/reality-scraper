@@ -14,17 +14,17 @@ public class SeleniumWebDriver : Application.Interfaces.Scraping.IWebDriver
 		this.driver = driver;
 	}
 
-	public Task NavigateToUrlAsync(string? url, CancellationToken cancellationToken)
+	public Task NavigateToUrlAsync(string url, CancellationToken cancellationToken)
 	{
 		//await driver.Navigate().GoToUrlAsync(url);
 		driver.Navigate().GoToUrl(url);
 		return Task.CompletedTask;
 	}
 
-	public Task<IWebDriverElement> FindElementAsync(string selector, CancellationToken cancellationToken)
+	public Task<IWebDriverElement?> FindElementAsync(string selector, CancellationToken cancellationToken)
 	{
 		var element = driver.FindElement(By.CssSelector(selector));
-		return Task.FromResult<IWebDriverElement>(new SeleniumWebElement(driver, element));
+		return Task.FromResult<IWebDriverElement?>(new SeleniumWebElement(driver, element));
 	}
 
 	public Task<IReadOnlyList<IWebDriverElement>> FindElementsAsync(string selector, CancellationToken cancellationToken)
@@ -45,11 +45,6 @@ public class SeleniumWebDriver : Application.Interfaces.Scraping.IWebDriver
 	public Task<string> GetPageSourceAsync()
 	{
 		return Task.FromResult(driver.PageSource);
-	}
-
-	public Task<IWebDriverElement> GetShadowRootAsync(IWebDriverElement element)
-	{
-		throw new NotImplementedException();
 	}
 
 	public void Dispose()

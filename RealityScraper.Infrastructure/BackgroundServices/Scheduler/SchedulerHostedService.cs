@@ -89,13 +89,11 @@ public class SchedulerHostedService : BackgroundService
 							LastRunTime = dbTask.LastRunAt
 						});
 
-						logger.LogInformation("Loaded task '{Name}' from database with cron expression '{CronExpression}'",
-							dbTask.Name, dbTask.CronExpression);
+						logger.LogTrace("Loaded task '{Name}' from database with cron expression '{CronExpression}'", dbTask.Name, dbTask.CronExpression);
 					}
 					catch (Exception ex)
 					{
-						logger.LogError(ex, "Failed to load task '{Name}' with cron expression '{CronExpression}' from database",
-							dbTask.Name, dbTask.CronExpression);
+						logger.LogError(ex, "Failed to load task '{Name}' with cron expression '{CronExpression}' from database", dbTask.Name, dbTask.CronExpression);
 					}
 				}
 				else
@@ -119,7 +117,7 @@ public class SchedulerHostedService : BackgroundService
 
 							existingTask.LastRunTime = dbTask.LastRunAt;
 
-							logger.LogInformation("Updated task '{Name}' from database", dbTask.Name);
+							logger.LogTrace("Updated task '{Name}' from database", dbTask.Name);
 						}
 						catch (Exception ex)
 						{
@@ -204,7 +202,7 @@ public class SchedulerHostedService : BackgroundService
 			// Výpočet dalšího času spuštění
 			taskInfo.NextRunTime = taskInfo.CronExpression.GetNextOccurrence(DateTime.UtcNow, TimeZoneInfo.Local);
 
-			logger.LogInformation("Task '{Name}' next run time: {NextRunTime}", taskInfo.Name, taskInfo.NextRunTime);
+			logger.LogTrace("Task '{Name}' next run time: {NextRunTime}", taskInfo.Name, taskInfo.NextRunTime);
 
 			// Označení úlohy jako neběžící
 			taskInfo.IsRunning = false;
