@@ -14,9 +14,7 @@ namespace RealityScraper.Persistence;
 
 public static class PersistenceServiceRegistration
 {
-	public static IServiceCollection AddPersistenceServices(
-		this IServiceCollection services,
-		IConfiguration configuration)
+	public static IServiceCollection AddPersistenceServices(this IServiceCollection services, IConfiguration configuration)
 	{
 		// Konfigurace databázového kontextu
 		services.AddDbContext<RealityDbContext>(options =>

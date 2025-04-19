@@ -1,50 +1,52 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Remote;
 using RealityScraper.Application.Interfaces.Scraping;
+using RealityScraper.Infrastructure.Configuration;
 
 namespace RealityScraper.Infrastructure.Utilities.Scraping;
 
 // Implementace továrny pro Chrome
 public class ChromeDriverFactory : IWebDriverFactory
 {
-	private readonly IConfiguration configuration;
+	private readonly SeleniumOptions options;
 	private readonly ILogger<ChromeDriverFactory> logger;
 	private readonly string driverPath;
 
-	public ChromeDriverFactory(IConfiguration configuration, ILogger<ChromeDriverFactory> logger)
+	public ChromeDriverFactory(
+		IOptions<SeleniumOptions> options,
+		ILogger<ChromeDriverFactory> logger)
 	{
-		this.configuration = configuration;
+		this.options = options.Value;
 		this.logger = logger;
-		driverPath = this.configuration.GetValue("SeleniumSettings:DriverPath", "./drivers");
 
 		// Zajistíme, že adresář pro driver existuje
-		Directory.CreateDirectory(driverPath);
+		Directory.CreateDirectory(this.options.DriverPath);
 	}
 
 	public RealityScraper.Application.Interfaces.Scraping.IWebDriver CreateDriver()
 	{
 		try
 		{
-			var options = new ChromeOptions();
+			var chromeOptions = new ChromeOptions();
 
 			// Přidáme argumenty pro Chrome
-			var additionalArgs = configuration.GetSection("SeleniumSettings:BrowserArguments").Get<List<string>>();
+			var additionalArgs = options.BrowserArguments;
 			if (additionalArgs != null)
 			{
 				foreach (var arg in additionalArgs)
 				{
-					options.AddArgument(arg);
+					chromeOptions.AddArgument(arg);
 				}
 			}
 
 			// Pokud je konfigurace pro proxy, přidáme ji
-			var proxyUrl = configuration.GetValue<string>("SeleniumSettings:ProxyUrl");
+			var proxyUrl = options.ProxyUrl;
 			if (!string.IsNullOrEmpty(proxyUrl))
 			{
-				options.Proxy = new Proxy
+				chromeOptions.Proxy = new Proxy
 				{
 					Kind = ProxyKind.Manual,
 					HttpProxy = proxyUrl,
@@ -53,26 +55,21 @@ public class ChromeDriverFactory : IWebDriverFactory
 			}
 
 			// Nastav user agent pokud je definovaný
-			var userAgent = configuration.GetValue<string>("SeleniumSettings:UserAgent");
+			var userAgent = options.UserAgent;
 			if (!string.IsNullOrEmpty(userAgent))
 			{
-				options.AddArgument($"--user-agent={userAgent}");
+				chromeOptions.AddArgument($"--user-agent={userAgent}");
 			}
 
 			OpenQA.Selenium.IWebDriver driver;
 
 			// Kontrola zda se má použít remote WebDriver (standalone Selenium)
-			var useRemoteDriver = configuration.GetValue<bool>("SeleniumSettings:UseRemoteDriver");
+			var useRemoteDriver = options.UseRemoteDriver;
 			if (useRemoteDriver)
 			{
-				var seleniumHubUrl = configuration.GetValue<string>("SeleniumSettings:SeleniumHubUrl");
-				if (string.IsNullOrEmpty(seleniumHubUrl))
-				{
-					seleniumHubUrl = "http://localhost:4444/wd/hub"; // Výchozí URL pro Selenium v Docker compose
-				}
-
+				var seleniumHubUrl = options.SeleniumHubUrl;
 				logger.LogInformation("Připojuji se k Selenium hub na {seleniumHubUrl}", seleniumHubUrl);
-				driver = new RemoteWebDriver(new Uri(seleniumHubUrl), options);
+				driver = new RemoteWebDriver(new Uri(seleniumHubUrl), chromeOptions);
 			}
 			else
 			{
@@ -81,10 +78,10 @@ public class ChromeDriverFactory : IWebDriverFactory
 				service.HideCommandPromptWindow = true;
 
 				// Vytvoříme driver
-				driver = new ChromeDriver(service, options);
+				driver = new ChromeDriver(service, chromeOptions);
 			}
 
-			int timeoutSeconds = configuration.GetValue<int>("SeleniumSettings:PageLoadTimeoutSeconds", 30);
+			int timeoutSeconds = options.PageLoadTimeoutSeconds;
 			driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(timeoutSeconds);
 			return new SeleniumWebDriver(driver);
 		}

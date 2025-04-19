@@ -1,29 +1,28 @@
 ﻿using System.Net.Mail;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using RealityScraper.Application.Interfaces.Mailing;
+using RealityScraper.Infrastructure.Configuration;
 
 namespace RealityScraper.Infrastructure.Utilities.Mailing;
 
 // Služba pro odesílání e-mailů (beze změny)
 public class SmtpEmailService : IEmailService
 {
-	private readonly IConfiguration configuration;
+	private readonly SmtpOptions options;
 	private readonly ILogger<SmtpEmailService> logger;
 
 	public SmtpEmailService(
-		IConfiguration configuration,
+		IOptions<SmtpOptions> options,
 		ILogger<SmtpEmailService> logger
 		)
 	{
-		this.configuration = configuration;
+		this.options = options.Value;
 		this.logger = logger;
 	}
 
 	public async Task SendEmailNotificationAsync(string emailBody, List<string> recipients, CancellationToken cancellationToken)
 	{
-		var smtpSettings = configuration.GetSection("SmtpSettings");
-
 		if (recipients == null || !recipients.Any())
 		{
 			logger.LogWarning("Nejsou nastaveni žádní příjemci e-mailů.");
@@ -32,16 +31,16 @@ public class SmtpEmailService : IEmailService
 
 		try
 		{
-			using (var client = new SmtpClient(smtpSettings["Server"])
+			using (var client = new SmtpClient(options.Server)
 			{
-				Port = int.Parse(smtpSettings["Port"]),
-				Credentials = new System.Net.NetworkCredential(smtpSettings["Username"], smtpSettings["Password"]),
-				EnableSsl = bool.Parse(smtpSettings["EnableSsl"])
+				Port = options.Port,
+				Credentials = new System.Net.NetworkCredential(options.Username, options.Password),
+				EnableSsl = options.EnableSsl
 			})
 			{
 				var mailMessage = new MailMessage
 				{
-					From = new MailAddress(smtpSettings["FromAddress"], smtpSettings["FromName"]),
+					From = new MailAddress(options.FromAddress, options.FromName),
 					Subject = $"Nové realitní nabídky ({DateTime.Now:dd.MM.yyyy})",
 					IsBodyHtml = true,
 					Body = emailBody

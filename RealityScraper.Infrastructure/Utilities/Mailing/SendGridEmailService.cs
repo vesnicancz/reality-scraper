@@ -1,6 +1,7 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using RealityScraper.Application.Interfaces.Mailing;
+using RealityScraper.Infrastructure.Configuration;
 using SendGrid;
 using SendGrid.Helpers.Mail;
 
@@ -8,26 +9,21 @@ namespace RealityScraper.Infrastructure.Utilities.Mailing;
 
 public class SendGridEmailService : IEmailService
 {
-	private readonly IConfiguration configuration;
+	private readonly SendGridOptions options;
 	private readonly ILogger<SendGridEmailService> logger;
 
 	public SendGridEmailService(
-		IConfiguration configuration,
-		IEmailGenerator htmlMailBodyGenerator,
+		IOptions<SendGridOptions> options,
 		ILogger<SendGridEmailService> logger
 		)
 	{
-		this.configuration = configuration;
+		this.options = options.Value;
 		this.logger = logger;
 	}
 
 	public async Task SendEmailNotificationAsync(string mailBody, List<string> recipients, CancellationToken cancellationToken)
 	{
-		var apiKey = configuration["SendGridSettings:ApiKey"];
-		var fromEmail = configuration["SendGridSettings:FromEmail"];
-		var fromName = configuration["SendGridSettings:FromName"];
-
-		if (string.IsNullOrEmpty(apiKey))
+		if (string.IsNullOrEmpty(options.ApiKey))
 		{
 			logger.LogError("SendGrid API key is not configured");
 			return;
@@ -41,8 +37,8 @@ public class SendGridEmailService : IEmailService
 
 		try
 		{
-			var client = new SendGridClient(apiKey);
-			var from = new EmailAddress(fromEmail, fromName);
+			var client = new SendGridClient(options.ApiKey);
+			var from = new EmailAddress(options.FromEmail, options.FromName);
 			var subject = $"Nové realitní nabídky ({DateTime.Now:dd.MM.yyyy})";
 
 			// Create a message for each recipient (or use BCC for multiple recipients)
