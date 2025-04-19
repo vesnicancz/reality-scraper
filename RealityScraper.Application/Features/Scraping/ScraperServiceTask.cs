@@ -1,11 +1,10 @@
 ﻿using Microsoft.Extensions.Logging;
-using RealityScraper.Application.Features.Scheduling;
 using RealityScraper.Application.Features.Scraping.Configuration;
 using RealityScraper.Application.Features.Scraping.Model;
-using RealityScraper.Application.Features.Scraping.Scrapers;
 using RealityScraper.Application.Interfaces;
 using RealityScraper.Application.Interfaces.Mailing;
 using RealityScraper.Application.Interfaces.Repositories.Realty;
+using RealityScraper.Application.Interfaces.Scheduler;
 using RealityScraper.Application.Interfaces.Scraping;
 using RealityScraper.Domain.Entities.Realty;
 

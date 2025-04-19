@@ -2,7 +2,7 @@
 using RealityScraper.Application.Features.Scraping.Model;
 using RealityScraper.Domain.Enums;
 
-namespace RealityScraper.Application.Features.Scraping.Scrapers;
+namespace RealityScraper.Application.Interfaces.Scraping;
 
 public interface IRealityScraperService
 {

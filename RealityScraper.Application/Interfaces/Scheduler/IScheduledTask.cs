@@ -1,6 +1,6 @@
 ﻿using RealityScraper.Application.Features.Scraping.Configuration;
 
-namespace RealityScraper.Application.Features.Scheduling;
+namespace RealityScraper.Application.Interfaces.Scheduler;
 
 // Rozhraní pro úlohy
 public interface IScheduledTask

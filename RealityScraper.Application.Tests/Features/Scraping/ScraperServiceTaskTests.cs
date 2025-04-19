@@ -3,7 +3,6 @@ using Moq;
 using RealityScraper.Application.Features.Scraping;
 using RealityScraper.Application.Features.Scraping.Configuration;
 using RealityScraper.Application.Features.Scraping.Model;
-using RealityScraper.Application.Features.Scraping.Scrapers;
 using RealityScraper.Application.Interfaces;
 using RealityScraper.Application.Interfaces.Mailing;
 using RealityScraper.Application.Interfaces.Repositories.Realty;

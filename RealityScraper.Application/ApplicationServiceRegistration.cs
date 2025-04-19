@@ -4,8 +4,8 @@ using RealityScraper.Application.Configuration;
 using RealityScraper.Application.Features.Scraping;
 using RealityScraper.Application.Features.Scraping.Scrapers;
 using RealityScraper.Application.Interfaces.Mailing;
+using RealityScraper.Application.Interfaces.Scraping;
 using RealityScraper.Application.Services.Mailing;
-using RealityScraper.Infrastructure.Utilities.Scraping;
 
 namespace RealityScraper.Application;
 
