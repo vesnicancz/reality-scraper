@@ -1,5 +1,6 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using RealityScraper.Application.Configuration;
 using RealityScraper.Application.Features.Scraping.Configuration;
 using RealityScraper.Application.Features.Scraping.Model;
 using RealityScraper.Application.Features.Scraping.Scrapers;
@@ -11,16 +12,16 @@ namespace RealityScraper.Infrastructure.Utilities.Scraping;
 public class RealityIdnesScraperService : IRealityScraperService
 {
 	private readonly ILogger<RealityIdnesScraperService> logger;
-	private readonly IConfiguration configuration;
+	private readonly RealityIdnesScraperOptions options;
 	private readonly IWebDriverFactory webDriverFactory;
 
 	public RealityIdnesScraperService(
 		ILogger<RealityIdnesScraperService> logger,
-		IConfiguration configuration,
+		IOptions<RealityIdnesScraperOptions> options,
 		IWebDriverFactory webDriverFactory)
 	{
 		this.logger = logger;
-		this.configuration = configuration;
+		this.options = options.Value;
 		this.webDriverFactory = webDriverFactory;
 	}
 
@@ -57,7 +58,7 @@ public class RealityIdnesScraperService : IRealityScraperService
 			{
 				// Získání seznamu inzerátů
 				//var listingElements = driver.FindElements(By.CssSelector(configuration["RealityIdnesScraper:ListingSelector"]));
-				var listingElements = await driver.FindElementsAsync(configuration["RealityIdnesScraper:ListingSelector"], cancellationToken);
+				var listingElements = await driver.FindElementsAsync(options.ListingSelector, cancellationToken);
 				logger.LogInformation("Nalezeno {count} inzerátů na stránce.", listingElements.Count);
 
 				foreach (var element in listingElements)
@@ -78,15 +79,15 @@ public class RealityIdnesScraperService : IRealityScraperService
 						}
 
 						//var title = element.FindElement(By.CssSelector(configuration["RealityIdnesScraper:TitleSelector"])).Text;
-						var titleElement = (await element.FindElementAsync(configuration["RealityIdnesScraper:TitleSelector"], cancellationToken));
+						var titleElement = (await element.FindElementAsync(options.TitleSelector, cancellationToken));
 						var title = await titleElement.GetTextAsync(cancellationToken);
 
 						//var priceVal = element.FindElement(By.CssSelector(configuration["RealityIdnesScraper:PriceSelector"])).Text;
-						var priceElement = await element.FindElementAsync(configuration["RealityIdnesScraper:PriceSelector"], cancellationToken);
+						var priceElement = await element.FindElementAsync(options.PriceSelector, cancellationToken);
 						var priceVal = await priceElement.GetTextAsync(cancellationToken);
 
 						//var location = element.FindElement(By.CssSelector(configuration["RealityIdnesScraper:LocationSelector"])).Text;
-						var locationElement = await element.FindElementAsync(configuration["RealityIdnesScraper:LocationSelector"], cancellationToken);
+						var locationElement = await element.FindElementAsync(options.LocationSelector, cancellationToken);
 						var location = await locationElement.GetTextAsync(cancellationToken);
 
 						var price = ParseNullableDecimal(priceVal.Replace("Kč", "").Replace(" ", ""));
@@ -95,7 +96,7 @@ public class RealityIdnesScraperService : IRealityScraperService
 						try
 						{
 							//var imgElement = element.FindElement(By.CssSelector(configuration["RealityIdnesScraper:ImageSelector"]));
-							var imgElement = await element.FindElementAsync(configuration["RealityIdnesScraper:ImageSelector"], cancellationToken);
+							var imgElement = await element.FindElementAsync(options.ImageSelector, cancellationToken);
 							imageUrl = await imgElement.GetAttributeAsync("data-src", cancellationToken);
 						}
 						catch
@@ -129,7 +130,7 @@ public class RealityIdnesScraperService : IRealityScraperService
 
 				// načtení další strany
 				//var nextButton = driver.FindElements(By.CssSelector(configuration["RealityIdnesScraper:NextPageSelector"]));
-				var nextButton = await driver.FindElementsAsync(configuration["RealityIdnesScraper:NextPageSelector"], cancellationToken);
+				var nextButton = await driver.FindElementsAsync(options.NextPageSelector, cancellationToken);
 
 				if (nextButton.Count > 0)
 				{

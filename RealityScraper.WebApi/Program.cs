@@ -18,7 +18,7 @@ public static class Program
 		builder.Services.AddRazorPages();
 
 		// Registrace závislostí
-		builder.Services.AddApplicationServices();
+		builder.Services.AddApplicationServices(builder.Configuration);
 		builder.Services.AddInfrastructureServices(builder.Configuration);
 		builder.Services.AddPersistenceServices(builder.Configuration);
 
