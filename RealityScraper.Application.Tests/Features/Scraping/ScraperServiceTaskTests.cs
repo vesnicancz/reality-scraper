@@ -59,7 +59,9 @@ public class ScraperServiceTaskTests
 				ExternalId = "ExternalId1"
 			}
 		};
-		scraperServiceMock.Setup(i => i.ScrapeListingsAsync(It.Is<ScraperConfiguration>(j => j.Url == url1))).ReturnsAsync(result1);
+		scraperServiceMock
+			.Setup(i => i.ScrapeListingsAsync(It.Is<ScraperConfiguration>(j => j.Url == url1), It.IsAny<CancellationToken>()))
+			.ReturnsAsync(result1);
 
 		var result2 = new List<ListingItem>
 		{
@@ -72,7 +74,9 @@ public class ScraperServiceTaskTests
 				ExternalId = "ExternalId1"
 			}
 		};
-		scraperServiceMock.Setup(i => i.ScrapeListingsAsync(It.Is<ScraperConfiguration>(j => j.Url == url2))).ReturnsAsync(result2);
+		scraperServiceMock
+			.Setup(i => i.ScrapeListingsAsync(It.Is<ScraperConfiguration>(j => j.Url == url2), It.IsAny<CancellationToken>()))
+			.ReturnsAsync(result2);
 
 		var scraperServiceTask = new ScraperServiceTask(scraperServices, mailerServiceMock.Object, imageDownloadServiceMock.Object, listingRepositoryMock.Object, unitOfWorkMock.Object, loggerMock.Object);
 

@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using RealityScraper.Application.Features.Scraping.Scrapers;
 using RealityScraper.Application.Interfaces.Mailing;
 using RealityScraper.Application.Interfaces.Scraping;
 using RealityScraper.Infrastructure.BackgroundServices.Scheduler;
@@ -29,10 +28,6 @@ public static class InfrastructureServiceRegistration
 
 		services.AddTransient<IImageDownloadService, ImageDownloadService>();
 		services.AddTransient<IWebDriverFactory, ChromeDriverFactory>();
-
-		// scrapers
-		services.AddTransient<IRealityScraperService, SRealityScraperService>();
-		services.AddTransient<IRealityScraperService, RealityIdnesScraperService>();
 
 		services.AddHostedService<SchedulerHostedService>();
 

@@ -58,7 +58,7 @@ public class ScraperServiceTask : IScheduledTask
 			}
 
 			logger.LogInformation("Spouštím scraper: {scraperName}", scraperService.SiteName);
-			var listings = await scraperService.ScrapeListingsAsync(scraperConfiguration);
+			var listings = await scraperService.ScrapeListingsAsync(scraperConfiguration, cancellationToken);
 
 			var scraperResult = new ScraperResult
 			{
