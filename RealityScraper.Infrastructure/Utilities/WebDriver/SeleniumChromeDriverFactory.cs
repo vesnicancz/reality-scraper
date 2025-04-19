@@ -6,33 +6,31 @@ using OpenQA.Selenium.Remote;
 using RealityScraper.Application.Interfaces.Scraping;
 using RealityScraper.Infrastructure.Configuration;
 
-namespace RealityScraper.Infrastructure.Utilities.Scraping;
+namespace RealityScraper.Infrastructure.Utilities.WebDriver;
 
-// Implementace továrny pro Chrome
-public class ChromeDriverFactory : IWebDriverFactory
+/// <summary>
+/// Selenium Chrome WebDriver factory.
+/// </summary>
+public class SeleniumChromeDriverFactory : IWebDriverFactory
 {
 	private readonly SeleniumOptions options;
-	private readonly ILogger<ChromeDriverFactory> logger;
-	private readonly string driverPath;
+	private readonly ILogger<SeleniumChromeDriverFactory> logger;
 
-	public ChromeDriverFactory(
+	public SeleniumChromeDriverFactory(
 		IOptions<SeleniumOptions> options,
-		ILogger<ChromeDriverFactory> logger)
+		ILogger<SeleniumChromeDriverFactory> logger)
 	{
 		this.options = options.Value;
 		this.logger = logger;
-
-		// Zajistíme, že adresář pro driver existuje
-		Directory.CreateDirectory(this.options.DriverPath);
 	}
 
-	public RealityScraper.Application.Interfaces.Scraping.IWebDriver CreateDriver()
+	public Application.Interfaces.Scraping.IWebDriver CreateDriver()
 	{
 		try
 		{
 			var chromeOptions = new ChromeOptions();
 
-			// Přidáme argumenty pro Chrome
+			// Add arguments for Chrome
 			var additionalArgs = options.BrowserArguments;
 			if (additionalArgs != null)
 			{
@@ -42,7 +40,7 @@ public class ChromeDriverFactory : IWebDriverFactory
 				}
 			}
 
-			// Pokud je konfigurace pro proxy, přidáme ji
+			// If there is a configuration for a proxy, add it
 			var proxyUrl = options.ProxyUrl;
 			if (!string.IsNullOrEmpty(proxyUrl))
 			{
@@ -54,7 +52,7 @@ public class ChromeDriverFactory : IWebDriverFactory
 				};
 			}
 
-			// Nastav user agent pokud je definovaný
+			// Set user agent if defined
 			var userAgent = options.UserAgent;
 			if (!string.IsNullOrEmpty(userAgent))
 			{
@@ -63,7 +61,7 @@ public class ChromeDriverFactory : IWebDriverFactory
 
 			OpenQA.Selenium.IWebDriver driver;
 
-			// Kontrola zda se má použít remote WebDriver (standalone Selenium)
+			// Check if a remote WebDriver (standalone Selenium) should be used
 			var useRemoteDriver = options.UseRemoteDriver;
 			if (useRemoteDriver)
 			{
@@ -73,16 +71,21 @@ public class ChromeDriverFactory : IWebDriverFactory
 			}
 			else
 			{
-				// Vytvoříme servisní objekt pro Chrome
-				var service = ChromeDriverService.CreateDefaultService(driverPath);
+				// Ensure driver path exists
+				Directory.CreateDirectory(options.DriverPath);
+
+				// Create a service object for Chrome
+				var service = ChromeDriverService.CreateDefaultService(options.DriverPath);
 				service.HideCommandPromptWindow = true;
 
-				// Vytvoříme driver
+				// Create the driver
+				logger.LogInformation("Vytvářím Chrome driver na {driverPath}", options.DriverPath);
 				driver = new ChromeDriver(service, chromeOptions);
 			}
 
-			int timeoutSeconds = options.PageLoadTimeoutSeconds;
-			driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(timeoutSeconds);
+			// Set the timeout for page loading
+			driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(options.PageLoadTimeoutSeconds);
+
 			return new SeleniumWebDriver(driver);
 		}
 		catch (Exception ex)

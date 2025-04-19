@@ -6,11 +6,11 @@ public record ScraperResult
 
 	public int TotalListingCount { get; init; }
 
-	public int NewListingCount => NewListings.Count;
-
-	public int PriceChangedListingsCount => PriceChangedListings.Count;
-
 	public List<ListingItem> NewListings { get; init; } = new List<ListingItem>();
 
 	public List<ListingItemWithNewPrice> PriceChangedListings { get; init; } = new List<ListingItemWithNewPrice>();
+
+	public int NewListingCount => NewListings.Count;
+
+	public int PriceChangedListingsCount => PriceChangedListings.Count;
 }

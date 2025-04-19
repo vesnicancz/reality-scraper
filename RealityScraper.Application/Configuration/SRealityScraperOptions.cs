@@ -2,7 +2,13 @@
 
 public class SRealityScraperOptions
 {
+	public string CpmDialogContainerSelector { get; set; }
+
+	public string CpmAgreeButtonsSelector { get; set; }
+
 	public string ListingSelector { get; set; }
+
+	public string DetailLinkSelector { get; set; }
 
 	public string TitleSelector { get; set; }
 
