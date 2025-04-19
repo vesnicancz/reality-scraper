@@ -28,10 +28,9 @@ public class SeleniumWebDriver : RealityScraper.Application.Interfaces.Scraping.
 			var element = driver.FindElement(By.CssSelector(selector));
 			return Task.FromResult<IWebDriverElement>(new SeleniumWebElement(driver, element));
 		}
-		catch (NoSuchElementException)
+		catch (NoSuchElementException ex)
 		{
-			return Task.FromResult<IWebDriverElement>(null);
-		}
+			throw new NoSuchElementException($"Element with selector '{selector}' was not found.", ex);
 	}
 
 	public Task<IReadOnlyList<IWebDriverElement>> FindElementsAsync(string selector, CancellationToken cancellationToken)
