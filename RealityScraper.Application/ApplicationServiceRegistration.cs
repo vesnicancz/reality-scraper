@@ -3,6 +3,7 @@ using RealityScraper.Application.Features.Scraping;
 using RealityScraper.Application.Features.Scraping.Scrapers;
 using RealityScraper.Application.Interfaces.Mailing;
 using RealityScraper.Application.Services.Mailing;
+using RealityScraper.Infrastructure.Utilities.Scraping;
 
 namespace RealityScraper.Application;
 
@@ -28,6 +29,10 @@ public static class DependencyInjection
 
 		// registrace úloh
 		services.AddTransient<ScraperServiceTask>();
+
+		// scrapers
+		services.AddTransient<IRealityScraperService, SRealityScraperService>();
+		services.AddTransient<IRealityScraperService, RealityIdnesScraperService>();
 
 		// mailing
 		services.AddTransient<IMailerService, MailerService>();

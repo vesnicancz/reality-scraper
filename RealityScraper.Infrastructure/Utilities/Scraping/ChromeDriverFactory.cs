@@ -3,11 +3,12 @@ using Microsoft.Extensions.Logging;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Remote;
+using RealityScraper.Application.Interfaces.Scraping;
 
 namespace RealityScraper.Infrastructure.Utilities.Scraping;
 
 // Implementace továrny pro Chrome
-public class ChromeDriverFactory : IWebDriverFactory, IDisposable
+public class ChromeDriverFactory : IWebDriverFactory
 {
 	private readonly IConfiguration configuration;
 	private readonly ILogger<ChromeDriverFactory> logger;
@@ -23,7 +24,7 @@ public class ChromeDriverFactory : IWebDriverFactory, IDisposable
 		Directory.CreateDirectory(driverPath);
 	}
 
-	public IWebDriver CreateDriver()
+	public RealityScraper.Application.Interfaces.Scraping.IWebDriver CreateDriver()
 	{
 		try
 		{
@@ -58,6 +59,8 @@ public class ChromeDriverFactory : IWebDriverFactory, IDisposable
 				options.AddArgument($"--user-agent={userAgent}");
 			}
 
+			OpenQA.Selenium.IWebDriver driver;
+
 			// Kontrola zda se má použít remote WebDriver (standalone Selenium)
 			var useRemoteDriver = configuration.GetValue<bool>("SeleniumSettings:UseRemoteDriver");
 			if (useRemoteDriver)
@@ -69,7 +72,7 @@ public class ChromeDriverFactory : IWebDriverFactory, IDisposable
 				}
 
 				logger.LogInformation("Připojuji se k Selenium hub na {seleniumHubUrl}", seleniumHubUrl);
-				return new RemoteWebDriver(new Uri(seleniumHubUrl), options);
+				driver = new RemoteWebDriver(new Uri(seleniumHubUrl), options);
 			}
 			else
 			{
@@ -78,18 +81,17 @@ public class ChromeDriverFactory : IWebDriverFactory, IDisposable
 				service.HideCommandPromptWindow = true;
 
 				// Vytvoříme driver
-				return new ChromeDriver(service, options);
+				driver = new ChromeDriver(service, options);
 			}
+
+			int timeoutSeconds = configuration.GetValue<int>("SeleniumSettings:PageLoadTimeoutSeconds", 30);
+			driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(timeoutSeconds);
+			return new SeleniumWebDriver(driver);
 		}
 		catch (Exception ex)
 		{
 			logger.LogError(ex, "Chyba při vytváření Chrome driveru");
 			throw;
 		}
-	}
-
-	public void Dispose()
-	{
-		// Případné úklidy
 	}
 }
