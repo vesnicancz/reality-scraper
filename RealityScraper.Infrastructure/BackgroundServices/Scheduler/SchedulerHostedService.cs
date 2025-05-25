@@ -218,8 +218,14 @@ public class SchedulerHostedService : BackgroundService
 	}
 
 	/// <summary>
-	/// Method called when service is stopping
+	/// Called when the service is stopping to ensure proper termination of running tasks.
 	/// </summary>
+	/// <remarks>
+	/// This method waits for all currently running tasks to complete before stopping the service.
+	/// A timeout is applied to prevent indefinite waiting. If tasks do not complete within the
+	/// specified timeout period, the service will log an error and proceed with termination.
+	/// </remarks>
+	/// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
 	public override async Task StopAsync(CancellationToken cancellationToken)
 	{
 		logger.LogInformation("Stopping Scheduler service");
