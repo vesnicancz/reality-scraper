@@ -228,7 +228,7 @@ public class SchedulerHostedService : BackgroundService
 		var runningTasks = scheduledTasks.Where(t => t.IsRunning).ToList();
 		if (runningTasks.Count != 0)
 		{
-			logger.LogWarning("Čekám na dokončení {Count} běžících úloh...", runningTasks.Count);
+			logger.LogWarning("Waiting for {Count} running tasks to complete...", runningTasks.Count);
 
 			var terminationDeadline = DateTime.Now.Add(terminationTimeout);
 
