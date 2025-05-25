@@ -1,9 +1,9 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using RealityScraper.Application.Features.Scheduler;
 using RealityScraper.Application.Features.Scraping;
 using RealityScraper.Application.Interfaces.Scheduler;
-using RealityScraper.Infrastructure.Utilities.Scheduler;
 
 namespace RealityScraper.Infrastructure.BackgroundServices.Scheduler;
 
@@ -18,7 +18,10 @@ public class SchedulerHostedService : BackgroundService
 	private readonly List<ScheduledTaskInfo> scheduledTasks = new List<ScheduledTaskInfo>();
 	private readonly TimeSpan taskCheckInterval = TimeSpan.FromSeconds(15);
 	private readonly TimeSpan dbRefreshInterval = TimeSpan.FromMinutes(5);
+
 	private DateTime lastDbCheckTime = DateTime.MinValue;
+
+	private readonly TimeSpan terminationTimeout = TimeSpan.FromMinutes(5);
 
 	public SchedulerHostedService(
 		IServiceScopeFactory serviceScopeFactory,
@@ -214,23 +217,38 @@ public class SchedulerHostedService : BackgroundService
 		}
 	}
 
-	///// <summary>
-	///// Method called when service is stopping
-	///// </summary>
-	//public override async Task StopAsync(CancellationToken cancellationToken)
-	//{
-	//	logger.LogInformation("Stopping Scheduler service");
+	/// <summary>
+	/// Method called when service is stopping
+	/// </summary>
+	public override async Task StopAsync(CancellationToken cancellationToken)
+	{
+		logger.LogInformation("Stopping Scheduler service");
 
-	//	// Wait for running tasks to complete (optional with timeout)
-	//	var runningTasks = scheduledTasks.Where(t => t.IsRunning).ToList();
-	//	if (runningTasks.Any())
-	//	{
-	//		logger.LogWarning("Čekám na dokončení {Count} běžících úloh...", runningTasks.Count);
+		// Wait for running tasks to complete (optional with timeout)
+		var runningTasks = scheduledTasks.Where(t => t.IsRunning).ToList();
+		if (runningTasks.Count != 0)
+		{
+			logger.LogWarning("Čekám na dokončení {Count} běžících úloh...", runningTasks.Count);
 
-	//		// Here could be a timeout wait or other logic for safe termination
-	//		// For simplicity we just log and continue
-	//	}
+			var terminationDeadline = DateTime.Now.Add(terminationTimeout);
 
-	//	await base.StopAsync(cancellationToken);
-	//}
+			do
+			{
+				await Task.Delay(TimeSpan.FromSeconds(30), cancellationToken);
+				runningTasks = scheduledTasks.Where(t => t.IsRunning).ToList();
+			}
+			while ((runningTasks.Count != 0) && (DateTime.Now < terminationDeadline) && !cancellationToken.IsCancellationRequested);
+
+			if (runningTasks.Count != 0)
+			{
+				logger.LogError("Některé úlohy se nepodařilo dokončit včas. Ukončuji službu.");
+			}
+			else
+			{
+				logger.LogInformation("Všechny úlohy byly úspěšně dokončeny.");
+			}
+		}
+
+		await base.StopAsync(cancellationToken);
+	}
 }

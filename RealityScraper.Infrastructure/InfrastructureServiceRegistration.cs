@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using RazorEngineCore;
 using RealityScraper.Application.Interfaces.Mailing;
+using RealityScraper.Application.Interfaces.Scheduler;
 using RealityScraper.Application.Interfaces.Scraping;
 using RealityScraper.Infrastructure.BackgroundServices.Scheduler;
 using RealityScraper.Infrastructure.Configuration;
@@ -37,7 +38,6 @@ public static class InfrastructureServiceRegistration
 		services.AddTransient<IWebDriverFactory, SeleniumChromeDriverFactory>();
 
 		services.AddTransient<IScheduleTimeCalculator, CronosScheduleTimeCalculator>();
-		services.AddTransient<ITaskSchedulerService, TaskSchedulerService>();
 
 		services.AddHostedService<SchedulerHostedService>();
 

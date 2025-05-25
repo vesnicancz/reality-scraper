@@ -1,9 +1,11 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RealityScraper.Application.Configuration;
+using RealityScraper.Application.Features.Scheduler;
 using RealityScraper.Application.Features.Scraping;
 using RealityScraper.Application.Features.Scraping.Scrapers;
 using RealityScraper.Application.Interfaces.Mailing;
+using RealityScraper.Application.Interfaces.Scheduler;
 using RealityScraper.Application.Interfaces.Scraping;
 using RealityScraper.Application.Services.Mailing;
 
@@ -39,6 +41,9 @@ public static class DependencyInjection
 		// scrapers
 		services.AddTransient<IRealityScraperService, SRealityScraperService>();
 		services.AddTransient<IRealityScraperService, RealityIdnesScraperService>();
+
+		// task scheduler
+		services.AddTransient<ITaskSchedulerService, TaskSchedulerService>();
 
 		// mailing
 		services.AddTransient<IMailerService, MailerService>();

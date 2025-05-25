@@ -1,4 +1,5 @@
 ﻿using Cronos;
+using RealityScraper.Application.Interfaces.Scheduler;
 
 namespace RealityScraper.Infrastructure.Utilities.Scheduler;
 
