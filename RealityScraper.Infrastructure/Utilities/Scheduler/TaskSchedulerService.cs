@@ -40,7 +40,7 @@ public class TaskSchedulerService : ITaskSchedulerService
 		{
 			if (!timeCalculator.IsValidExpression(dbTask.CronExpression))
 			{
-				logger.LogWarning("Úloha '{Name}' má neplatný cron výraz: '{CronExpression}'", dbTask.Name, dbTask.CronExpression);
+				logger.LogWarning("Task '{Name}' has an invalid cron expression: '{CronExpression}'", dbTask.Name, dbTask.CronExpression);
 				continue;
 			}
 
