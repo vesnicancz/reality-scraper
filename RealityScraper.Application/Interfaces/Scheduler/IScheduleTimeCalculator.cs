@@ -1,4 +1,4 @@
-﻿namespace RealityScraper.Infrastructure.Utilities.Scheduler;
+﻿namespace RealityScraper.Application.Interfaces.Scheduler;
 
 public interface IScheduleTimeCalculator
 {

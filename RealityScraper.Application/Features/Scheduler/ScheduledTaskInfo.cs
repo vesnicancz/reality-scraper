@@ -1,6 +1,6 @@
 ﻿using RealityScraper.Application.Features.Scraping.Configuration;
 
-namespace RealityScraper.Infrastructure.BackgroundServices.Scheduler;
+namespace RealityScraper.Application.Features.Scheduler;
 
 public class ScheduledTaskInfo
 {

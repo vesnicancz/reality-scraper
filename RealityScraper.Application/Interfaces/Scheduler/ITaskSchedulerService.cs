@@ -1,6 +1,6 @@
-﻿using RealityScraper.Infrastructure.BackgroundServices.Scheduler;
+﻿using RealityScraper.Application.Features.Scheduler;
 
-namespace RealityScraper.Infrastructure.Utilities.Scheduler;
+namespace RealityScraper.Application.Interfaces.Scheduler;
 
 public interface ITaskSchedulerService
 {

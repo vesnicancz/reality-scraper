@@ -2,10 +2,10 @@
 using RealityScraper.Application.Features.Scraping.Configuration;
 using RealityScraper.Application.Interfaces;
 using RealityScraper.Application.Interfaces.Repositories.Configuration;
+using RealityScraper.Application.Interfaces.Scheduler;
 using RealityScraper.Domain.Entities.Configuration;
-using RealityScraper.Infrastructure.BackgroundServices.Scheduler;
 
-namespace RealityScraper.Infrastructure.Utilities.Scheduler;
+namespace RealityScraper.Application.Features.Scheduler;
 
 public class TaskSchedulerService : ITaskSchedulerService
 {
