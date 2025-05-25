@@ -1,24 +1,23 @@
-﻿using Cronos;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RealityScraper.Application.Features.Scraping;
-using RealityScraper.Application.Features.Scraping.Configuration;
-using RealityScraper.Application.Interfaces;
-using RealityScraper.Application.Interfaces.Repositories.Configuration;
 using RealityScraper.Application.Interfaces.Scheduler;
-using RealityScraper.Domain.Entities.Configuration;
+using RealityScraper.Infrastructure.Utilities.Scheduler;
 
 namespace RealityScraper.Infrastructure.BackgroundServices.Scheduler;
 
+/// <summary>
+/// Hosted service for task management and scheduling
+/// </summary>
 public class SchedulerHostedService : BackgroundService
 {
 	private readonly IServiceScopeFactory serviceScopeFactory;
 	private readonly ILogger<SchedulerHostedService> logger;
 
 	private readonly List<ScheduledTaskInfo> scheduledTasks = new List<ScheduledTaskInfo>();
-	private readonly TimeSpan taskRunTimeSpan = TimeSpan.FromSeconds(15);
-	private readonly TimeSpan dbRefreshInterval = TimeSpan.FromMinutes(5); // Interval obnovení úloh z DB
+	private readonly TimeSpan taskCheckInterval = TimeSpan.FromSeconds(15);
+	private readonly TimeSpan dbRefreshInterval = TimeSpan.FromMinutes(5);
 	private DateTime lastDbCheckTime = DateTime.MinValue;
 
 	public SchedulerHostedService(
@@ -29,183 +28,209 @@ public class SchedulerHostedService : BackgroundService
 		this.logger = logger;
 	}
 
+	/// <summary>
+	/// Main service method called at startup and running until service is stopped
+	/// </summary>
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 	{
 		logger.LogInformation("Scheduler service started at: {Time}", DateTimeOffset.Now);
 
 		while (!stoppingToken.IsCancellationRequested)
 		{
-			// Pravidelná kontrola nových nebo upravených úloh v databázi
+			// Periodic check of tasks in database
 			if (DateTime.UtcNow >= lastDbCheckTime.Add(dbRefreshInterval))
 			{
-				await LoadTasksFromDatabaseAsync(stoppingToken);
+				await RefreshTasksFromDatabaseAsync(stoppingToken);
 				lastDbCheckTime = DateTime.UtcNow;
 			}
 
+			// Check and execute tasks that need to be run
 			await CheckAndExecuteScheduledTasksAsync(stoppingToken);
 
-			// Krátká pauza mezi kontrolami naplánovaných úloh
-			await Task.Delay(taskRunTimeSpan, stoppingToken);
+			// Pause before next check
+			await Task.Delay(taskCheckInterval, stoppingToken);
 		}
+
+		logger.LogInformation("Scheduler service terminated at: {Time}", DateTimeOffset.Now);
 	}
 
-	private async Task LoadTasksFromDatabaseAsync(CancellationToken cancellationToken)
+	/// <summary>
+	/// Updates the task list from the database
+	/// </summary>
+	private async Task RefreshTasksFromDatabaseAsync(CancellationToken cancellationToken)
 	{
+		logger.LogTrace("Update the list of tasks from the database.");
+
 		try
 		{
-			using var scope = serviceScopeFactory.CreateScope();
-			var taskRepository = scope.ServiceProvider.GetRequiredService<IScraperTaskRepository>();
-			var activeTasks = await taskRepository.GetActiveTasksAsync(cancellationToken);
-
-			// Odstranění neaktivních úloh
-			scheduledTasks.RemoveAll(t =>
-				!activeTasks.Any(dbTask => dbTask.Id.ToString() == t.Id) ||
-				activeTasks.Any(dbTask => dbTask.Id.ToString() == t.Id && dbTask.Enabled == false));
-
-			// Aktualizace nebo přidání aktivních úloh
-			foreach (var dbTask in activeTasks.Where(t => t.Enabled))
+			List<ScheduledTaskInfo> activeTasks;
+			using (var scope = serviceScopeFactory.CreateScope())
 			{
-				// Pokud není aktivní úloha spuštěna a není v seznamu, přidáme ji
-				var existingTask = scheduledTasks.FirstOrDefault(t => t.Id == dbTask.Id.ToString());
+				var schedulerService = scope.ServiceProvider.GetRequiredService<ITaskSchedulerService>();
 
-				if (existingTask == null)
+				// Load active tasks from database
+				activeTasks = await schedulerService.LoadActiveTasksAsync(cancellationToken);
+			}
+
+			// Remove tasks that are no longer in database or no longer active
+			var tasksToRemove = scheduledTasks
+				.Where(t => !activeTasks.Any(a => a.Id == t.Id) || activeTasks.Any(a => (a.Id == t.Id) && !t.IsRunning))
+				.ToList();
+
+			foreach (var taskToRemove in tasksToRemove)
+			{
+				if (!taskToRemove.IsRunning)
 				{
-					// Nová úloha
-					try
-					{
-						var cronExpression = CronExpression.Parse(dbTask.CronExpression);
-						var nextRunTime = dbTask.NextRunAt ?? cronExpression.GetNextOccurrence(DateTime.UtcNow, TimeZoneInfo.Local);
-
-						// Vytvoření konfigurace scraperu
-						var scrapingConfig = CreateScrapingConfigFromDbTask(dbTask);
-
-						scheduledTasks.Add(new ScheduledTaskInfo
-						{
-							Id = dbTask.Id.ToString(),
-							Name = dbTask.Name,
-							CronExpression = cronExpression,
-							ScrapingConfiguration = scrapingConfig,
-							NextRunTime = nextRunTime,
-							LastRunTime = dbTask.LastRunAt
-						});
-
-						logger.LogTrace("Loaded task '{Name}' from database with cron expression '{CronExpression}'", dbTask.Name, dbTask.CronExpression);
-					}
-					catch (Exception ex)
-					{
-						logger.LogError(ex, "Failed to load task '{Name}' with cron expression '{CronExpression}' from database", dbTask.Name, dbTask.CronExpression);
-					}
-				}
-				else
-				{
-					// Existující úloha - aktualizujeme pouze pokud není zrovna spuštěná
-					if (!existingTask.IsRunning)
-					{
-						try
-						{
-							// Aktualizace úlohy
-							var cronExpression = CronExpression.Parse(dbTask.CronExpression);
-							existingTask.Name = dbTask.Name;
-							existingTask.CronExpression = cronExpression;
-							existingTask.ScrapingConfiguration = CreateScrapingConfigFromDbTask(dbTask);
-
-							// Aktualizace času příštího spuštění pouze pokud není již nastaven nebo pokud se změnil výraz
-							if (!existingTask.NextRunTime.HasValue || dbTask.NextRunAt.HasValue)
-							{
-								existingTask.NextRunTime = dbTask.NextRunAt ?? cronExpression.GetNextOccurrence(DateTime.UtcNow, TimeZoneInfo.Local);
-							}
-
-							existingTask.LastRunTime = dbTask.LastRunAt;
-
-							logger.LogTrace("Updated task '{Name}' from database", dbTask.Name);
-						}
-						catch (Exception ex)
-						{
-							logger.LogError(ex, "Failed to update task '{Name}' from database", dbTask.Name);
-						}
-					}
+					scheduledTasks.Remove(taskToRemove);
+					logger.LogTrace("Task '{Name}' was removed from the list", taskToRemove.Name);
 				}
 			}
+
+			// Add or update tasks
+			foreach (var dbTask in activeTasks)
+			{
+				var existingTask = scheduledTasks.FirstOrDefault(t => t.Id == dbTask.Id);
+				if (existingTask == null)
+				{
+					// Add new task
+					scheduledTasks.Add(dbTask);
+					logger.LogInformation("New task added '{Name}', next run: {NextRunTime}", dbTask.Name, dbTask.NextRunTime);
+				}
+				else if (!existingTask.IsRunning)
+				{
+					// Update existing task that is not currently running
+					existingTask.Name = dbTask.Name;
+					existingTask.CronExpression = dbTask.CronExpression;
+					existingTask.ScrapingConfiguration = dbTask.ScrapingConfiguration;
+
+					// Update next run time only if not manually set or newer in database
+					if (dbTask.NextRunTime.HasValue && (!existingTask.NextRunTime.HasValue || existingTask.NextRunTime.Value < dbTask.NextRunTime.Value))
+					{
+						existingTask.NextRunTime = dbTask.NextRunTime;
+					}
+
+					// Update last run time
+					if (dbTask.LastRunTime.HasValue && (!existingTask.LastRunTime.HasValue || existingTask.LastRunTime.Value < dbTask.LastRunTime.Value))
+					{
+						existingTask.LastRunTime = dbTask.LastRunTime;
+					}
+
+					logger.LogTrace("Updated task '{Name}' from database, next run: {NextRunTime}", existingTask.Name, existingTask.NextRunTime);
+				}
+			}
+
+			logger.LogInformation("Loaded and processed {Count} active tasks", activeTasks.Count);
 		}
 		catch (Exception ex)
 		{
 			logger.LogError(ex, "Error loading tasks from database");
+			throw;
 		}
 	}
 
-	private static ScrapingConfiguration CreateScrapingConfigFromDbTask(ScraperTask dbTask)
+	/// <summary>
+	/// Determines which tasks should be executed and runs them
+	/// </summary>
+	private async Task CheckAndExecuteScheduledTasksAsync(CancellationToken cancellationToken)
 	{
-		var config = new ScrapingConfiguration
+		// Execute tasks sequentially
+		foreach (var taskInfo in scheduledTasks.Where(t => !t.IsRunning && t.NextRunTime.HasValue && t.NextRunTime.Value <= DateTime.UtcNow))
 		{
-			Id = dbTask.Id,
-			EmailRecipients = dbTask.Recipients.Select(r => r.Email).ToList(),
-			Scrapers = dbTask.Targets.Select(t => new ScraperConfiguration
-			{
-				ScraperType = t.ScraperType,
-				Url = t.Url
-			}).ToList()
-		};
-
-		return config;
-	}
-
-	private async Task CheckAndExecuteScheduledTasksAsync(CancellationToken stoppingToken)
-	{
-		foreach (var taskInfo in scheduledTasks.Where(t => !t.IsRunning && t.NextRunTime.HasValue && t.NextRunTime <= DateTime.UtcNow))
-		{
-			await ExecuteTaskAsync(taskInfo, stoppingToken);
+			await ExecuteTaskAsync(taskInfo, cancellationToken);
 		}
 	}
 
-	private async Task ExecuteTaskAsync(ScheduledTaskInfo taskInfo, CancellationToken stoppingToken)
+	/// <summary>
+	/// Executes one specific task
+	/// </summary>
+	private async Task ExecuteTaskAsync(ScheduledTaskInfo taskInfo, CancellationToken cancellationToken)
 	{
-		// Označení úlohy jako běžící
+		// Mark task as running
 		taskInfo.IsRunning = true;
 
 		try
 		{
 			logger.LogInformation("Starting task '{Name}'", taskInfo.Name);
 
+			// Create new scope for each task
 			using (var scope = serviceScopeFactory.CreateScope())
 			{
 				// Získání instance úlohy
 				var task = (IScheduledTask)scope.ServiceProvider.GetRequiredService(typeof(ScraperServiceTask));
 
-				// Spuštění úlohy
-				await task.ExecuteAsync(taskInfo.ScrapingConfiguration, stoppingToken);
+				// Get task instance
+				await task.ExecuteAsync(taskInfo.ScrapingConfiguration, cancellationToken);
+
+				var schedulerService = scope.ServiceProvider.GetRequiredService<ITaskSchedulerService>();
+
+				// Save last run time and calculate next execution
+				var lastRunTime = DateTime.UtcNow;
+				var nextRunTime = await schedulerService.CalculateNextRunTimeAsync(taskInfo.CronExpression, lastRunTime, cancellationToken);
+
+				// Update times in database
+				await schedulerService.UpdateTaskExecutionTimesAsync(taskInfo.Id, lastRunTime, nextRunTime, cancellationToken);
+
+				// Update task information
+				taskInfo.LastRunTime = lastRunTime;
+				taskInfo.NextRunTime = nextRunTime;
+
+				logger.LogInformation("Task '{Name}' completed successfully, next execution: {NextRunTime}", taskInfo.Name, nextRunTime);
 			}
-
-			// Uložení posledního času spuštění do databáze
-			using (var scope = serviceScopeFactory.CreateScope())
-			{
-				var taskRepository = scope.ServiceProvider.GetRequiredService<IScraperTaskRepository>();
-				var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-
-				var taskId = Guid.Parse(taskInfo.Id);
-				await taskRepository.UpdateLastRunTimeAsync(taskId, DateTime.UtcNow, stoppingToken);
-				await taskRepository.UpdateNextRunTimeAsync(taskId, taskInfo.NextRunTime, stoppingToken);
-
-				await unitOfWork.SaveChangesAsync(stoppingToken);
-			}
-
-			// Aktualizace času posledního spuštění
-			taskInfo.LastRunTime = DateTime.UtcNow;
-
-			logger.LogInformation("Task '{Name}' completed successfully", taskInfo.Name);
+		}
+		catch (OperationCanceledException)
+		{
+			logger.LogWarning("Task '{Name}' was cancelled", taskInfo.Name);
+			throw;
 		}
 		catch (Exception ex)
 		{
 			logger.LogError(ex, "Error executing task '{Name}'", taskInfo.Name);
+
+			// On error, try to recalculate next run time
+			try
+			{
+				using (var scope = serviceScopeFactory.CreateScope())
+				{
+					var schedulerService = scope.ServiceProvider.GetRequiredService<ITaskSchedulerService>();
+					var nextRunTime = await schedulerService.CalculateNextRunTimeAsync(taskInfo.CronExpression, DateTime.UtcNow, cancellationToken);
+
+					taskInfo.NextRunTime = nextRunTime;
+
+					// Update only next run time, not last run time
+					await schedulerService.UpdateTaskExecutionTimesAsync(taskInfo.Id, taskInfo.LastRunTime ?? DateTime.UtcNow, nextRunTime, cancellationToken);
+
+					logger.LogWarning("Task '{Name}' will be run again at: {NextRunTime}", taskInfo.Name, nextRunTime);
+				}
+			}
+			catch (Exception innerEx)
+			{
+				logger.LogError(innerEx, "Error calculating next run time for task '{Name}' after failure", taskInfo.Name);
+			}
 		}
 		finally
 		{
-			// Výpočet dalšího času spuštění
-			taskInfo.NextRunTime = taskInfo.CronExpression.GetNextOccurrence(DateTime.UtcNow, TimeZoneInfo.Local);
-
-			logger.LogTrace("Task '{Name}' next run time: {NextRunTime}", taskInfo.Name, taskInfo.NextRunTime);
-
-			// Označení úlohy jako neběžící
+			// Mark task as completed
 			taskInfo.IsRunning = false;
 		}
 	}
+
+	///// <summary>
+	///// Method called when service is stopping
+	///// </summary>
+	//public override async Task StopAsync(CancellationToken cancellationToken)
+	//{
+	//	logger.LogInformation("Stopping Scheduler service");
+
+	//	// Wait for running tasks to complete (optional with timeout)
+	//	var runningTasks = scheduledTasks.Where(t => t.IsRunning).ToList();
+	//	if (runningTasks.Any())
+	//	{
+	//		logger.LogWarning("Čekám na dokončení {Count} běžících úloh...", runningTasks.Count);
+
+	//		// Here could be a timeout wait or other logic for safe termination
+	//		// For simplicity we just log and continue
+	//	}
+
+	//	await base.StopAsync(cancellationToken);
+	//}
 }

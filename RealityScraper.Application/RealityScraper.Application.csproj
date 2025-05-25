@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <Folder Include="DTOs\" />
+    <Folder Include="Features\Scheduler\" />
     <Folder Include="Mappings\" />
     <Folder Include="Behaviors\" />
   </ItemGroup>

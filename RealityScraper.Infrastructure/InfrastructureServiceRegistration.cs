@@ -7,6 +7,7 @@ using RealityScraper.Infrastructure.BackgroundServices.Scheduler;
 using RealityScraper.Infrastructure.Configuration;
 using RealityScraper.Infrastructure.Utilities;
 using RealityScraper.Infrastructure.Utilities.Mailing;
+using RealityScraper.Infrastructure.Utilities.Scheduler;
 using RealityScraper.Infrastructure.Utilities.WebDriver;
 
 namespace RealityScraper.Infrastructure;
@@ -34,6 +35,9 @@ public static class InfrastructureServiceRegistration
 
 		services.AddTransient<IImageDownloadService, ImageDownloadService>();
 		services.AddTransient<IWebDriverFactory, SeleniumChromeDriverFactory>();
+
+		services.AddTransient<IScheduleTimeCalculator, CronosScheduleTimeCalculator>();
+		services.AddTransient<ITaskSchedulerService, TaskSchedulerService>();
 
 		services.AddHostedService<SchedulerHostedService>();
 
