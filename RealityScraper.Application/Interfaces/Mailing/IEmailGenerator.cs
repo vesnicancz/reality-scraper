@@ -1,4 +1,4 @@
-﻿using RealityScraper.Application.Features.Scraping.Model;
+﻿using RealityScraper.Application.Features.Scraping.Model.Report;
 
 namespace RealityScraper.Application.Interfaces.Mailing;
 

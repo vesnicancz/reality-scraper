@@ -1,4 +1,4 @@
-﻿namespace RealityScraper.Application.Features.Scraping.Model;
+﻿namespace RealityScraper.Application.Features.Scraping.Model.Report;
 
 public record ListingItemWithNewPrice : ListingItem
 {

@@ -1,4 +1,4 @@
-﻿using RealityScraper.Application.Features.Scraping.Model;
+﻿using RealityScraper.Application.Features.Scraping.Model.Report;
 using RealityScraper.Application.Interfaces.Mailing;
 
 namespace RealityScraper.Infrastructure.Utilities.Mailing;
@@ -20,16 +20,16 @@ public class HtmlEmailGenerator : IEmailGenerator
 		body.AppendLine("<body>");
 		body.AppendLine("<h1>Nové realitní nabídky</h1>");
 		body.AppendLine($"<p>Datum: {DateTime.Now:dd.MM.yyyy HH:mm}</p>");
-		body.AppendLine($"<p>Celkem nalezeno: {GetPluralForm(scrapingReport.NewListingCount, "nová nabídka", "nové nabídky", "nových nabídek")}</p>");
+		body.AppendLine($"<p>Celkem nalezeno: {GetPluralForm(scrapingReport.NewListingsCount, "nová nabídka", "nové nabídky", "nových nabídek")}</p>");
 
-		foreach (var result in scrapingReport.Results.Where(i => i.NewListingCount > 0 || i.PriceChangedListingsCount > 0))
+		foreach (var result in scrapingReport.Results.Where(i => i.NewListingsCount > 0 || i.PriceChangedListingsCount > 0))
 		{
 			body.AppendLine("<h2>" + result.SiteName + "</h2>");
-			body.AppendLine($"<p>Celkem nalezeno: {GetPluralForm(result.TotalListingCount, "nabídka", "nabídky", "nabídek")}</p>");
+			body.AppendLine($"<p>Celkem nalezeno: {GetPluralForm(result.TotalListingsCount, "nabídka", "nabídky", "nabídek")}</p>");
 
-			if (result.NewListingCount > 0)
+			if (result.NewListingsCount > 0)
 			{
-				body.AppendLine($"<p>Celkem nových: {result.NewListingCount}</p>");
+				body.AppendLine($"<p>Celkem nových: {result.NewListingsCount}</p>");
 
 				foreach (var listing in result.NewListings)
 				{

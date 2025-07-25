@@ -1,6 +1,6 @@
 ﻿namespace RealityScraper.Application.Features.Scraping.Model;
 
-public record ListingItem
+public class ScraperListingItem
 {
 	public string Title { get; init; }
 
