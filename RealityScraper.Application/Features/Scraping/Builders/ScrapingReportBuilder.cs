@@ -108,8 +108,6 @@ public class ScrapingReportBuilder
 		else
 		{
 			// Existující bez změn - jen započítáme do celkového počtu
-			// builder.IncrementTotalCount();
-			// NOOP
 		}
 
 		processedListings.Add(listingKey);
