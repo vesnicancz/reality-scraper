@@ -233,8 +233,8 @@
 	</div>
 
 	<div class="summary">
-		<p>Souhrn změn: @GetPluralForm(Model.NewListingCount, "nalezena", "nalezeny", "nalezeno")
-			<strong>@GetPluralFormWithNumber(Model.NewListingCount, "nová nabídka", "nové nabídky", "nových nabídek")</strong>
+		<p>Souhrn změn: @GetPluralForm(Model.NewListingsCount, "nalezena", "nalezeny", "nalezeno")
+			<strong>@GetPluralFormWithNumber(Model.NewListingsCount, "nová nabídka", "nové nabídky", "nových nabídek")</strong>
 			a <strong>@GetPluralFormWithNumber(@Model.PriceChangedListingsCount, "změna ceny", "změny ceny", "změn cen")</strong>
 			napříč sledovanými portály.
 		</p>
@@ -245,15 +245,15 @@
 		<div class="portal-section">
 			<div class="portal-header">
 				<h2>@result.SiteName</h2>
-				<span class="count">@result.TotalListingCount</span>
+				<span class="count">@result.TotalListingsCount</span>
 			</div>
 
-			@if (result.NewListingCount > 0)
+			@if (result.NewListingsCount > 0)
 			{
 				<!-- Nové nabídky -->
 				<div class="section-header">
 					<span>Nové nabídky</span>
-					<span class="count">@result.NewListingCount</span>
+					<span class="count">@result.NewListingsCount</span>
 				</div>
 				<ul class="property-list">
 

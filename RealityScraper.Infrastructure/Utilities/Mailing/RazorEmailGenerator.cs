@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using RazorEngineCore;
-using RealityScraper.Application.Features.Scraping.Model;
+using RealityScraper.Application.Features.Scraping.Model.Report;
 using RealityScraper.Application.Interfaces.Mailing;
 
 namespace RealityScraper.Infrastructure.Utilities.Mailing;

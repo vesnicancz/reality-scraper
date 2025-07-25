@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using RealityScraper.Application.Configuration;
 using RealityScraper.Application.Features.Scheduler;
 using RealityScraper.Application.Features.Scraping;
+using RealityScraper.Application.Features.Scraping.Builders;
 using RealityScraper.Application.Features.Scraping.Scrapers;
 using RealityScraper.Application.Interfaces.Mailing;
 using RealityScraper.Application.Interfaces.Scheduler;
@@ -35,12 +36,16 @@ public static class DependencyInjection
 		services.Configure<RealityIdnesScraperOptions>(configuration.GetSection("RealityIdnesScraper"));
 		services.Configure<SRealityScraperOptions>(configuration.GetSection("SRealityScraper"));
 
+		services.AddTransient<ScrapingReportBuilder>();
+
 		// registrace úloh
 		services.AddTransient<ScraperServiceTask>();
 
 		// scrapers
 		services.AddTransient<IRealityScraperService, SRealityScraperService>();
 		services.AddTransient<IRealityScraperService, RealityIdnesScraperService>();
+
+		services.AddTransient<IScrapingReportProcessor, ScrapingReportProcessor>();
 
 		// task scheduler
 		services.AddTransient<ITaskSchedulerService, TaskSchedulerService>();

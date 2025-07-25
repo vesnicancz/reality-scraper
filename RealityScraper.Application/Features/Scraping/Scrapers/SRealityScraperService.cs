@@ -29,9 +29,9 @@ public class SRealityScraperService : IRealityScraperService
 
 	public ScrapersEnum ScrapersEnum => ScrapersEnum.SReality;
 
-	public async Task<List<ListingItem>> ScrapeListingsAsync(ScraperConfiguration scraperConfiguration, CancellationToken cancellationToken)
+	public async Task<List<ScraperListingItem>> ScrapeListingsAsync(ScraperConfiguration scraperConfiguration, CancellationToken cancellationToken)
 	{
-		var listings = new List<ListingItem>();
+		var listings = new List<ScraperListingItem>();
 		var url = scraperConfiguration.Url;
 
 		IWebDriver? driver = null;
@@ -123,7 +123,7 @@ public class SRealityScraperService : IRealityScraperService
 							// Obrázek není povinný
 						}
 
-						var listing = new ListingItem
+						var listing = new ScraperListingItem
 						{
 							Title = title,
 							Price = price,
