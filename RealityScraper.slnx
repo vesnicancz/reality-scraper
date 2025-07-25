@@ -1,0 +1,29 @@
+<Solution>
+  <Folder Name="/Core/">
+    <Project Path="RealityScraper.Application/RealityScraper.Application.csproj" />
+    <Project Path="RealityScraper.Domain/RealityScraper.Domain.csproj" />
+  </Folder>
+  <Folder Name="/Infrastructure/">
+    <Project Path="RealityScraper.Infrastructure/RealityScraper.Infrastructure.csproj" />
+    <Project Path="RealityScraper.Persistence/RealityScraper.Persistence.csproj" />
+  </Folder>
+  <Folder Name="/Presentation/">
+    <Project Path="RealityScraper.Client/RealityScraper.Client.csproj" />
+    <Project Path="RealityScraper.WebApi/RealityScraper.WebApi.csproj" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="RealityScraper.Application.Tests/RealityScraper.Application.Tests.csproj" />
+    <Project Path="RealityScraper.Domain.Tests/RealityScraper.Domain.Tests.csproj" />
+    <Project Path="RealityScraper.Infrastructure.Tests/RealityScraper.Infrastructure.Tests.csproj" />
+    <Project Path="RealityScraper.IntegrationTests/RealityScraper.IntegrationTests.csproj" />
+    <Project Path="RealityScraper.Persistence.Tests/RealityScraper.Persistence.Tests.csproj" />
+  </Folder>
+  <Folder Name="/_Solution items/">
+    <File Path=".dockerignore" />
+    <File Path=".editorconfig" />
+    <File Path=".gitignore" />
+    <File Path="Directory.Packages.props" />
+    <File Path="LICENSE" />
+    <File Path="README.md" />
+  </Folder>
+</Solution>
