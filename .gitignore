@@ -414,6 +414,9 @@ FodyWeavers.xsd
 *.msm
 *.msp
 
+# Rider
+.idea/
+
 # Custom ignores
 /**/appsettings.development.json
 /**/appsettings.production.json
