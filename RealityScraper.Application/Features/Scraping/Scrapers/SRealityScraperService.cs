@@ -147,9 +147,16 @@ public class SRealityScraperService : IRealityScraperService
 					}
 				}
 
+				//var guid = Guid.NewGuid().ToString();
+
+				//var screenshot = await driver.TakeScreenshotAsync();
+				//File.WriteAllBytes($"D:/temp/scraper/{guid}.png", screenshot);
+
+				//var html = await driver.GetPageSourceAsync();
+				//File.WriteAllText($"D:/temp/scraper/{guid}.html", html);
+
 				// načtení další strany
 				var nextButton = await driver.FindElementsAsync(options.NextPageSelector, cancellationToken);
-
 				if (nextButton.Count > 0)
 				{
 					await nextButton.First().ClickAsync(cancellationToken);

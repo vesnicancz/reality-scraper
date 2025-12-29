@@ -422,3 +422,5 @@ FodyWeavers.xsd
 /**/appsettings.production.json
 /**/App_Data
 /**/Properties/launchSettings.json
+
+/.claude
