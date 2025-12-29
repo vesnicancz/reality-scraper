@@ -27,7 +27,7 @@ public class ResendEmailService : IEmailService
 	{
 		if (recipients == null || recipients.Count == 0)
 		{
-			logger.LogWarning("Nejsou nastaveni žádní příjemci e-mailů.");
+			logger.LogWarning("No email recipients are set.");
 			return;
 		}
 
