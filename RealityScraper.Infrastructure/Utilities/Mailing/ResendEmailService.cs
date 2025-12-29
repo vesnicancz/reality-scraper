@@ -60,7 +60,7 @@ public class ResendEmailService : IEmailService
 		}
 		catch (Exception ex)
 		{
-			logger.LogError(ex, "Chyba při odesílání e-mailu přes Resend.");
+			logger.LogError(ex, "Error sending email via Resend.");
 		}
 	}
 }
