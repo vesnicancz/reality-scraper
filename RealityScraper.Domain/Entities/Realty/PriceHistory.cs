@@ -1,9 +1,9 @@
-﻿namespace RealityScraper.Domain.Entities.Realty;
+﻿using RealityScraper.Domain.Common;
 
-public class PriceHistory
+namespace RealityScraper.Domain.Entities.Realty;
+
+public class PriceHistory : BaseEntity
 {
-	public Guid Id { get; set; }
-
 	public Guid ListingId { get; set; }
 
 	public Listing Listing { get; set; }

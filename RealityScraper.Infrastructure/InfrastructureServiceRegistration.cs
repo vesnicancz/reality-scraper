@@ -10,6 +10,7 @@ using RealityScraper.Infrastructure.Utilities;
 using RealityScraper.Infrastructure.Utilities.Mailing;
 using RealityScraper.Infrastructure.Utilities.Scheduler;
 using RealityScraper.Infrastructure.Utilities.WebDriver;
+using Resend;
 
 namespace RealityScraper.Infrastructure;
 
@@ -20,6 +21,7 @@ public static class InfrastructureServiceRegistration
 		// configuration
 		services.Configure<SmtpOptions>(configuration.GetSection("SmtpSettings"));
 		services.Configure<SendGridOptions>(configuration.GetSection("SendGridSettings"));
+		services.Configure<ResendOptions>(configuration.GetSection("ResendSettings"));
 		services.Configure<SeleniumOptions>(configuration.GetSection("SeleniumSettings"));
 
 		services.AddHttpClient();
@@ -27,8 +29,15 @@ public static class InfrastructureServiceRegistration
 		//services.Configure<SchedulerSettings>(configuration.GetSection("SchedulerSettings"));
 
 		// mail settings
-		services.AddTransient<IEmailService, SendGridEmailService>();
+		//services.AddTransient<IEmailService, SendGridEmailService>();
 		//services.AddTransient<IEmailService, SmtpEmailService>();
+		services.AddHttpClient<ResendClient>();
+		services.Configure<ResendClientOptions>(o =>
+		{
+			o.ApiToken = configuration.GetValue<string>("ResendSettings:ApiKey");
+		});
+		services.AddTransient<IResend, ResendClient>();
+		services.AddTransient<IEmailService, ResendEmailService>();
 
 		services.AddTransient<IRazorEngine, RazorEngine>();
 		services.AddTransient<IEmailGenerator, RazorEmailGenerator>();

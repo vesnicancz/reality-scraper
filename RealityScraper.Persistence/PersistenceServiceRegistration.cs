@@ -18,7 +18,11 @@ public static class PersistenceServiceRegistration
 	{
 		// Konfigurace databázového kontextu
 		services.AddDbContext<RealityDbContext>(options =>
-			options.UseSqlite(
+			//options.UseSqlite(
+			//	configuration.GetConnectionString("DefaultConnection"),
+			//	b => b.MigrationsAssembly(typeof(RealityDbContext).Assembly)
+			//)
+			options.UseNpgsql(
 				configuration.GetConnectionString("DefaultConnection"),
 				b => b.MigrationsAssembly(typeof(RealityDbContext).Assembly)
 			)
