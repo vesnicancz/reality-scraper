@@ -8,7 +8,7 @@
     <Project Path="RealityScraper.Persistence/RealityScraper.Persistence.csproj" />
   </Folder>
   <Folder Name="/Presentation/">
-    <Project Path="RealityScraper.Client/RealityScraper.Client.csproj" />
+    <Project Path="RealityScraper.Client/RealityScraper.Client.csproj" Id="e080766c-a6ea-494a-b0d5-5673eec53787" />
     <Project Path="RealityScraper.WebApi/RealityScraper.WebApi.csproj" />
   </Folder>
   <Folder Name="/Tests/">

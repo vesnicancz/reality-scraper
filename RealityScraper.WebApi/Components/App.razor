@@ -1,0 +1,35 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<base href="/" />
+		@* <ResourcePreloader /> *@
+		<link href="@Assets["_content/Havit.Blazor.Components.Web.Bootstrap/bootstrap.min.css"]" rel="stylesheet" />
+		<link rel="stylesheet" href="@Assets["lib/bootstrap/dist/css/bootstrap.min.css"]" />
+		<link rel="stylesheet" href="@Assets["app.css"]" />
+		<link rel="stylesheet" href="@Assets["RealityScraper.Client.styles.css"]" />
+		<ImportMap />
+		<link rel="icon" type="image/png" href="favicon.png" />
+		<HeadOutlet @rendermode="PageRenderMode" />
+	</head>
+
+	<body>
+		<Routes @rendermode="PageRenderMode" />
+		<script src="@Assets["_framework/blazor.web.js"]"></script>
+		@((MarkupString)@HxSetup.RenderBootstrapJavaScriptReference())
+	</body>
+
+</html>
+
+@using Havit.Blazor.Components.Web
+@using Havit.Blazor.Components.Web.Bootstrap
+
+@code {
+	[CascadingParameter]
+	private HttpContext HttpContext { get; set; } = default!;
+
+	private IComponentRenderMode? PageRenderMode =>
+		HttpContext.AcceptsInteractiveRouting() ? InteractiveWebAssembly : null;
+}
