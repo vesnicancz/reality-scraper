@@ -26,8 +26,6 @@ public static class InfrastructureServiceRegistration
 
 		services.AddHttpClient();
 
-		//services.Configure<SchedulerSettings>(configuration.GetSection("SchedulerSettings"));
-
 		// mail settings
 		//services.AddTransient<IEmailService, SendGridEmailService>();
 		//services.AddTransient<IEmailService, SmtpEmailService>();
