@@ -1,0 +1,55 @@
+name: .NET Build and Docker Push
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Docker image tag'
+        required: false
+        default: 'latest'
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+    
+    - name: Restore dependencies
+      run: dotnet restore
+    
+    - name: Build
+      run: dotnet build --no-restore -c Release
+    
+    - name: Test
+      run: dotnet test --no-build --verbosity normal -c Release
+    
+    - name: Publish
+      run: dotnet publish -c Release -o ./publish
+    
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Build Docker image
+      run: |
+        docker build -t ghcr.io/${{ github.repository }}:${{ inputs.tag }} -f ./Dockerfile.publish .
+        if [ "${{ inputs.tag }}" = "latest" ] || [ "${{ inputs.environment }}" = "production" ]; then
+          docker tag ghcr.io/${{ github.repository }}:${{ inputs.tag }} ghcr.io/${{ github.repository }}:latest
+        fi
+    
+    - name: Push Docker image
+      run: |
+        docker push ghcr.io/${{ github.repository }}:${{ inputs.tag }}
+        if [ "${{ inputs.tag }}" = "latest" ] || [ "${{ inputs.environment }}" = "production" ]; then
+          docker push ghcr.io/${{ github.repository }}:latest
+        fi
