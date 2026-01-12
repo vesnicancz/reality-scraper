@@ -26,7 +26,7 @@ public class TaskSchedulerService : ITaskSchedulerService
 		this.logger = logger;
 	}
 
-	public Task<DateTime?> CalculateNextRunTimeAsync(string cronExpression, DateTime fromTime, CancellationToken cancellationToken)
+	public Task<DateTimeOffset?> CalculateNextRunTimeAsync(string cronExpression, DateTimeOffset fromTime, CancellationToken cancellationToken)
 	{
 		return Task.FromResult(timeCalculator.GetNextExecutionTime(cronExpression, fromTime));
 	}
@@ -63,7 +63,7 @@ public class TaskSchedulerService : ITaskSchedulerService
 		return result;
 	}
 
-	public async Task UpdateTaskExecutionTimesAsync(Guid taskId, DateTime lastRunTime, DateTime? nextRunTime, CancellationToken cancellationToken)
+	public async Task UpdateTaskExecutionTimesAsync(Guid taskId, DateTimeOffset lastRunTime, DateTimeOffset? nextRunTime, CancellationToken cancellationToken)
 	{
 		await taskRepository.UpdateLastRunTimeAsync(taskId, lastRunTime, cancellationToken);
 		await taskRepository.UpdateNextRunTimeAsync(taskId, nextRunTime, cancellationToken);

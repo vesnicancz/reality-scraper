@@ -5,7 +5,7 @@ namespace RealityScraper.Infrastructure.Utilities.Scheduler;
 
 public class CronosScheduleTimeCalculator : IScheduleTimeCalculator
 {
-	public DateTime? GetNextExecutionTime(string cronExpression, DateTime fromTime)
+	public DateTimeOffset? GetNextExecutionTime(string cronExpression, DateTimeOffset fromTime)
 	{
 		if (string.IsNullOrWhiteSpace(cronExpression))
 		{
@@ -14,8 +14,7 @@ public class CronosScheduleTimeCalculator : IScheduleTimeCalculator
 
 		if (CronExpression.TryParse(cronExpression, out var cronExp))
 		{
-			var timeZone = TimeZoneInfo.FindSystemTimeZoneById("Central Europe Standard Time");
-			return cronExp.GetNextOccurrence(fromTime.ToUniversalTime(), timeZone);
+			return cronExp.GetNextOccurrence(fromTime, TimeZoneInfo.Utc);
 		}
 
 		return null;

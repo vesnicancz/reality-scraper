@@ -26,7 +26,7 @@ public class DateTimeProvider : IDateTimeProvider
 	/// <summary>
 	/// Vrací aktuální datum (bez času).
 	/// </summary>
-	public DateTime GetCurrentDate()
+	public DateTimeOffset GetCurrentDate()
 	{
 		return GetCurrentTime().Date;
 	}
@@ -34,8 +34,8 @@ public class DateTimeProvider : IDateTimeProvider
 	/// <summary>
 	/// Vrací aktuální čas.
 	/// </summary>
-	public DateTime GetCurrentTime()
+	public DateTimeOffset GetCurrentTime()
 	{
-		return TimeZoneInfo.ConvertTime(DateTime.Now, CurrentTimeZone);
+		return TimeZoneInfo.ConvertTime(DateTimeOffset.Now, CurrentTimeZone).ToUniversalTime();
 	}
 }

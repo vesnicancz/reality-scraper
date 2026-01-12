@@ -12,9 +12,9 @@ public class ScheduledTaskInfo
 
 	public ScrapingConfiguration ScrapingConfiguration { get; set; }
 
-	public DateTime? NextRunTime { get; set; }
+	public DateTimeOffset? NextRunTime { get; set; }
 
 	public bool IsRunning { get; set; }
 
-	public DateTime? LastRunTime { get; set; }
+	public DateTimeOffset? LastRunTime { get; set; }
 }

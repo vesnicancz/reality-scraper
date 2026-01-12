@@ -29,7 +29,7 @@ internal class ScraperTaskRepository : Repository<ScraperTask>, IScraperTaskRepo
 			.FirstOrDefaultAsync(t => t.Id == taskId, cancellationToken);
 	}
 
-	public async Task UpdateNextRunTimeAsync(Guid taskId, DateTime? nextRunTime, CancellationToken cancellationToken)
+	public async Task UpdateNextRunTimeAsync(Guid taskId, DateTimeOffset? nextRunTime, CancellationToken cancellationToken)
 	{
 		var task = await dbContext.Set<ScraperTask>().FindAsync(new object[] { taskId }, cancellationToken);
 
@@ -40,7 +40,7 @@ internal class ScraperTaskRepository : Repository<ScraperTask>, IScraperTaskRepo
 		}
 	}
 
-	public async Task UpdateLastRunTimeAsync(Guid taskId, DateTime lastRunTime, CancellationToken cancellationToken)
+	public async Task UpdateLastRunTimeAsync(Guid taskId, DateTimeOffset lastRunTime, CancellationToken cancellationToken)
 	{
 		var task = await dbContext.Set<ScraperTask>().FindAsync(new object[] { taskId }, cancellationToken);
 

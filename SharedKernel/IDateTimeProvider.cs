@@ -5,10 +5,10 @@ public interface IDateTimeProvider
 	/// <summary>
 	/// Returns the current date (without time).
 	/// </summary>
-	DateTime GetCurrentDate();
+	DateTimeOffset GetCurrentDate();
 
 	/// <summary>
 	/// Returns the current time.
 	/// </summary>
-	DateTime GetCurrentTime();
+	DateTimeOffset GetCurrentTime();
 }

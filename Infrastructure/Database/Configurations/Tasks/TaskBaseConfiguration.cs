@@ -22,13 +22,13 @@ public class TaskBaseConfiguration : IEntityTypeConfiguration<TaskBase>
 			.IsRequired()
 			.HasMaxLength(50);
 
-		builder.Property(e => e.CreatedAt)
-			.HasColumnType("timestamp without time zone");
+		//builder.Property(e => e.CreatedAt)
+		//	.HasColumnType("timestamp without time zone");
 
-		builder.Property(e => e.LastRunAt)
-			.HasColumnType("timestamp without time zone");
+		//builder.Property(e => e.LastRunAt)
+		//	.HasColumnType("timestamp without time zone");
 
-		builder.Property(e => e.NextRunAt)
-			.HasColumnType("timestamp without time zone");
+		//builder.Property(e => e.NextRunAt)
+		//	.HasColumnType("timestamp without time zone");
 	}
 }

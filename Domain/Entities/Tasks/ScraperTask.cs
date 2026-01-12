@@ -12,7 +12,7 @@ public class ScraperTask : TaskBase
 	{
 	}
 
-	public ScraperTask(string name, string cronExpression, bool enabled, DateTime createdAt, DateTime? nextRunAt)
+	public ScraperTask(string name, string cronExpression, bool enabled, DateTimeOffset createdAt, DateTimeOffset? nextRunAt)
 	{
 		Name = name;
 		CronExpression = cronExpression;
@@ -21,12 +21,12 @@ public class ScraperTask : TaskBase
 		NextRunAt = nextRunAt;
 	}
 
-	public void SetNextRunAt(DateTime? nextRunAt)
+	public void SetNextRunAt(DateTimeOffset? nextRunAt)
 	{
 		NextRunAt = nextRunAt;
 	}
 
-	public void SetLastRunAt(DateTime lastRunAt)
+	public void SetLastRunAt(DateTimeOffset lastRunAt)
 	{
 		LastRunAt = lastRunAt;
 	}

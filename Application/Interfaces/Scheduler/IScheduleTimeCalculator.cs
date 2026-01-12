@@ -2,7 +2,7 @@
 
 public interface IScheduleTimeCalculator
 {
-	DateTime? GetNextExecutionTime(string cronExpression, DateTime fromTime);
+	DateTimeOffset? GetNextExecutionTime(string cronExpression, DateTimeOffset fromTime);
 
 	bool IsValidExpression(string cronExpression);
 }
