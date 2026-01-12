@@ -1,0 +1,10 @@
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
+WORKDIR /app
+EXPOSE 5000
+
+ENV ASPNETCORE_URLS=http://+:5000
+ENV ASPNETCORE_ENVIRONMENT=Production
+
+COPY ./publish .
+
+ENTRYPOINT ["dotnet", "RealityScraper.Web.Api.dll"]
