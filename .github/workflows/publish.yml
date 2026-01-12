@@ -8,15 +8,6 @@ on:
         required: false
         default: 'latest'
         type: string
-      environment:
-        description: 'Target environment'
-        required: false
-        default: 'production'
-        type: choice
-        options:
-          - development
-          - staging
-          - production
 
 jobs:
   build:
