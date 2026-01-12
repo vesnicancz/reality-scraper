@@ -43,9 +43,13 @@ jobs:
     - name: Build Docker image
       run: |
         docker build -t ghcr.io/${{ github.repository }}:${{ inputs.tag }} -f ./Dockerfile.publish .
-        docker tag ghcr.io/${{ github.repository }}:${{ inputs.tag }} ghcr.io/${{ github.repository }}:latest
+        if [ "${{ inputs.tag }}" = "latest" ] || [ "${{ inputs.environment }}" = "production" ]; then
+          docker tag ghcr.io/${{ github.repository }}:${{ inputs.tag }} ghcr.io/${{ github.repository }}:latest
+        fi
     
     - name: Push Docker image
       run: |
         docker push ghcr.io/${{ github.repository }}:${{ inputs.tag }}
-        docker push ghcr.io/${{ github.repository }}:latest
+        if [ "${{ inputs.tag }}" = "latest" ] || [ "${{ inputs.environment }}" = "production" ]; then
+          docker push ghcr.io/${{ github.repository }}:latest
+        fi
