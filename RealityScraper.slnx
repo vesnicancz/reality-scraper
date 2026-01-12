@@ -1,24 +1,5 @@
 <Solution>
-  <Folder Name="/Core/">
-    <Project Path="RealityScraper.Application/RealityScraper.Application.csproj" />
-    <Project Path="RealityScraper.Domain/RealityScraper.Domain.csproj" />
-  </Folder>
-  <Folder Name="/Infrastructure/">
-    <Project Path="RealityScraper.Infrastructure/RealityScraper.Infrastructure.csproj" />
-    <Project Path="RealityScraper.Persistence/RealityScraper.Persistence.csproj" />
-  </Folder>
-  <Folder Name="/Presentation/">
-    <Project Path="RealityScraper.Client/RealityScraper.Client.csproj" Id="e080766c-a6ea-494a-b0d5-5673eec53787" />
-    <Project Path="RealityScraper.WebApi/RealityScraper.WebApi.csproj" />
-  </Folder>
-  <Folder Name="/Tests/">
-    <Project Path="RealityScraper.Application.Tests/RealityScraper.Application.Tests.csproj" />
-    <Project Path="RealityScraper.Domain.Tests/RealityScraper.Domain.Tests.csproj" />
-    <Project Path="RealityScraper.Infrastructure.Tests/RealityScraper.Infrastructure.Tests.csproj" />
-    <Project Path="RealityScraper.IntegrationTests/RealityScraper.IntegrationTests.csproj" />
-    <Project Path="RealityScraper.Persistence.Tests/RealityScraper.Persistence.Tests.csproj" />
-  </Folder>
-  <Folder Name="/_Solution items/">
+  <Folder Name="/Solution items/">
     <File Path=".dockerignore" />
     <File Path=".editorconfig" />
     <File Path=".gitignore" />
@@ -28,4 +9,17 @@
     <File Path="LICENSE" />
     <File Path="README.md" />
   </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="Application.Tests/Application.Tests.csproj" />
+    <Project Path="Domain.Tests/Domain.Tests.csproj" />
+    <Project Path="Infrastructure.Tests/Infrastructure.Tests.csproj" />
+    <Project Path="IntegrationTests/IntegrationTests.csproj" />
+  </Folder>
+  <Project Path="Application/Application.csproj" />
+  <Project Path="Domain/Domain.csproj" />
+  <Project Path="Infrastructure/Infrastructure.csproj" />
+  <Project Path="SharedKernel/SharedKernel.csproj" Id="54e134f4-371e-4b02-810e-67d8eefcfa59" />
+  <Project Path="Web.Api/Web.Api.csproj" />
+  <Project Path="Web.Client/Web.Client.csproj" Id="e080766c-a6ea-494a-b0d5-5673eec53787" />
+  <Project Path="Web.Shared/Web.Shared.csproj" Id="53e92779-0199-416a-8c5b-0c6b9671d955" />
 </Solution>
