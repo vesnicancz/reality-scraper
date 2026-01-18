@@ -2,7 +2,7 @@
 WORKDIR /app
 EXPOSE 5000
 
-RUN mkdir -p /app/files && chmod 777 /app/files
+RUN mkdir -p /app/files && chmod 755 /app/files
 
 ENV ASPNETCORE_URLS=http://+:5000
 ENV ASPNETCORE_ENVIRONMENT=Production
