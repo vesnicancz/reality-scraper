@@ -266,7 +266,7 @@
 								</div>
 								<div class="property-info">
 									<div class="property-title">@listing.Location</div>
-									<div class="property-price">@(listing.Price?.ToString("C0") ?? "Neuvedeno")</div>
+									<div class="property-price">@FormatPrice(listing.Price)</div>
 									<a href="@listing.Url" class="property-link">Zobrazit detail</a>
 								</div>
 							</div>
@@ -294,18 +294,18 @@
 								<div class="property-info">
 									<div class="property-title">@listing.Location</div>
 									<div class="property-price">
-										@(listing.Price?.ToString("C0") ?? "neuvedeno")
+										@FormatPrice(listing.Price)
 										@if (listing.PriceDiff < 0)
 										{
-											<span class="price-change price-down">↓ @listing.PriceDiff.ToString("C0")</span>
+											<span class="price-change price-down">↓ @FormatPrice(listing.PriceDiff)</span>
 										}
 										else if (listing.PriceDiff > 0)
 										{
-											<span class="price-change price-up">↑ +@listing.PriceDiff.ToString("C0")</span>
+											<span class="price-change price-up">↑ +@FormatPrice(listing.PriceDiff)</span>
 										}
 										else
 										{
-											<text>(původně @(listing.OldPrice?.ToString("C0") ?? "neuvedeno"))</text>
+											<text>(původně @FormatPrice(listing.OldPrice))</text>
 										}
 									</div>
 									<a href="@listing.Url" class="property-link">Zobrazit detail</a>
@@ -354,6 +354,18 @@
 		else
 		{
 			return $"{count} {form5plus}";
+		}
+	}
+
+	string FormatPrice(decimal? price)
+	{
+		if (price.HasValue)
+		{
+			return price.Value.ToString("C0", System.Globalization.CultureInfo.GetCultureInfo("cs-CZ"));
+		}
+		else
+		{
+			return "neuvedeno";
 		}
 	}
 }
