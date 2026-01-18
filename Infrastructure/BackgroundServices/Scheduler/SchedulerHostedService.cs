@@ -141,7 +141,7 @@ public class SchedulerHostedService : BackgroundService
 	private async Task CheckAndExecuteScheduledTasksAsync(CancellationToken cancellationToken)
 	{
 		// Execute tasks sequentially
-		foreach (var taskInfo in scheduledTasks.Where(t => !t.IsRunning && t.NextRunTime.HasValue && t.NextRunTime.Value <= dateTimeProvider.GetCurrentTime()))
+		foreach (var taskInfo in scheduledTasks.Where(t => !t.IsRunning && t.NextRunTime.HasValue && t.NextRunTime.Value <= DateTimeOffset.UtcNow)) // taskInfo.NextRunTime is in UTC
 		{
 			await ExecuteTaskAsync(taskInfo, cancellationToken);
 		}
