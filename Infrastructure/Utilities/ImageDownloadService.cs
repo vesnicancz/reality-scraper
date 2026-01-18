@@ -38,7 +38,7 @@ public class ImageDownloadService : IImageDownloadService
 			imageBytes = await response.Content.ReadAsByteArrayAsync(cancellationToken);
 		}
 
-		var folder = Path.Combine(Directory.GetCurrentDirectory(), "App_Data", "Images", listing.Id.ToString()[..2]);
+		var folder = Path.Combine(Directory.GetCurrentDirectory(), "files", "images", listing.Id.ToString()[..2]);
 		if (!Directory.Exists(folder))
 		{
 			Directory.CreateDirectory(folder);
