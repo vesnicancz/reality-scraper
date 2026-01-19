@@ -43,6 +43,11 @@ public class ImageDownloadService : IImageDownloadService
 		}
 
 		var rootPath = configuration.GetValue<string>("FileStorage:ImagePath");
+		if (string.IsNullOrWhiteSpace(rootPath))
+		{
+			logger.LogWarning("Configuration value 'FileStorage:ImagePath' is missing or empty. Falling back to default 'files/images'.");
+			rootPath = "files/images";
+		}
 		var folder = Path.Combine(Directory.GetCurrentDirectory(), rootPath, listing.Id.ToString()[..2]);
 		if (!Directory.Exists(folder))
 		{
