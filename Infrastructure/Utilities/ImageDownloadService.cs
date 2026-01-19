@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using RealityScraper.Application.Interfaces.Scraping;
 using RealityScraper.Domain.Entities.Realty;
 
@@ -7,14 +8,17 @@ namespace RealityScraper.Infrastructure.Utilities;
 public class ImageDownloadService : IImageDownloadService
 {
 	private readonly IHttpClientFactory httpClientFactory;
+	private readonly IConfiguration configuration;
 	private readonly ILogger<ImageDownloadService> logger;
 
 	public ImageDownloadService(
 		IHttpClientFactory httpClientFactory,
+		IConfiguration configuration,
 		ILogger<ImageDownloadService> logger
 		)
 	{
 		this.httpClientFactory = httpClientFactory;
+		this.configuration = configuration;
 		this.logger = logger;
 	}
 
@@ -38,7 +42,13 @@ public class ImageDownloadService : IImageDownloadService
 			imageBytes = await response.Content.ReadAsByteArrayAsync(cancellationToken);
 		}
 
-		var folder = Path.Combine(Directory.GetCurrentDirectory(), "files", "images", listing.Id.ToString()[..2]);
+		var rootPath = configuration.GetValue<string>("FileStorage:ImagePath");
+		if (string.IsNullOrWhiteSpace(rootPath))
+		{
+			logger.LogWarning("Configuration value 'FileStorage:ImagePath' is missing or empty. Falling back to default 'files/images'.");
+			rootPath = "files/images";
+		}
+		var folder = Path.Combine(Directory.GetCurrentDirectory(), rootPath, listing.Id.ToString()[..2]);
 		if (!Directory.Exists(folder))
 		{
 			Directory.CreateDirectory(folder);
