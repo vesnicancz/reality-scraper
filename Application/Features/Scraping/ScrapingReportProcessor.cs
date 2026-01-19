@@ -102,6 +102,7 @@ public class ScrapingReportProcessor : IScrapingReportProcessor
 		{
 			logger.LogInformation("Nalezeno {newCount} nových inzerátů a {priceChangedCount} upravených cen.", report.NewListingsCount, report.PriceChangedListingsCount);
 			await mailerService.SendNewListingsAsync(report, recipients, cancellationToken);
+			logger.LogInformation("Notifikace o nových inzerátech odeslána.");
 		}
 		else
 		{
@@ -111,9 +112,16 @@ public class ScrapingReportProcessor : IScrapingReportProcessor
 
 	private async Task DownloadListingImagesAsync(List<Listing> listingsToDownload, CancellationToken cancellationToken)
 	{
+		if (listingsToDownload.Count == 0)
+		{
+			return;
+		}
+
 		foreach (var listing in listingsToDownload)
 		{
 			await imageDownloadService.DownloadImageAsync(listing, cancellationToken);
 		}
+
+		logger.LogInformation("Obrázky pro {count} inzerátů byly staženy.", listingsToDownload.Count);
 	}
 }
