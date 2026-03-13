@@ -65,7 +65,7 @@ public class SchedulerHostedService : BackgroundService
 			}
 			else
 			{
-				// Timeout expired — execute due tasks, then refresh
+				// Timeout expired — execute due tasks
 				await CheckAndExecuteScheduledTasksAsync(stoppingToken);
 			}
 		}
