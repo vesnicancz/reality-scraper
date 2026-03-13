@@ -3,6 +3,7 @@ using RealityScraper.Application.Abstractions.Messaging;
 using RealityScraper.Application.Features.ScraperTaskRecipients;
 using RealityScraper.Application.Features.ScraperTaskTargets;
 using RealityScraper.Application.Interfaces.Repositories.Configuration;
+using RealityScraper.Application.Interfaces.Scheduler;
 using RealityScraper.Domain.Entities.Tasks;
 using RealityScraper.Domain.Enums;
 using RealityScraper.Domain.Events;
@@ -14,21 +15,28 @@ internal sealed class CreateScraperTaskCommandHandler : ICommandHandler<CreateSc
 {
 	private readonly IScraperTaskRepository scraperTaskRepository;
 	private readonly IDateTimeProvider dateTimeProvider;
+	private readonly IScheduleTimeCalculator timeCalculator;
 	private readonly IUnitOfWork unitOfWork;
 
 	public CreateScraperTaskCommandHandler(
 		IScraperTaskRepository scraperTaskRepository,
 		IDateTimeProvider dateTimeProvider,
+		IScheduleTimeCalculator timeCalculator,
 		IUnitOfWork unitOfWork)
 	{
 		this.scraperTaskRepository = scraperTaskRepository;
 		this.dateTimeProvider = dateTimeProvider;
+		this.timeCalculator = timeCalculator;
 		this.unitOfWork = unitOfWork;
 	}
 
 	public async Task<Result<ScraperTaskDto>> Handle(CreateScraperTaskCommand command, CancellationToken cancellationToken)
 	{
-		var scraperTask = new ScraperTask(command.Name, command.CronExpression, command.Enabled, dateTimeProvider.GetCurrentTime(), null);
+		var nextRunTime = command.Enabled
+			? timeCalculator.GetNextExecutionTime(command.CronExpression, dateTimeProvider.GetCurrentTime())
+			: null;
+
+		var scraperTask = new ScraperTask(command.Name, command.CronExpression, command.Enabled, dateTimeProvider.GetCurrentTime(), nextRunTime);
 
 		foreach (var recipient in command.Recipients)
 		{

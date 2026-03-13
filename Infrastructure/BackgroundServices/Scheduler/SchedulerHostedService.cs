@@ -47,13 +47,9 @@ public class SchedulerHostedService : BackgroundService
 
 		while (!stoppingToken.IsCancellationRequested)
 		{
-			var timeToNextTask = CalculateTimeToNextTask();
+			var (timeToNextTask, nextTaskDueAt) = CalculateTimeToNextTask();
 
-			logger.LogTrace("Scheduler sleeping for {SleepTime}, next task due at {NextDue}",
-				timeToNextTask,
-				timeToNextTask < maxSleepInterval
-					? dateTimeProvider.GetCurrentTime().Add(timeToNextTask)
-					: (object)"no tasks scheduled");
+			logger.LogTrace("Scheduler sleeping for {SleepTime}, next task due at {NextDue}", timeToNextTask, nextTaskDueAt.HasValue ? nextTaskDueAt.Value : "no tasks scheduled");
 
 			// Wait for either: a refresh signal (task changed) or timeout (next task is due)
 			var wasSignaled = await refreshSignal.WaitForRefreshAsync(timeToNextTask, stoppingToken);
@@ -76,7 +72,7 @@ public class SchedulerHostedService : BackgroundService
 	/// <summary>
 	/// Calculates time until the next scheduled task, or maxSleepInterval if no tasks are pending.
 	/// </summary>
-	private TimeSpan CalculateTimeToNextTask()
+	private (TimeSpan Delay, DateTimeOffset? NextDueAt) CalculateTimeToNextTask()
 	{
 		var nextRunTime = scheduledTasks
 			.Where(t => !t.IsRunning && t.NextRunTime.HasValue)
@@ -86,17 +82,17 @@ public class SchedulerHostedService : BackgroundService
 
 		if (!nextRunTime.HasValue)
 		{
-			return maxSleepInterval;
+			return (maxSleepInterval, null);
 		}
 
 		var delay = nextRunTime.Value - dateTimeProvider.GetCurrentTime();
 
 		if (delay <= TimeSpan.Zero)
 		{
-			return TimeSpan.Zero;
+			return (TimeSpan.Zero, nextRunTime);
 		}
 
-		return delay < maxSleepInterval ? delay : maxSleepInterval;
+		return (delay < maxSleepInterval ? delay : maxSleepInterval, nextRunTime);
 	}
 
 	/// <summary>
