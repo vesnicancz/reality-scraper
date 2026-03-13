@@ -65,37 +65,44 @@ public partial class ScraperTaskEditPage(
 
 	private async Task HandleValidSubmit()
 	{
-		HttpResponseMessage response;
+		try
+		{
+			HttpResponseMessage response;
 
-		if (IsEdit)
-		{
-			response = await http.PutAsJsonAsync($"/api/scraper-tasks/{Id}", new UpdateScraperTaskRequest
+			if (IsEdit)
 			{
-				Name = model.Name,
-				CronExpression = model.CronExpression,
-				Enabled = model.Enabled,
-				Recipients = model.Recipients,
-				Targets = model.Targets
-			});
-		}
-		else
-		{
-			response = await http.PostAsJsonAsync("/api/scraper-tasks", new CreateScraperTaskRequest
+				response = await http.PutAsJsonAsync($"/api/scraper-tasks/{Id}", new UpdateScraperTaskRequest
+				{
+					Name = model.Name,
+					CronExpression = model.CronExpression,
+					Enabled = model.Enabled,
+					Recipients = model.Recipients,
+					Targets = model.Targets
+				});
+			}
+			else
 			{
-				Name = model.Name,
-				CronExpression = model.CronExpression,
-				Enabled = model.Enabled,
-				Recipients = model.Recipients,
-				Targets = model.Targets
-			});
-		}
+				response = await http.PostAsJsonAsync("/api/scraper-tasks", new CreateScraperTaskRequest
+				{
+					Name = model.Name,
+					CronExpression = model.CronExpression,
+					Enabled = model.Enabled,
+					Recipients = model.Recipients,
+					Targets = model.Targets
+				});
+			}
 
-		if (response.IsSuccessStatusCode)
-		{
-			messenger.AddInformation(IsEdit ? "Task byl upraven." : "Task byl vytvoren.");
-			nav.NavigateTo("/scraper-tasks");
+			if (response.IsSuccessStatusCode)
+			{
+				messenger.AddInformation(IsEdit ? "Task byl upraven." : "Task byl vytvoren.");
+				nav.NavigateTo("/scraper-tasks");
+			}
+			else
+			{
+				messenger.AddError("Nepodarilo se ulozit task.");
+			}
 		}
-		else
+		catch (HttpRequestException)
 		{
 			messenger.AddError("Nepodarilo se ulozit task.");
 		}
