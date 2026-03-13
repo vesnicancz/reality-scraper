@@ -1,5 +1,4 @@
 ﻿using FluentValidation;
-using RealityScraper.Application.Features.ScraperTasks.Create;
 using RealityScraper.Application.Interfaces.Scheduler;
 using RealityScraper.Domain.Enums;
 

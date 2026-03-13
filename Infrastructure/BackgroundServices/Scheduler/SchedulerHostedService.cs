@@ -91,8 +91,12 @@ public class SchedulerHostedService : BackgroundService
 
 		var delay = nextRunTime.Value - dateTimeProvider.GetCurrentTime();
 
-		// If task is already overdue, return zero
-		return delay > TimeSpan.Zero ? delay : TimeSpan.Zero;
+		if (delay <= TimeSpan.Zero)
+		{
+			return TimeSpan.Zero;
+		}
+
+		return delay < maxSleepInterval ? delay : maxSleepInterval;
 	}
 
 	/// <summary>

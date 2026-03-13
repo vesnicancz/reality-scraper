@@ -31,9 +31,16 @@ public partial class ScraperTaskEditPage(
 		if (IsEdit)
 		{
 			isLoading = true;
-			var task = await http.GetFromJsonAsync<ScraperTaskResult>($"/api/scraper-tasks/{Id}");
-			if (task != null)
+			try
 			{
+				var task = await http.GetFromJsonAsync<ScraperTaskResult>($"/api/scraper-tasks/{Id}");
+				if (task == null)
+				{
+					messenger.AddError("Task nebyl nalezen.");
+					nav.NavigateTo("/scraper-tasks");
+					return;
+				}
+
 				model = new ScraperTaskFormModel
 				{
 					Name = task.Name,
@@ -43,7 +50,15 @@ public partial class ScraperTaskEditPage(
 					Targets = task.Targets.Select(t => new TargetInputModel { ScraperType = t.ScraperType, Url = t.Url }).ToList()
 				};
 			}
-			isLoading = false;
+			catch (HttpRequestException)
+			{
+				messenger.AddError("Nepodarilo se nacist task.");
+				nav.NavigateTo("/scraper-tasks");
+			}
+			finally
+			{
+				isLoading = false;
+			}
 		}
 	}
 

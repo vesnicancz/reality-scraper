@@ -22,8 +22,8 @@ internal sealed class UpdateScraperTaskEndpoint : IEndpoint
 				request.Name,
 				request.CronExpression,
 				request.Enabled,
-				request.Recipients.Select(r => new ScraperTaskRecipientInput(r.Email)).ToList(),
-				request.Targets.Select(t => new ScraperTaskTargetInput(t.ScraperType, t.Url)).ToList());
+				(request.Recipients ?? []).Select(r => new ScraperTaskRecipientInput(r.Email)).ToList(),
+				(request.Targets ?? []).Select(t => new ScraperTaskTargetInput(t.ScraperType, t.Url)).ToList());
 
 			var result = await commandHandler.Handle(command, cancellationToken);
 
