@@ -1,32 +1,37 @@
 ﻿<div class="nav-menu @(isSidebarCollapsed ? "collapsed" : "")">
-	<div class="top-row ps-3 navbar navbar-dark">
-		<div class="container-fluid">
-			<a class="navbar-brand" href="">Reality Scraper</a>
-			<button class="sidebar-toggle" @onclick="ToggleSidebar" title="@(isSidebarCollapsed ? "Rozbalit menu" : "Sbalit menu")">
-				<span class="toggle-icon"></span>
-			</button>
-		</div>
-	</div>
+    <div class="top-row ps-3 navbar navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="">Reality Scraper</a>
+            <button class="sidebar-toggle" @onclick="ToggleSidebar" title="@(isSidebarCollapsed ? "Rozbalit menu" : "Sbalit menu")">
+                <span class="toggle-icon"></span>
+            </button>
+        </div>
+    </div>
 
-	<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+    <input type="checkbox" title="Navigation menu" class="navbar-toggler" />
 
-	<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-		<nav class="nav flex-column">
-			<div class="nav-item" data-tooltip="Home">
-				<NavLink class="nav-link" href="" Match="NavLinkMatch.All" title="Home">
-					<span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span><span class="nav-text">Home</span>
-				</NavLink>
-			</div>
+    <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+        <nav class="nav flex-column">
+            <div class="nav-item" data-tooltip="Home">
+                <NavLink class="nav-link" href="" Match="NavLinkMatch.All" title="Home">
+                    <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span><span class="nav-text">Home</span>
+                </NavLink>
+            </div>
 
-		</nav>
-	</div>
+            <div class="nav-item" data-tooltip="Scraper Tasks">
+                <NavLink class="nav-link" href="scraper-tasks" title="Scraper Tasks">
+                    <span class="bi bi-clipboard-check-nav-menu" aria-hidden="true"></span><span class="nav-text">Scraper Tasks</span>
+                </NavLink>
+            </div>
+        </nav>
+    </div>
 </div>
 
 @code {
-	private bool isSidebarCollapsed = false;
+    private bool isSidebarCollapsed = false;
 
-	private void ToggleSidebar()
-	{
-		isSidebarCollapsed = !isSidebarCollapsed;
-	}
+    private void ToggleSidebar()
+    {
+        isSidebarCollapsed = !isSidebarCollapsed;
+    }
 }

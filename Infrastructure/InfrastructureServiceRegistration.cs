@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RazorEngineCore;
 using RealityScraper.Application.Abstractions.Database;
+using RealityScraper.Application.Abstractions.Events;
 using RealityScraper.Application.Interfaces.Mailing;
 using RealityScraper.Application.Interfaces.Scheduler;
 using RealityScraper.Application.Interfaces.Scraping;
@@ -10,6 +11,7 @@ using RealityScraper.Infrastructure.BackgroundServices.Scheduler;
 using RealityScraper.Infrastructure.Configuration;
 using RealityScraper.Infrastructure.Contexts;
 using RealityScraper.Infrastructure.Database;
+using RealityScraper.Infrastructure.Events;
 using RealityScraper.Infrastructure.Services.Time;
 using RealityScraper.Infrastructure.Utilities;
 using RealityScraper.Infrastructure.Utilities.Mailing;
@@ -58,6 +60,7 @@ public static class InfrastructureServiceRegistration
 
 		services.AddTransient<IScheduleTimeCalculator, CronosScheduleTimeCalculator>();
 
+		services.AddSingleton<ISchedulerRefreshSignal, SchedulerRefreshSignal>();
 		services.AddHostedService<SchedulerHostedService>();
 
 		services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
@@ -76,6 +79,7 @@ public static class InfrastructureServiceRegistration
 		);
 
 		services.AddScoped<IDbContext, RealityDbContext>();
+		services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
 		services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 		// všechny implementace IRepository<> v aktuální assembly

@@ -2,7 +2,7 @@
 
 namespace RealityScraper.Domain.Entities.Tasks;
 
-public abstract class TaskBase : Entity
+public abstract class TaskBase : AggregateRoot
 {
 	public string Name { get; protected set; }
 

@@ -2,6 +2,8 @@
 using RealityScraper.Application.Abstractions.Messaging;
 using RealityScraper.Application.Interfaces.Repositories.Configuration;
 using RealityScraper.Domain.Entities.Tasks;
+using RealityScraper.Domain.Enums;
+using RealityScraper.Domain.Events;
 using RealityScraper.SharedKernel;
 
 namespace RealityScraper.Application.Features.ScraperTasks.Create;
@@ -25,6 +27,19 @@ internal sealed class CreateScraperTaskCommandHandler : ICommandHandler<CreateSc
 	public async Task<Result<ScraperTaskDto>> Handle(CreateScraperTaskCommand command, CancellationToken cancellationToken)
 	{
 		var scraperTask = new ScraperTask(command.Name, command.CronExpression, command.Enabled, dateTimeProvider.GetCurrentTime(), null);
+
+		foreach (var recipient in command.Recipients)
+		{
+			scraperTask.AddRecipient(new ScraperTaskRecipient(recipient.Email));
+		}
+
+		foreach (var target in command.Targets)
+		{
+			scraperTask.AddTarget(new ScraperTaskTarget((ScrapersEnum)target.ScraperType, target.Url));
+		}
+
+		scraperTask.RaiseDomainEvents(new ScraperTaskCreatedEvent(scraperTask.Id));
+
 		scraperTaskRepository.Add(scraperTask);
 
 		await unitOfWork.SaveChangesAsync(cancellationToken);

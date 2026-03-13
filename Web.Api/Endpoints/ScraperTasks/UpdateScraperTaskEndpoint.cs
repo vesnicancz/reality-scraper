@@ -1,22 +1,25 @@
 ﻿using RealityScraper.Application.Abstractions.Messaging;
 using RealityScraper.Application.Features.ScraperTasks;
 using RealityScraper.Application.Features.ScraperTasks.Create;
+using RealityScraper.Application.Features.ScraperTasks.Update;
 using RealityScraper.Web.Api.Infrastructure;
 using RealityScraper.Web.Api.Mappers.ScraperTasks;
 using RealityScraper.Web.Shared.Models.ScraperTasks;
 
 namespace RealityScraper.Web.Api.Endpoints.ScraperTasks;
 
-internal sealed class CreateScraperTaskEndpoint : IEndpoint
+internal sealed class UpdateScraperTaskEndpoint : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapPost("/api/scraper-tasks", async (
-			CreateScraperTaskRequest request,
-			ICommandHandler<CreateScraperTaskCommand, ScraperTaskDto> commandHandler,
+		app.MapPut("/api/scraper-tasks/{id:guid}", async (
+			Guid id,
+			UpdateScraperTaskRequest request,
+			ICommandHandler<UpdateScraperTaskCommand, ScraperTaskDto> commandHandler,
 			CancellationToken cancellationToken) =>
 		{
-			var command = new CreateScraperTaskCommand(
+			var command = new UpdateScraperTaskCommand(
+				id,
 				request.Name,
 				request.CronExpression,
 				request.Enabled,
@@ -26,7 +29,7 @@ internal sealed class CreateScraperTaskEndpoint : IEndpoint
 			var result = await commandHandler.Handle(command, cancellationToken);
 
 			return result.IsSuccess
-				? Results.Created($"/api/scraper-tasks/{result.Value.Id}", ScraperTaskDtoMapper.MapToResult(result.Value))
+				? Results.Ok(ScraperTaskDtoMapper.MapToResult(result.Value))
 				: CustomResults.Problem(result);
 		});
 	}

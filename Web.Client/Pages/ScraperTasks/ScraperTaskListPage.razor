@@ -1,0 +1,44 @@
+﻿@attribute [AllowAnonymous]
+@page "/scraper-tasks"
+<PageTitle>Scraper Tasks</PageTitle>
+
+<h3>Scraper Tasks</h3>
+
+<div class="mb-3">
+	<HxButton Text="Novy task" Color="ThemeColor.Primary" Icon="BootstrapIcon.PlusLg" OnClick="HandleCreateClick" />
+</div>
+
+<HxGrid @ref="grid" TItem="ScraperTaskResult" DataProvider="LoadData" Responsive="true">
+	<Columns>
+		<HxGridColumn HeaderText="Nazev" ItemTextSelector="t => t.Name" />
+		<HxGridColumn HeaderText="Cron" ItemTextSelector="t => t.CronExpression" />
+		<HxGridColumn HeaderText="Aktivni">
+			<ItemTemplate Context="task">
+				@if (task.Enabled)
+				{
+					<HxBadge Color="ThemeColor.Success">Ano</HxBadge>
+				}
+				else
+				{
+					<HxBadge Color="ThemeColor.Secondary">Ne</HxBadge>
+				}
+			</ItemTemplate>
+		</HxGridColumn>
+		<HxGridColumn HeaderText="Posledni beh">
+			<ItemTemplate Context="task">
+				@(task.LastRunAt?.LocalDateTime.ToString("g") ?? "—")
+			</ItemTemplate>
+		</HxGridColumn>
+		<HxGridColumn HeaderText="Nasledujici beh">
+			<ItemTemplate Context="task">
+				@(task.NextRunAt?.LocalDateTime.ToString("g") ?? "—")
+			</ItemTemplate>
+		</HxGridColumn>
+		<HxGridColumn HeaderText="Akce">
+			<ItemTemplate Context="task">
+				<HxButton Icon="BootstrapIcon.PencilSquare" Color="ThemeColor.Warning" Size="ButtonSize.Small" Outline="true" Tooltip="Upravit" OnClick="() => HandleEditClick(task)" CssClass="me-1" />
+				<HxButton Icon="BootstrapIcon.Trash" Color="ThemeColor.Danger" Size="ButtonSize.Small" Outline="true" Tooltip="Smazat" OnClick="() => HandleDeleteClick(task)" />
+			</ItemTemplate>
+		</HxGridColumn>
+	</Columns>
+</HxGrid>
