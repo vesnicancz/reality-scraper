@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Json;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Net.Http.Json;
 using Havit.Blazor.Components.Web;
 using Havit.Blazor.Components.Web.Bootstrap;
 using Microsoft.AspNetCore.Components;
@@ -127,8 +128,12 @@ public partial class ScraperTaskEditPage(
 
 	private class ScraperTaskFormModel
 	{
+		[Required(ErrorMessage = "Nazev je povinny.")]
 		public string Name { get; set; } = string.Empty;
+
+		[Required(ErrorMessage = "Cron vyraz je povinny.")]
 		public string CronExpression { get; set; } = string.Empty;
+
 		public bool Enabled { get; set; } = true;
 		public List<RecipientInputModel> Recipients { get; set; } = [];
 		public List<TargetInputModel> Targets { get; set; } = [];

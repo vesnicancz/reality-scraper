@@ -31,14 +31,19 @@ internal sealed class DomainEventDispatcher : IDomainEventDispatcher
 			.SelectMany(a => a.DomainEvents)
 			.ToList();
 
-		foreach (var domainEvent in domainEvents)
+		try
 		{
-			await DispatchEventAsync(domainEvent, cancellationToken);
+			foreach (var domainEvent in domainEvents)
+			{
+				await DispatchEventAsync(domainEvent, cancellationToken);
+			}
 		}
-
-		foreach (var aggregateRoot in aggregateRoots)
+		finally
 		{
-			aggregateRoot.ClearDomainEvents();
+			foreach (var aggregateRoot in aggregateRoots)
+			{
+				aggregateRoot.ClearDomainEvents();
+			}
 		}
 	}
 
