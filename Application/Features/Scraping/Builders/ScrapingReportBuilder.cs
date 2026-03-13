@@ -2,6 +2,7 @@
 using RealityScraper.Application.Features.Scraping.Model;
 using RealityScraper.Application.Features.Scraping.Model.Report;
 using RealityScraper.Application.Interfaces.Repositories.Realty;
+using RealityScraper.SharedKernel;
 
 namespace RealityScraper.Application.Features.Scraping.Builders;
 
@@ -12,13 +13,16 @@ public class ScrapingReportBuilder
 	private readonly HashSet<string> processedListings = new(); // Prevence duplikátů
 
 	private readonly IListingRepository listingRepository;
+	private readonly IDateTimeProvider dateTimeProvider;
 	private readonly ILogger<ScrapingReportBuilder> logger;
 
 	public ScrapingReportBuilder(
 		IListingRepository listingRepository,
+		IDateTimeProvider dateTimeProvider,
 		ILogger<ScrapingReportBuilder> logger)
 	{
 		this.listingRepository = listingRepository;
+		this.dateTimeProvider = dateTimeProvider;
 		this.logger = logger;
 	}
 
@@ -134,7 +138,7 @@ public class ScrapingReportBuilder
 
 		return new ScrapingReport
 		{
-			ReportDate = DateTime.Now,
+			ReportDate = dateTimeProvider.GetCurrentTime(),
 			ScraperTaskId = scraperTaskId,
 			Results = results
 		};
