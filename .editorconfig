@@ -9,6 +9,7 @@ indent_style = tab
 indent_size = 4
 insert_final_newline = false
 trim_trailing_whitespace = true
+spelling_languages = en-us,cs-cz
 
 ##########################################
 # File Extension Settings

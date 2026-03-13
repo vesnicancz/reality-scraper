@@ -2,7 +2,7 @@
 
 public record ScrapingReport
 {
-	public DateTime ReportDate { get; init; } = DateTime.Now;
+	public DateTimeOffset ReportDate { get; init; }
 
 	public Guid ScraperTaskId { get; init; }
 

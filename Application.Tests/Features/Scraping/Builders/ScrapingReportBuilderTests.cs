@@ -3,6 +3,7 @@ using Moq;
 using RealityScraper.Application.Features.Scraping.Builders;
 using RealityScraper.Application.Features.Scraping.Model;
 using RealityScraper.Application.Interfaces.Repositories.Realty;
+using RealityScraper.SharedKernel;
 
 namespace RealityScraper.Application.Tests.Features.Scraping.Builders;
 
@@ -37,9 +38,10 @@ public class ScrapingReportBuilderTests
 		};
 
 		var listingRepositoryMock = new Mock<IListingRepository>();
+		var dateTimeProviderMock = new Mock<IDateTimeProvider>();
 		var loggerMock = new Mock<ILogger<ScrapingReportBuilder>>();
 
-		var sut = new ScrapingReportBuilder(listingRepositoryMock.Object, loggerMock.Object);
+		var sut = new ScrapingReportBuilder(listingRepositoryMock.Object, dateTimeProviderMock.Object, loggerMock.Object);
 
 		// act
 		await sut.ProcessScraperResultsAsync("siteName", listings1, CancellationToken.None);
