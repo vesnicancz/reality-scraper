@@ -1,6 +1,5 @@
 ﻿using RealityScraper.Application.Abstractions.Messaging;
 using RealityScraper.Application.Features.ScraperTasks;
-using RealityScraper.Application.Features.ScraperTasks.Create;
 using RealityScraper.Application.Features.ScraperTasks.Update;
 using RealityScraper.Web.Api.Infrastructure;
 using RealityScraper.Web.Api.Mappers.ScraperTasks;
@@ -23,8 +22,8 @@ internal sealed class UpdateScraperTaskEndpoint : IEndpoint
 				request.Name,
 				request.CronExpression,
 				request.Enabled,
-				request.Recipients.Select(r => new CreateScraperTaskRecipientInput(r.Email)).ToList(),
-				request.Targets.Select(t => new CreateScraperTaskTargetInput(t.ScraperType, t.Url)).ToList());
+				request.Recipients.Select(r => new ScraperTaskRecipientInput(r.Email)).ToList(),
+				request.Targets.Select(t => new ScraperTaskTargetInput(t.ScraperType, t.Url)).ToList());
 
 			var result = await commandHandler.Handle(command, cancellationToken);
 

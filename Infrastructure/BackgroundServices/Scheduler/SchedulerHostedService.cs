@@ -80,7 +80,9 @@ public class SchedulerHostedService : BackgroundService
 	{
 		var nextRunTime = scheduledTasks
 			.Where(t => !t.IsRunning && t.NextRunTime.HasValue)
-			.Min(t => t.NextRunTime);
+			.Select(t => t.NextRunTime)
+			.DefaultIfEmpty()
+			.Min();
 
 		if (!nextRunTime.HasValue)
 		{

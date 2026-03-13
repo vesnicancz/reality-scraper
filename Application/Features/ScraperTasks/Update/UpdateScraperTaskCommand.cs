@@ -1,5 +1,4 @@
 ﻿using RealityScraper.Application.Abstractions.Messaging;
-using RealityScraper.Application.Features.ScraperTasks.Create;
 
 namespace RealityScraper.Application.Features.ScraperTasks.Update;
 
@@ -8,5 +7,5 @@ public record UpdateScraperTaskCommand(
 	string Name,
 	string CronExpression,
 	bool Enabled,
-	List<CreateScraperTaskRecipientInput> Recipients,
-	List<CreateScraperTaskTargetInput> Targets) : ICommand<ScraperTaskDto>;
+	List<ScraperTaskRecipientInput> Recipients,
+	List<ScraperTaskTargetInput> Targets) : ICommand<ScraperTaskDto>;

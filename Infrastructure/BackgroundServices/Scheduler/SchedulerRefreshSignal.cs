@@ -4,14 +4,17 @@ namespace RealityScraper.Infrastructure.BackgroundServices.Scheduler;
 
 public class SchedulerRefreshSignal : ISchedulerRefreshSignal
 {
-	private readonly SemaphoreSlim semaphore = new(0);
+	private readonly SemaphoreSlim semaphore = new(0, 1);
 
 	public void RequestRefresh()
 	{
-		// Release only if no one is already waiting with a pending signal
-		if (semaphore.CurrentCount == 0)
+		try
 		{
 			semaphore.Release();
+		}
+		catch (SemaphoreFullException)
+		{
+			// Signal already pending, no action needed
 		}
 	}
 

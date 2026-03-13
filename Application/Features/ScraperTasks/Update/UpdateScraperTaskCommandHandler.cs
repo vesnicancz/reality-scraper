@@ -80,6 +80,8 @@ internal sealed class UpdateScraperTaskCommandHandler : ICommandHandler<UpdateSc
 			Name = scraperTask.Name,
 			CronExpression = scraperTask.CronExpression,
 			Enabled = scraperTask.Enabled,
+			LastRunAt = scraperTask.LastRunAt,
+			NextRunAt = scraperTask.NextRunAt,
 			Recipients = scraperTask.Recipients.Select(r => new ScraperTaskRecipientDto
 			{
 				Id = r.Id,

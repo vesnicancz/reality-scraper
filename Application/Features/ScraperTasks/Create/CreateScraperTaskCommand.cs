@@ -6,9 +6,5 @@ public record CreateScraperTaskCommand(
 	string Name,
 	string CronExpression,
 	bool Enabled,
-	List<CreateScraperTaskRecipientInput> Recipients,
-	List<CreateScraperTaskTargetInput> Targets) : ICommand<ScraperTaskDto>;
-
-public record CreateScraperTaskRecipientInput(string Email);
-
-public record CreateScraperTaskTargetInput(int ScraperType, string Url);
+	List<ScraperTaskRecipientInput> Recipients,
+	List<ScraperTaskTargetInput> Targets) : ICommand<ScraperTaskDto>;
