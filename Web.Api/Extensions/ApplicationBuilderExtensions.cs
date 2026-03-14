@@ -14,10 +14,10 @@ internal static class ApplicationBuilderExtensions
 		return app;
 	}
 
-	public static void ApplyMigrations(this IApplicationBuilder app)
+	public static async Task ApplyMigrationsAsync(this IApplicationBuilder app)
 	{
 		using var scope = app.ApplicationServices.CreateScope();
 		var dbContext = scope.ServiceProvider.GetRequiredService<RealityDbContext>();
-		dbContext.Database.Migrate();
+		await dbContext.Database.MigrateAsync();
 	}
 }

@@ -28,7 +28,7 @@ public partial class ScraperTaskListPage(
 		}
 		catch (HttpRequestException)
 		{
-			messenger.AddError("Nepodarilo se nacist seznam tasku.");
+			messenger.AddError("Nepodařilo se načíst seznam tasků.");
 			return new GridDataProviderResult<ScraperTaskResult>
 			{
 				Data = [],
@@ -47,17 +47,50 @@ public partial class ScraperTaskListPage(
 		nav.NavigateTo($"/scraper-tasks/{task.Id}/edit");
 	}
 
-	private async Task HandleDeleteClick(ScraperTaskResult task)
+	private async Task HandleRunNowClick(ScraperTaskResult task)
 	{
-		var response = await http.DeleteAsync($"/api/scraper-tasks/{task.Id}");
-		if (response.IsSuccessStatusCode)
+		try
 		{
-			messenger.AddInformation($"Task '{task.Name}' byl smazan.");
+			using var response = await http.PostAsync($"/api/scraper-tasks/{task.Id}/run-now", null);
+			if (response.IsSuccessStatusCode)
+			{
+				messenger.AddInformation($"Task '{task.Name}' byl úspěšně spuštěn.");
+			}
+			else
+			{
+				messenger.AddError($"Nepodařilo se spustit task '{task.Name}'.");
+			}
+
 			await grid.RefreshDataAsync();
 		}
-		else
+		catch (TaskCanceledException)
 		{
-			messenger.AddError("Nepodarilo se smazat task.");
+			messenger.AddError($"Spuštění tasku '{task.Name}' vypršelo (timeout).");
+		}
+		catch (HttpRequestException)
+		{
+			messenger.AddError($"Nepodařilo se spustit task '{task.Name}'.");
+		}
+	}
+
+	private async Task HandleDeleteClick(ScraperTaskResult task)
+	{
+		try
+		{
+			using var response = await http.DeleteAsync($"/api/scraper-tasks/{task.Id}");
+			if (response.IsSuccessStatusCode)
+			{
+				messenger.AddInformation($"Task '{task.Name}' byl smazán.");
+				await grid.RefreshDataAsync();
+			}
+			else
+			{
+				messenger.AddError("Nepodařilo se smazat task.");
+			}
+		}
+		catch (HttpRequestException)
+		{
+			messenger.AddError("Nepodařilo se smazat task.");
 		}
 	}
 }

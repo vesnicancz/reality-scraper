@@ -30,7 +30,7 @@ public static class Program
 
 		var app = builder.Build();
 
-		app.ApplyMigrations();
+		await app.ApplyMigrationsAsync();
 
 		if (app.Environment.IsDevelopment())
 		{

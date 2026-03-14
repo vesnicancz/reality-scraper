@@ -75,6 +75,7 @@ public static class InfrastructureServiceRegistration
 			options.UseNpgsql(
 				configuration.GetConnectionString("DefaultConnection"),
 				b => b.MigrationsAssembly(typeof(RealityDbContext).Assembly)
+					.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)
 			)
 		);
 

@@ -53,7 +53,7 @@ public partial class ScraperTaskEditPage(
 			}
 			catch (HttpRequestException)
 			{
-				messenger.AddError("Nepodarilo se nacist task.");
+				messenger.AddError("Nepodařilo se načíst task.");
 				nav.NavigateTo("/scraper-tasks");
 			}
 			finally
@@ -94,17 +94,17 @@ public partial class ScraperTaskEditPage(
 
 			if (response.IsSuccessStatusCode)
 			{
-				messenger.AddInformation(IsEdit ? "Task byl upraven." : "Task byl vytvoren.");
+				messenger.AddInformation(IsEdit ? "Task byl upraven." : "Task byl vytvořen.");
 				nav.NavigateTo("/scraper-tasks");
 			}
 			else
 			{
-				messenger.AddError("Nepodarilo se ulozit task.");
+				messenger.AddError("Nepodařilo se uložit task.");
 			}
 		}
 		catch (HttpRequestException)
 		{
-			messenger.AddError("Nepodarilo se ulozit task.");
+			messenger.AddError("Nepodařilo se uložit task.");
 		}
 	}
 
@@ -135,10 +135,10 @@ public partial class ScraperTaskEditPage(
 
 	private class ScraperTaskFormModel
 	{
-		[Required(ErrorMessage = "Nazev je povinny.")]
+		[Required(ErrorMessage = "Název je povinný.")]
 		public string Name { get; set; } = string.Empty;
 
-		[Required(ErrorMessage = "Cron vyraz je povinny.")]
+		[Required(ErrorMessage = "Cron výraz je povinný.")]
 		public string CronExpression { get; set; } = string.Empty;
 
 		public bool Enabled { get; set; } = true;
