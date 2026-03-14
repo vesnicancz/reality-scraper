@@ -30,6 +30,8 @@ public static class Program
 
 		var app = builder.Build();
 
+		app.ApplyMigrations();
+
 		if (app.Environment.IsDevelopment())
 		{
 			app.UseOpenApiWithScalarUi();
@@ -37,8 +39,6 @@ public static class Program
 			// blazor: start
 			app.UseWebAssemblyDebugging();
 			// blazor: end
-
-			//app.ApplyMigrations();
 		}
 		else
 		{
