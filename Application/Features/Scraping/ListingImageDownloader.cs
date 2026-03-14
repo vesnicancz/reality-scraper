@@ -24,6 +24,7 @@ public class ListingImageDownloader : IListingImageDownloader
 			return;
 		}
 
+		var failedCount = 0;
 		foreach (var listing in listings)
 		{
 			try
@@ -32,10 +33,11 @@ public class ListingImageDownloader : IListingImageDownloader
 			}
 			catch (Exception ex) when (ex is not OperationCanceledException)
 			{
+				failedCount++;
 				logger.LogWarning(ex, "Nepodařilo se stáhnout obrázek pro inzerát {ListingId}", listing.Id);
 			}
 		}
 
-		logger.LogInformation("Stahování obrázků pro {Count} inzerátů dokončeno.", listings.Count);
+		logger.LogInformation("Stahování obrázků dokončeno: {SucceededCount} úspěšně, {FailedCount} selhalo.", listings.Count - failedCount, failedCount);
 	}
 }

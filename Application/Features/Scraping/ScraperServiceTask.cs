@@ -44,7 +44,7 @@ public class ScraperServiceTask : IScheduledTask
 				continue;
 			}
 
-			logger.LogInformation("Spouštím scraper: {scraperName}", scraperService.SiteName);
+			logger.LogInformation("Spouštím scraper: {ScraperName}", scraperService.SiteName);
 			var listings = await scraperService.ScrapeListingsAsync(scraperConfig, cancellationToken);
 
 			// Použití builderu pro zpracování výsledků
