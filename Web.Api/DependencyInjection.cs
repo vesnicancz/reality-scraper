@@ -25,6 +25,7 @@ public static class DependencyInjection
 			.AddInteractiveWebAssemblyComponents()
 			.AddAuthenticationStateSerialization();
 
+		services.AddAuthorization();
 		services.AddCascadingAuthenticationState();
 		//services.AddScoped<IdentityRedirectManager>();
 
