@@ -55,12 +55,13 @@ public partial class ScraperTaskListPage(
 			if (response.IsSuccessStatusCode)
 			{
 				messenger.AddInformation($"Task '{task.Name}' byl úspěšně spuštěn.");
-				await grid.RefreshDataAsync();
 			}
 			else
 			{
 				messenger.AddError($"Nepodařilo se spustit task '{task.Name}'.");
 			}
+
+			await grid.RefreshDataAsync();
 		}
 		catch (TaskCanceledException)
 		{
