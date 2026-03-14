@@ -1,4 +1,4 @@
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RealityScraper.Application.Features.Scheduler;
@@ -49,7 +49,7 @@ public class SchedulerHostedService : BackgroundService
 		{
 			var (timeToNextTask, nextTaskDueAt) = CalculateTimeToNextTask();
 
-			logger.LogTrace("Scheduler spí po dobu {SleepTime}, další úloha: {NextDue}", timeToNextTask, nextTaskDueAt?.ToString() ?? "žádná");
+			logger.LogTrace("Scheduler spí po dobu {SleepTime}, další úloha: {NextDue}", timeToNextTask, nextTaskDueAt);
 
 			// Wait for either: a refresh signal (task changed) or timeout (next task is due)
 			var wasSignaled = await refreshSignal.WaitForRefreshAsync(timeToNextTask, stoppingToken);

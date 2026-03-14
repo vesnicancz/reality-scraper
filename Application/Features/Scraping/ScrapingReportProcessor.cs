@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using RealityScraper.Application.Abstractions.Database;
 using RealityScraper.Application.Features.Scraping.Model.Report;
 

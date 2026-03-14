@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RealityScraper.Application.Interfaces.Mailing;
 using RealityScraper.Infrastructure.Configuration;
