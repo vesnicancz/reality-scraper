@@ -21,9 +21,10 @@ public class MailerService : IMailerService
 
 	public async Task SendNewListingsAsync(ScrapingReport scrapingReport, List<string> recipients, CancellationToken cancellationToken)
 	{
+		var date = scrapingReport.ReportDate.ToString("dd.MM.yyyy");
 		var subject = string.IsNullOrWhiteSpace(scrapingReport.TaskName)
-			? $"Nové realitní nabídky ({DateTime.Now:dd.MM.yyyy})"
-			: $"{scrapingReport.TaskName} – nové nabídky ({DateTime.Now:dd.MM.yyyy})";
+			? $"Nové realitní nabídky ({date})"
+			: $"{scrapingReport.TaskName} – nové nabídky ({date})";
 		var emailBody = await htmlMailBodyGenerator.GenerateHtmlBodyAsync(scrapingReport, cancellationToken);
 		await emailService.SendEmailNotificationAsync(subject, emailBody, recipients, cancellationToken);
 	}
