@@ -133,18 +133,7 @@ public partial class ScraperTaskEditPage(
 		nav.NavigateTo("/scraper-tasks");
 	}
 
-	private class ScraperTaskFormModel
-	{
-		[Required(ErrorMessage = "Název je povinný.")]
-		public string Name { get; set; } = string.Empty;
-
-		[Required(ErrorMessage = "Cron výraz je povinný.")]
-		public string CronExpression { get; set; } = string.Empty;
-
-		public bool Enabled { get; set; } = true;
-		public List<RecipientInputModel> Recipients { get; set; } = [];
-		public List<TargetInputModel> Targets { get; set; } = [];
-	}
+	private class ScraperTaskFormModel : ScraperTaskInputModel;
 
 	private record ScraperTypeOption(int Value, string Name);
 }
