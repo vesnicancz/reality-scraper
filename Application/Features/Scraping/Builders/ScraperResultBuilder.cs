@@ -8,10 +8,12 @@ public class ScraperResultBuilder
 	private readonly List<ListingItem> newListings = new();
 	private readonly List<ListingItemWithNewPrice> priceChangedListings = new();
 	private int totalCount = 0;
+	private int listingsCount = 0;
 
-	public ScraperResultBuilder(string siteName)
+	public ScraperResultBuilder(string siteName, int listingsCount)
 	{
 		this.siteName = siteName;
+		this.listingsCount = listingsCount;
 	}
 
 	public ScraperResultBuilder AddNewListing(ListingItem listing)
@@ -33,7 +35,7 @@ public class ScraperResultBuilder
 		return new PortalReport
 		{
 			SiteName = siteName,
-			TotalListingsCount = totalCount,
+			TotalListingsCount = listingsCount,
 			NewListings = new List<ListingItem>(newListings),
 			PriceChangedListings = new List<ListingItemWithNewPrice>(priceChangedListings)
 		};

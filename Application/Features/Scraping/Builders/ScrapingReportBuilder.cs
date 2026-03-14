@@ -33,27 +33,17 @@ public class ScrapingReportBuilder
 	}
 
 	/// <summary>
-	/// Inicializuje scraper pro daný web
-	/// </summary>
-	public ScrapingReportBuilder ForScraper(string siteName)
-	{
-		if (!scraperBuilders.ContainsKey(siteName))
-		{
-			scraperBuilders[siteName] = new ScraperResultBuilder(siteName);
-		}
-		return this;
-	}
-
-	/// <summary>
 	/// Batch zpracování všech listingů z jednoho scraperu
 	/// </summary>
 	public async Task<ScrapingReportBuilder> ProcessScraperResultsAsync(string siteName, List<ScraperListingItem> listings, CancellationToken cancellationToken)
 	{
 		logger.LogInformation("Zpracovávám {Count} listingů z {SiteName}", listings.Count, siteName);
 
+		var builder = GetOrCreateScraperBuilder(siteName, listings.Count);
+
 		foreach (var listing in listings)
 		{
-			await ProcessListingAsync(siteName, listing, cancellationToken);
+			await ProcessListingAsync(builder, siteName, listing, cancellationToken);
 		}
 
 		return this;
@@ -62,7 +52,7 @@ public class ScrapingReportBuilder
 	/// <summary>
 	/// Zpracuje listing a automaticky určí typ operace (nový/změna ceny/existující)
 	/// </summary>
-	private async Task<ScrapingReportBuilder> ProcessListingAsync(string siteName, ScraperListingItem listing, CancellationToken cancellationToken)
+	private async Task<ScrapingReportBuilder> ProcessListingAsync(ScraperResultBuilder builder, string siteName, ScraperListingItem listing, CancellationToken cancellationToken)
 	{
 		// Prevence duplikátů mezi scrapery
 		var listingKey = listing.ExternalId;
@@ -71,8 +61,6 @@ public class ScrapingReportBuilder
 			logger.LogDebug("Duplikátní listing {ExternalId} přeskočen", listing.ExternalId);
 			return this;
 		}
-
-		var builder = GetOrCreateScraperBuilder(siteName);
 
 		// Kontrola existence v databázi
 		var existingListing = await listingRepository.GetByExternalIdAsync(scraperTaskId, listing.ExternalId, cancellationToken);
@@ -118,11 +106,11 @@ public class ScrapingReportBuilder
 		return this;
 	}
 
-	private ScraperResultBuilder GetOrCreateScraperBuilder(string siteName)
+	private ScraperResultBuilder GetOrCreateScraperBuilder(string siteName, int listingsCount)
 	{
 		if (!scraperBuilders.ContainsKey(siteName))
 		{
-			scraperBuilders[siteName] = new ScraperResultBuilder(siteName);
+			scraperBuilders[siteName] = new ScraperResultBuilder(siteName, listingsCount);
 		}
 		return scraperBuilders[siteName];
 	}
