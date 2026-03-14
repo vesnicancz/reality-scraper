@@ -25,8 +25,6 @@ public class RealityDbContext : DbContext, IDbContext
 	public RealityDbContext(DbContextOptions<RealityDbContext> options)
 		: base(options)
 	{
-		// Automatické vytvoření databáze při prvním spuštění
-		Database.EnsureCreated();
 	}
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
