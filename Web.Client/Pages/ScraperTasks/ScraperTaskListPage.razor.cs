@@ -51,7 +51,7 @@ public partial class ScraperTaskListPage(
 	{
 		try
 		{
-			var response = await http.PostAsync($"/api/scraper-tasks/{task.Id}/run-now", null);
+			using var response = await http.PostAsync($"/api/scraper-tasks/{task.Id}/run-now", null);
 			if (response.IsSuccessStatusCode)
 			{
 				messenger.AddInformation($"Task '{task.Name}' byl úspěšně spuštěn.");
@@ -74,7 +74,7 @@ public partial class ScraperTaskListPage(
 
 	private async Task HandleDeleteClick(ScraperTaskResult task)
 	{
-		var response = await http.DeleteAsync($"/api/scraper-tasks/{task.Id}");
+		using var response = await http.DeleteAsync($"/api/scraper-tasks/{task.Id}");
 		if (response.IsSuccessStatusCode)
 		{
 			messenger.AddInformation($"Task '{task.Name}' byl smazán.");

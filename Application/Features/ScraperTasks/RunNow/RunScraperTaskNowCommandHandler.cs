@@ -2,7 +2,6 @@
 using RealityScraper.Application.Features.Scraping;
 using RealityScraper.Application.Interfaces.Repositories.Configuration;
 using RealityScraper.Application.Interfaces.Scheduler;
-using RealityScraper.Domain.Events;
 using RealityScraper.SharedKernel;
 
 namespace RealityScraper.Application.Features.ScraperTasks.RunNow;
@@ -38,8 +37,16 @@ internal sealed class RunScraperTaskNowCommandHandler : ICommandHandler<RunScrap
 		}
 
 		var config = taskSchedulerService.CreateScrapingConfigFromTask(scraperTask);
+		var succeeded = true;
 
-		await scraperServiceTask.ExecuteAsync(config, cancellationToken);
+		try
+		{
+			await scraperServiceTask.ExecuteAsync(config, cancellationToken);
+		}
+		catch (Exception) when (!cancellationToken.IsCancellationRequested)
+		{
+			succeeded = false;
+		}
 
 		var lastRunTime = dateTimeProvider.GetCurrentTime();
 		var nextRunTime = scraperTask.Enabled
@@ -48,6 +55,8 @@ internal sealed class RunScraperTaskNowCommandHandler : ICommandHandler<RunScrap
 
 		await taskSchedulerService.UpdateTaskExecutionTimesAsync(scraperTask.Id, lastRunTime, nextRunTime, cancellationToken);
 
-		return Result.Success();
+		return succeeded
+			? Result.Success()
+			: Result.Failure(Error.Failure("ScraperTask.RunFailed", $"Task '{scraperTask.Name}' failed during execution."));
 	}
 }
