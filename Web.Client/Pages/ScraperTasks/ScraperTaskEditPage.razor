@@ -1,9 +1,9 @@
 ﻿@attribute [AllowAnonymous]
 @page "/scraper-tasks/create"
 @page "/scraper-tasks/{Id:guid}/edit"
-<PageTitle>@(IsEdit ? "Upravit task" : "Novy task")</PageTitle>
+<PageTitle>@(IsEdit ? "Upravit task" : "Nový task")</PageTitle>
 
-<h3>@(IsEdit ? "Upravit task" : "Novy task")</h3>
+<h3>@(IsEdit ? "Upravit task" : "Nový task")</h3>
 
 @if (isLoading)
 {
@@ -16,19 +16,19 @@ else
 
         <div class="row">
             <div class="col-md-6">
-                <HxInputText @bind-Value="model.Name" Label="Nazev" />
+                <HxInputText @bind-Value="model.Name" Label="Název" />
             </div>
             <div class="col-md-4">
-                <HxInputText @bind-Value="model.CronExpression" Label="Cron vyraz" Hint="Napr. 0 8 * * 1 (kazde pondeli v 8:00)" />
+                <HxInputText @bind-Value="model.CronExpression" Label="Cron výraz" Hint="Např. 0 8 * * 1 (každé pondělí v 8:00)" />
             </div>
             <div class="col-md-2">
-                <HxCheckbox @bind-Value="model.Enabled" Label="Aktivni" />
+                <HxCheckbox @bind-Value="model.Enabled" Label="Aktivní" />
             </div>
         </div>
 
         <div class="row mt-4">
             <div class="col-md-6">
-                <h5>Prijemci</h5>
+                <h5>Příjemci</h5>
                 @for (var i = 0; i < model.Recipients.Count; i++)
                 {
                     var index = i;
@@ -37,10 +37,10 @@ else
                         <HxButton Color="ThemeColor.Danger" Icon="BootstrapIcon.Trash" Size="ButtonSize.Small" OnClick="() => RemoveRecipient(index)" />
                     </div>
                 }
-                <HxButton Text="Pridat prijemce" Color="ThemeColor.Secondary" Size="ButtonSize.Small" Icon="BootstrapIcon.PlusLg" OnClick="AddRecipient" />
+                <HxButton Text="Přidat příjemce" Color="ThemeColor.Secondary" Size="ButtonSize.Small" Icon="BootstrapIcon.PlusLg" OnClick="AddRecipient" />
             </div>
             <div class="col-md-6">
-                <h5>Cile scraperu</h5>
+                <h5>Cíle scraperů</h5>
                 @for (var i = 0; i < model.Targets.Count; i++)
                 {
                     var index = i;
@@ -59,13 +59,13 @@ else
                         <HxButton Color="ThemeColor.Danger" Icon="BootstrapIcon.Trash" Size="ButtonSize.Small" OnClick="() => RemoveTarget(index)" />
                     </div>
                 }
-                <HxButton Text="Pridat cil" Color="ThemeColor.Secondary" Size="ButtonSize.Small" Icon="BootstrapIcon.PlusLg" OnClick="AddTarget" />
+                <HxButton Text="Přidat cíl" Color="ThemeColor.Secondary" Size="ButtonSize.Small" Icon="BootstrapIcon.PlusLg" OnClick="AddTarget" />
             </div>
         </div>
 
         <div class="mt-4">
-            <HxSubmit Text="@(IsEdit ? "Ulozit" : "Vytvorit")" Color="ThemeColor.Primary" />
-            <HxButton Text="Zpet" Color="ThemeColor.Secondary" Outline="true" OnClick="HandleCancel" />
+            <HxSubmit Text="@(IsEdit ? "Uložit" : "Vytvořit")" Color="ThemeColor.Primary" />
+            <HxButton Text="Zpět" Color="ThemeColor.Secondary" Outline="true" OnClick="HandleCancel" />
         </div>
     </EditForm>
 }

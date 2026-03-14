@@ -74,7 +74,7 @@ public class TaskSchedulerService : ITaskSchedulerService
 	/// <summary>
 	/// Vytvoří konfiguraci scraperu z entity ScraperTask
 	/// </summary>
-	private ScrapingConfiguration CreateScrapingConfigFromTask(ScraperTask dbTask)
+	public ScrapingConfiguration CreateScrapingConfigFromTask(ScraperTask dbTask)
 	{
 		return new ScrapingConfiguration
 		{

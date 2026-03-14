@@ -21,7 +21,8 @@ internal static class Program
 
 		builder.Services.AddScoped(sp => new HttpClient
 		{
-			BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
+			BaseAddress = new Uri(builder.HostEnvironment.BaseAddress),
+			Timeout = TimeSpan.FromMinutes(5)
 		});
 
 		await builder.Build().RunAsync();
