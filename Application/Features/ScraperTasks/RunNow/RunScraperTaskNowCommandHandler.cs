@@ -1,5 +1,7 @@
-﻿using RealityScraper.Application.Abstractions.Messaging;
+﻿using Microsoft.Extensions.Logging;
+using RealityScraper.Application.Abstractions.Messaging;
 using RealityScraper.Application.Features.Scraping;
+using RealityScraper.Application.Features.Scraping.Configuration;
 using RealityScraper.Application.Interfaces.Repositories.Configuration;
 using RealityScraper.Application.Interfaces.Scheduler;
 using RealityScraper.SharedKernel;
@@ -13,19 +15,25 @@ internal sealed class RunScraperTaskNowCommandHandler : ICommandHandler<RunScrap
 	private readonly ITaskSchedulerService taskSchedulerService;
 	private readonly IScheduleTimeCalculator timeCalculator;
 	private readonly IDateTimeProvider dateTimeProvider;
+	private readonly ISchedulerRefreshSignal schedulerRefreshSignal;
+	private readonly ILogger<RunScraperTaskNowCommandHandler> logger;
 
 	public RunScraperTaskNowCommandHandler(
 		IScraperTaskRepository scraperTaskRepository,
 		ScraperServiceTask scraperServiceTask,
 		ITaskSchedulerService taskSchedulerService,
 		IScheduleTimeCalculator timeCalculator,
-		IDateTimeProvider dateTimeProvider)
+		IDateTimeProvider dateTimeProvider,
+		ISchedulerRefreshSignal schedulerRefreshSignal,
+		ILogger<RunScraperTaskNowCommandHandler> logger)
 	{
 		this.scraperTaskRepository = scraperTaskRepository;
 		this.scraperServiceTask = scraperServiceTask;
 		this.taskSchedulerService = taskSchedulerService;
 		this.timeCalculator = timeCalculator;
 		this.dateTimeProvider = dateTimeProvider;
+		this.schedulerRefreshSignal = schedulerRefreshSignal;
+		this.logger = logger;
 	}
 
 	public async Task<Result> Handle(RunScraperTaskNowCommand command, CancellationToken cancellationToken)
@@ -36,15 +44,16 @@ internal sealed class RunScraperTaskNowCommandHandler : ICommandHandler<RunScrap
 			return Result.Failure(Error.NotFound("ScraperTask.NotFound", $"ScraperTask with ID {command.Id} was not found."));
 		}
 
-		var config = taskSchedulerService.CreateScrapingConfigFromTask(scraperTask);
+		var config = ScrapingConfigurationFactory.CreateFromTask(scraperTask);
 		var succeeded = true;
 
 		try
 		{
 			await scraperServiceTask.ExecuteAsync(config, cancellationToken);
 		}
-		catch (Exception) when (!cancellationToken.IsCancellationRequested)
+		catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
 		{
+			logger.LogError(ex, "Task '{Name}' ({Id}) failed during manual execution", scraperTask.Name, scraperTask.Id);
 			succeeded = false;
 		}
 
@@ -54,6 +63,7 @@ internal sealed class RunScraperTaskNowCommandHandler : ICommandHandler<RunScrap
 			: null;
 
 		await taskSchedulerService.UpdateTaskExecutionTimesAsync(scraperTask.Id, lastRunTime, nextRunTime, cancellationToken);
+		schedulerRefreshSignal.RequestRefresh();
 
 		return succeeded
 			? Result.Success()

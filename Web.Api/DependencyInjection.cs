@@ -18,7 +18,6 @@ public static class DependencyInjection
 
 		services.AddOpenApi();
 
-		services.AddControllers();
 		services.AddEndpoints(Assembly.GetExecutingAssembly());
 
 		// blazor start

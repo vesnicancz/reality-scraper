@@ -74,13 +74,20 @@ public partial class ScraperTaskListPage(
 
 	private async Task HandleDeleteClick(ScraperTaskResult task)
 	{
-		using var response = await http.DeleteAsync($"/api/scraper-tasks/{task.Id}");
-		if (response.IsSuccessStatusCode)
+		try
 		{
-			messenger.AddInformation($"Task '{task.Name}' byl smazán.");
-			await grid.RefreshDataAsync();
+			using var response = await http.DeleteAsync($"/api/scraper-tasks/{task.Id}");
+			if (response.IsSuccessStatusCode)
+			{
+				messenger.AddInformation($"Task '{task.Name}' byl smazán.");
+				await grid.RefreshDataAsync();
+			}
+			else
+			{
+				messenger.AddError("Nepodařilo se smazat task.");
+			}
 		}
-		else
+		catch (HttpRequestException)
 		{
 			messenger.AddError("Nepodařilo se smazat task.");
 		}

@@ -51,7 +51,7 @@ public class TaskSchedulerService : ITaskSchedulerService
 				Id = dbTask.Id,
 				Name = dbTask.Name,
 				CronExpression = dbTask.CronExpression,
-				ScrapingConfiguration = CreateScrapingConfigFromTask(dbTask),
+				ScrapingConfiguration = ScrapingConfigurationFactory.CreateFromTask(dbTask),
 				NextRunTime = nextRunTime,
 				LastRunTime = dbTask.LastRunAt,
 				IsRunning = false
@@ -69,22 +69,5 @@ public class TaskSchedulerService : ITaskSchedulerService
 		await taskRepository.UpdateNextRunTimeAsync(taskId, nextRunTime, cancellationToken);
 
 		await unitOfWork.SaveChangesAsync(cancellationToken);
-	}
-
-	/// <summary>
-	/// Vytvoří konfiguraci scraperu z entity ScraperTask
-	/// </summary>
-	public ScrapingConfiguration CreateScrapingConfigFromTask(ScraperTask dbTask)
-	{
-		return new ScrapingConfiguration
-		{
-			Id = dbTask.Id,
-			EmailRecipients = dbTask.Recipients?.Select(r => r.Email).ToList() ?? new List<string>(),
-			Scrapers = dbTask.Targets?.Select(t => new ScraperConfiguration
-			{
-				ScraperType = t.ScraperType,
-				Url = t.Url
-			}).ToList() ?? new List<ScraperConfiguration>()
-		};
 	}
 }
