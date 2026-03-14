@@ -31,7 +31,7 @@ public class RealityIdnesScraperService : BaseScraperService
 	{
 		var nextPageElement = nextButtons.First();
 		var nextPageLink = await nextPageElement.GetAttributeAsync("href", cancellationToken);
-		await driver.NavigateToUrlAsync(nextPageLink, cancellationToken);
+		await driver.NavigateToUrlAsync(nextPageLink!, cancellationToken);
 		return true;
 	}
 }

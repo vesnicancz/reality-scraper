@@ -1,4 +1,4 @@
-﻿namespace RealityScraper.Application.Features.ScraperTaskRecipients;
+namespace RealityScraper.Application.Features.ScraperTaskRecipients;
 
 public class ScraperTaskRecipientDto
 {
@@ -6,5 +6,5 @@ public class ScraperTaskRecipientDto
 
 	public Guid ScraperTaskId { get; set; }
 
-	public string Email { get; set; }
+	public required string Email { get; set; }
 }

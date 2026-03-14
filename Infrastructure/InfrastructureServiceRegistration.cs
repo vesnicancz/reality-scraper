@@ -46,7 +46,7 @@ public static class InfrastructureServiceRegistration
 		services.AddHttpClient<ResendClient>();
 		services.Configure<ResendClientOptions>(o =>
 		{
-			o.ApiToken = configuration.GetValue<string>("ResendSettings:ApiKey");
+			o.ApiToken = configuration.GetValue<string>("ResendSettings:ApiKey")!;
 		});
 		services.AddTransient<IResend, ResendClient>();
 		services.AddTransient<IEmailService, ResendEmailService>();

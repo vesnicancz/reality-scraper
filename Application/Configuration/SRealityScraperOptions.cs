@@ -1,10 +1,10 @@
-﻿namespace RealityScraper.Application.Configuration;
+namespace RealityScraper.Application.Configuration;
 
 public class SRealityScraperOptions : BaseScraperOptions
 {
-	public string CpmDialogContainerSelector { get; set; }
+	public required string CpmDialogContainerSelector { get; set; }
 
-	public string CpmAgreeButtonsSelector { get; set; }
+	public required string CpmAgreeButtonsSelector { get; set; }
 
-	public string PremiumWindowSelector { get; set; }
+	public required string PremiumWindowSelector { get; set; }
 }

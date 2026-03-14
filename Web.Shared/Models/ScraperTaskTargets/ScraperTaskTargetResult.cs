@@ -1,4 +1,4 @@
-﻿namespace RealityScraper.Web.Shared.Models.ScraperTaskTargets;
+namespace RealityScraper.Web.Shared.Models.ScraperTaskTargets;
 
 public class ScraperTaskTargetResult
 {
@@ -8,5 +8,5 @@ public class ScraperTaskTargetResult
 
 	public int ScraperType { get; set; }
 
-	public string Url { get; set; }
+	public required string Url { get; set; }
 }
