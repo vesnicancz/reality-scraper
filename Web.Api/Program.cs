@@ -27,6 +27,7 @@ public static class Program
 		builder.Services.AddApplicationServices(builder.Configuration);
 		builder.Services.AddInfrastructureServices(builder.Configuration);
 		builder.Services.AddPresentation();
+		builder.Services.AddHealthChecks();
 
 		var app = builder.Build();
 
@@ -68,6 +69,7 @@ public static class Program
 
 		//app.UseAuthorization();
 
+		app.MapHealthChecks("/health");
 		app.MapEndpoints();
 
 		// Mapuje Identity API endpointy

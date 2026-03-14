@@ -1,10 +1,18 @@
 ﻿using Cronos;
 using RealityScraper.Application.Interfaces.Scheduler;
+using RealityScraper.SharedKernel;
 
 namespace RealityScraper.Infrastructure.Utilities.Scheduler;
 
 public class CronosScheduleTimeCalculator : IScheduleTimeCalculator
 {
+	private readonly TimeZoneInfo timeZone;
+
+	public CronosScheduleTimeCalculator(IDateTimeProvider dateTimeProvider)
+	{
+		timeZone = dateTimeProvider.ApplicationTimeZone;
+	}
+
 	public DateTimeOffset? GetNextExecutionTime(string cronExpression, DateTimeOffset fromTime)
 	{
 		if (string.IsNullOrWhiteSpace(cronExpression))
@@ -14,7 +22,7 @@ public class CronosScheduleTimeCalculator : IScheduleTimeCalculator
 
 		if (CronExpression.TryParse(cronExpression, out var cronExp))
 		{
-			return cronExp.GetNextOccurrence(fromTime, TimeZoneInfo.Utc);
+			return cronExp.GetNextOccurrence(fromTime, timeZone);
 		}
 
 		return null;

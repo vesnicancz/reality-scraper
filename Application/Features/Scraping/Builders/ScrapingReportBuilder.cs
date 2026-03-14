@@ -31,6 +31,8 @@ public class ScrapingReportBuilder
 	{
 		scraperTaskId = taskId;
 		scraperTaskName = taskName;
+		scraperBuilders.Clear();
+		processedListings.Clear();
 		return this;
 	}
 
@@ -128,7 +130,7 @@ public class ScrapingReportBuilder
 
 		return new ScrapingReport
 		{
-			ReportDate = dateTimeProvider.GetCurrentTime(),
+			ReportDate = dateTimeProvider.ToApplicationTime(dateTimeProvider.UtcNow),
 			ScraperTaskId = scraperTaskId,
 			TaskName = scraperTaskName,
 			Results = results

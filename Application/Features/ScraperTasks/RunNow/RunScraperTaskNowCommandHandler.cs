@@ -57,7 +57,7 @@ internal sealed class RunScraperTaskNowCommandHandler : ICommandHandler<RunScrap
 			succeeded = false;
 		}
 
-		var lastRunTime = dateTimeProvider.GetCurrentTime();
+		var lastRunTime = dateTimeProvider.UtcNow;
 		var nextRunTime = scraperTask.Enabled
 			? timeCalculator.GetNextExecutionTime(scraperTask.CronExpression, lastRunTime)
 			: null;

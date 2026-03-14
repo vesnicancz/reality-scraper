@@ -26,12 +26,12 @@
         </HxGridColumn>
         <HxGridColumn HeaderText="Poslední běh">
             <ItemTemplate Context="task">
-                @(task.LastRunAt?.LocalDateTime.ToString("g") ?? "—")
+                @TimeZoneHelper.FormatLocal(task.LastRunAt)
             </ItemTemplate>
         </HxGridColumn>
         <HxGridColumn HeaderText="Následující běh">
             <ItemTemplate Context="task">
-                @(task.NextRunAt?.LocalDateTime.ToString("g") ?? "—")
+                @TimeZoneHelper.FormatLocal(task.NextRunAt)
             </ItemTemplate>
         </HxGridColumn>
         <HxGridColumn HeaderText="Akce">

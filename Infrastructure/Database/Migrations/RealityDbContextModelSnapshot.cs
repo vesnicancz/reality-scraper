@@ -75,7 +75,7 @@ namespace RealityScraper.Infrastructure.Database.Migrations
                     b.HasIndex("ExternalId", "ScraperTaskId")
                         .IsUnique();
 
-                    b.ToTable("Listing");
+                    b.ToTable("Listing", (string)null);
                 });
 
             modelBuilder.Entity("RealityScraper.Domain.Entities.Realty.PriceHistory", b =>
@@ -97,7 +97,7 @@ namespace RealityScraper.Infrastructure.Database.Migrations
 
                     b.HasIndex("ListingId");
 
-                    b.ToTable("PriceHistory");
+                    b.ToTable("PriceHistory", (string)null);
                 });
 
             modelBuilder.Entity("RealityScraper.Domain.Entities.Tasks.ScraperTaskRecipient", b =>
@@ -118,7 +118,7 @@ namespace RealityScraper.Infrastructure.Database.Migrations
 
                     b.HasIndex("ScraperTaskId");
 
-                    b.ToTable("ScraperTaskRecipient");
+                    b.ToTable("ScraperTaskRecipient", (string)null);
                 });
 
             modelBuilder.Entity("RealityScraper.Domain.Entities.Tasks.ScraperTaskTarget", b =>
@@ -142,7 +142,7 @@ namespace RealityScraper.Infrastructure.Database.Migrations
 
                     b.HasIndex("ScraperTaskId");
 
-                    b.ToTable("ScraperTaskTarget");
+                    b.ToTable("ScraperTaskTarget", (string)null);
                 });
 
             modelBuilder.Entity("RealityScraper.Domain.Entities.Tasks.TaskBase", b =>

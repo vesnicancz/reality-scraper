@@ -1,0 +1,33 @@
+﻿using Microsoft.Extensions.Logging;
+using RealityScraper.Application.Features.Scraping.Model.Report;
+using RealityScraper.Application.Interfaces.Mailing;
+
+namespace RealityScraper.Application.Features.Scraping;
+
+public class ListingNotificationService : IListingNotificationService
+{
+	private readonly IMailerService mailerService;
+	private readonly ILogger<ListingNotificationService> logger;
+
+	public ListingNotificationService(
+		IMailerService mailerService,
+		ILogger<ListingNotificationService> logger)
+	{
+		this.mailerService = mailerService;
+		this.logger = logger;
+	}
+
+	public async Task SendNotificationsAsync(ScrapingReport report, List<string> recipients, CancellationToken cancellationToken)
+	{
+		if (report.NewListingsCount > 0 || report.PriceChangedListingsCount > 0)
+		{
+			logger.LogInformation("Nalezeno {newCount} nových inzerátů a {priceChangedCount} upravených cen.", report.NewListingsCount, report.PriceChangedListingsCount);
+			await mailerService.SendNewListingsAsync(report, recipients, cancellationToken);
+			logger.LogInformation("Notifikace o nových inzerátech odeslána.");
+		}
+		else
+		{
+			logger.LogInformation("Žádné nové inzeráty nebyly nalezeny.");
+		}
+	}
+}

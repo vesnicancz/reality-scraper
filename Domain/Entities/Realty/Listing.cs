@@ -16,11 +16,11 @@ public class Listing : Entity
 
 	public string ImageUrl { get; set; }
 
-	public DateTime CreatedAt { get; set; }
+	public DateTimeOffset CreatedAt { get; set; }
 
-	public DateTime LastSeenAt { get; set; }
+	public DateTimeOffset LastSeenAt { get; set; }
 
-	public DateTime PriceFrom { get; set; }
+	public DateTimeOffset PriceFrom { get; set; }
 
 	public Guid? ScraperTaskId { get; set; }
 

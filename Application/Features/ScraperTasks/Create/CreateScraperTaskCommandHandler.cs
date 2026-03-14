@@ -31,10 +31,10 @@ internal sealed class CreateScraperTaskCommandHandler : ICommandHandler<CreateSc
 	public async Task<Result<ScraperTaskDto>> Handle(CreateScraperTaskCommand command, CancellationToken cancellationToken)
 	{
 		var nextRunTime = command.Enabled
-			? timeCalculator.GetNextExecutionTime(command.CronExpression, dateTimeProvider.GetCurrentTime())
+			? timeCalculator.GetNextExecutionTime(command.CronExpression, dateTimeProvider.UtcNow)
 			: null;
 
-		var scraperTask = new ScraperTask(command.Name, command.CronExpression, command.Enabled, dateTimeProvider.GetCurrentTime(), nextRunTime);
+		var scraperTask = new ScraperTask(command.Name, command.CronExpression, command.Enabled, dateTimeProvider.UtcNow, nextRunTime);
 
 		foreach (var recipient in command.Recipients)
 		{
