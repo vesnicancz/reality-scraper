@@ -49,7 +49,7 @@ public class SchedulerHostedService : BackgroundService
 		{
 			var (timeToNextTask, nextTaskDueAt) = CalculateTimeToNextTask();
 
-			logger.LogTrace("Scheduler spí po dobu {SleepTime}, další úloha naplánována na {NextDue}", timeToNextTask, nextTaskDueAt.HasValue ? nextTaskDueAt.Value : "žádné úlohy");
+			logger.LogTrace("Scheduler spí po dobu {SleepTime}, další úloha naplánována na {NextDue}", timeToNextTask, nextTaskDueAt);
 
 			// Wait for either: a refresh signal (task changed) or timeout (next task is due)
 			var wasSignaled = await refreshSignal.WaitForRefreshAsync(timeToNextTask, stoppingToken);

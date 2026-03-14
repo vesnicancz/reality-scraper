@@ -30,7 +30,7 @@ public class ListingImageDownloader : IListingImageDownloader
 			{
 				await imageDownloadService.DownloadImageAsync(listing, cancellationToken);
 			}
-			catch (Exception ex)
+			catch (Exception ex) when (ex is not OperationCanceledException)
 			{
 				logger.LogWarning(ex, "Nepodařilo se stáhnout obrázek pro inzerát {ListingId}", listing.Id);
 			}
