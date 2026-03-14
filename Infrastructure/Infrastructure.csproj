@@ -3,6 +3,11 @@
     <AssemblyName>RealityScraper.Infrastructure</AssemblyName>
     <RootNamespace>RealityScraper.Infrastructure</RootNamespace>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="DomainEvents\**" />
+    <EmbeddedResource Remove="DomainEvents\**" />
+    <None Remove="DomainEvents\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Cronos" />
@@ -29,10 +34,6 @@
     <None Update="Utilities\Mailing\Templates\ListingReport.cshtml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="DomainEvents\" />
   </ItemGroup>
 
 </Project>

@@ -6,6 +6,8 @@ public class SRealityScraperOptions
 
 	public string CpmAgreeButtonsSelector { get; set; }
 
+	public string PremiumWindowSelector { get; set; }
+
 	public string ListingSelector { get; set; }
 
 	public string DetailLinkSelector { get; set; }

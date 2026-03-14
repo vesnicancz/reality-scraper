@@ -65,7 +65,7 @@ public class SRealityScraperService : IRealityScraperService
 			}
 
 			var load = true;
-
+			int strana = 1;
 			while (load)
 			{
 				// Získání seznamu inzerátů
@@ -155,11 +155,21 @@ public class SRealityScraperService : IRealityScraperService
 				//var html = await driver.GetPageSourceAsync();
 				//File.WriteAllText($"D:/temp/scraper/{guid}.html", html);
 
+				strana++;
+
 				// načtení další strany
 				var nextButton = await driver.FindElementsAsync(options.NextPageSelector, cancellationToken);
 				if (nextButton.Count > 0)
 				{
-					await nextButton.First().ClickAsync(cancellationToken);
+					var premiumDialog = await driver.FindElementsAsync(options.PremiumWindowSelector, cancellationToken);
+					if (premiumDialog.Count > 0)
+					{
+						await driver.NavigateToUrlAsync(url + "&strana=" + strana, cancellationToken);
+					}
+					else
+					{
+						await nextButton.First().ClickAsync(cancellationToken);
+					}
 					await Task.Delay(5000);
 				}
 				else
