@@ -112,7 +112,7 @@ public abstract class BaseScraperService : IRealityScraperService
 							Location = location ?? string.Empty,
 							Url = detailUrl ?? string.Empty,
 							ImageUrl = imageUrl ?? string.Empty,
-							ExternalId = externalId!
+							ExternalId = externalId ?? string.Empty
 						};
 
 						listings.Add(listing);
