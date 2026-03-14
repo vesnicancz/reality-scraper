@@ -1,4 +1,4 @@
-﻿using RealityScraper.Domain.Enums;
+using RealityScraper.Domain.Enums;
 using RealityScraper.SharedKernel;
 
 namespace RealityScraper.Domain.Entities.Tasks;
@@ -7,11 +7,11 @@ public class ScraperTaskTarget : Entity
 {
 	public Guid ScraperTaskId { get; protected set; }
 
-	public ScraperTask ScraperTask { get; protected set; }
+	public ScraperTask ScraperTask { get; protected set; } = null!;
 
 	public ScrapersEnum ScraperType { get; protected set; }
 
-	public string Url { get; protected set; }
+	public string Url { get; protected set; } = null!;
 
 	protected ScraperTaskTarget()
 	{

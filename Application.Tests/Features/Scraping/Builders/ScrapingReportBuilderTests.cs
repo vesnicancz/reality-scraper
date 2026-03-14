@@ -21,7 +21,8 @@ public class ScrapingReportBuilderTests
 				Price = 1000,
 				Location = "Location1",
 				Url = "Url1",
-				ExternalId = "ExternalId1"
+				ExternalId = "ExternalId1",
+				ImageUrl = string.Empty
 			}
 		};
 
@@ -33,7 +34,8 @@ public class ScrapingReportBuilderTests
 				Price = 1000,
 				Location = "Location1",
 				Url = "Url1",
-				ExternalId = "ExternalId1"
+				ExternalId = "ExternalId1",
+				ImageUrl = string.Empty
 			}
 		};
 

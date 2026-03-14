@@ -7,7 +7,7 @@ public interface IScraperTaskRepository : IRepository<ScraperTask>
 {
 	Task<List<ScraperTask>> GetActiveTasksAsync(CancellationToken cancellationToken);
 
-	Task<ScraperTask> GetTaskWithDetailsAsync(Guid taskId, CancellationToken cancellationToken);
+	Task<ScraperTask?> GetTaskWithDetailsAsync(Guid taskId, CancellationToken cancellationToken);
 
 	Task UpdateNextRunTimeAsync(Guid taskId, DateTimeOffset? nextRunTime, CancellationToken cancellationToken);
 

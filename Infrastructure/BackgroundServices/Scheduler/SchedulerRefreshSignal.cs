@@ -1,8 +1,8 @@
-﻿using RealityScraper.Application.Interfaces.Scheduler;
+using RealityScraper.Application.Interfaces.Scheduler;
 
 namespace RealityScraper.Infrastructure.BackgroundServices.Scheduler;
 
-public class SchedulerRefreshSignal : ISchedulerRefreshSignal
+public class SchedulerRefreshSignal : ISchedulerRefreshSignal, IDisposable
 {
 	private readonly SemaphoreSlim semaphore = new(0, 1);
 
@@ -22,5 +22,10 @@ public class SchedulerRefreshSignal : ISchedulerRefreshSignal
 	{
 		// Returns true if signaled, false if timed out
 		return await semaphore.WaitAsync(timeout, cancellationToken);
+	}
+
+	public void Dispose()
+	{
+		semaphore.Dispose();
 	}
 }

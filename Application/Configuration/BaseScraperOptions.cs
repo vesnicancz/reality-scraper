@@ -1,18 +1,18 @@
-﻿namespace RealityScraper.Application.Configuration;
+namespace RealityScraper.Application.Configuration;
 
 public class BaseScraperOptions
 {
-	public string ListingSelector { get; set; }
+	public required string ListingSelector { get; set; }
 
-	public string DetailLinkSelector { get; set; }
+	public required string DetailLinkSelector { get; set; }
 
-	public string TitleSelector { get; set; }
+	public required string TitleSelector { get; set; }
 
-	public string PriceSelector { get; set; }
+	public required string PriceSelector { get; set; }
 
-	public string LocationSelector { get; set; }
+	public required string LocationSelector { get; set; }
 
-	public string ImageSelector { get; set; }
+	public required string ImageSelector { get; set; }
 
-	public string NextPageSelector { get; set; }
+	public required string NextPageSelector { get; set; }
 }

@@ -1,4 +1,4 @@
-﻿namespace RealityScraper.Web.Shared.Models.ScraperTaskRecipients;
+namespace RealityScraper.Web.Shared.Models.ScraperTaskRecipients;
 
 public class ScraperTaskRecipientResult
 {
@@ -6,5 +6,5 @@ public class ScraperTaskRecipientResult
 
 	public Guid ScraperTaskId { get; set; }
 
-	public string Email { get; set; }
+	public required string Email { get; set; }
 }

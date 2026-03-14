@@ -38,6 +38,12 @@ public class SRealityScraperService : BaseScraperService
 		if (shadowHost.Count > 0)
 		{
 			var shadowRoot = await shadowHost.First().GetShadowRootAsync(cancellationToken);
+			if (shadowRoot is null)
+			{
+				logger.LogWarning("Shadow root nebyl nalezen pro CPM dialog");
+				return;
+			}
+
 			var agreeButtons = await shadowRoot.FindElementsAsync(options.CpmAgreeButtonsSelector, cancellationToken);
 			await agreeButtons.First().ClickAsync(cancellationToken);
 			await Task.Delay(5000, cancellationToken);

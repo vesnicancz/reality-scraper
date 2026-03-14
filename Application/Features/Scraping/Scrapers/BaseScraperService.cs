@@ -107,12 +107,12 @@ public abstract class BaseScraperService : IRealityScraperService
 
 						var listing = new ScraperListingItem
 						{
-							Title = title,
+							Title = title ?? string.Empty,
 							Price = price,
-							Location = location,
-							Url = detailUrl,
-							ImageUrl = imageUrl,
-							ExternalId = externalId
+							Location = location ?? string.Empty,
+							Url = detailUrl ?? string.Empty,
+							ImageUrl = imageUrl ?? string.Empty,
+							ExternalId = externalId ?? string.Empty
 						};
 
 						listings.Add(listing);

@@ -1,8 +1,8 @@
-﻿namespace RealityScraper.Application.Features.Scraping.Model.Report;
+namespace RealityScraper.Application.Features.Scraping.Model.Report;
 
 public record PortalReport
 {
-	public string SiteName { get; init; }
+	public required string SiteName { get; init; }
 
 	public int TotalListingsCount { get; init; }
 

@@ -21,7 +21,7 @@ internal class ScraperTaskRepository : Repository<ScraperTask>, IScraperTaskRepo
 			.ToListAsync(cancellationToken);
 	}
 
-	public async Task<ScraperTask> GetTaskWithDetailsAsync(Guid taskId, CancellationToken cancellationToken)
+	public async Task<ScraperTask?> GetTaskWithDetailsAsync(Guid taskId, CancellationToken cancellationToken)
 	{
 		return await dbContext.Set<ScraperTask>()
 			.Include(t => t.Recipients)
