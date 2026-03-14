@@ -29,7 +29,7 @@ public class ImageDownloadService : IImageDownloadService
 			return;
 		}
 
-		logger.LogTrace("Downloading image for listing {ListingId} from {ImageUrl}", listing.Id, listing.ImageUrl);
+		logger.LogTrace("Stahuji obrázek pro inzerát {ListingId} z {ImageUrl}", listing.Id, listing.ImageUrl);
 
 		var imageUri = new Uri(listing.ImageUrl);
 		using var httpClient = httpClientFactory.CreateClient();
@@ -45,7 +45,7 @@ public class ImageDownloadService : IImageDownloadService
 		var rootPath = configuration.GetValue<string>("FileStorage:ImagePath");
 		if (string.IsNullOrWhiteSpace(rootPath))
 		{
-			logger.LogWarning("Configuration value 'FileStorage:ImagePath' is missing or empty. Falling back to default 'files/images'.");
+			logger.LogWarning("Konfigurace 'FileStorage:ImagePath' chybí nebo je prázdná. Používám výchozí 'files/images'.");
 			rootPath = "files/images";
 		}
 		var folder = Path.Combine(Directory.GetCurrentDirectory(), rootPath, listing.Id.ToString()[..2]);

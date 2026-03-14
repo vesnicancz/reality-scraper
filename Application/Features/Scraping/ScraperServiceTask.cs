@@ -40,7 +40,7 @@ public class ScraperServiceTask : IScheduledTask
 		{
 			if (!scrapersDictionary.TryGetValue(scraperConfig.ScraperType, out var scraperService))
 			{
-				logger.LogWarning("Scraper '{scraperName}' not found.", scraperConfig.ScraperType);
+				logger.LogWarning("Scraper '{ScraperName}' nebyl nalezen.", scraperConfig.ScraperType);
 				continue;
 			}
 
@@ -55,8 +55,6 @@ public class ScraperServiceTask : IScheduledTask
 
 		// Vytvoření finálního reportu
 		var report = scrapingReportBuilder.Build();
-
-		logger.LogInformation("Report vytvořen.");
 
 		await scrapingReportProcessor.ProcessReportAsync(report, configuration.EmailRecipients, cancellationToken);
 	}

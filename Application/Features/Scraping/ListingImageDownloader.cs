@@ -26,9 +26,16 @@ public class ListingImageDownloader : IListingImageDownloader
 
 		foreach (var listing in listings)
 		{
-			await imageDownloadService.DownloadImageAsync(listing, cancellationToken);
+			try
+			{
+				await imageDownloadService.DownloadImageAsync(listing, cancellationToken);
+			}
+			catch (Exception ex)
+			{
+				logger.LogWarning(ex, "Nepodařilo se stáhnout obrázek pro inzerát {ListingId}", listing.Id);
+			}
 		}
 
-		logger.LogInformation("Obrázky pro {count} inzerátů byly staženy.", listings.Count);
+		logger.LogInformation("Stahování obrázků pro {Count} inzerátů dokončeno.", listings.Count);
 	}
 }
