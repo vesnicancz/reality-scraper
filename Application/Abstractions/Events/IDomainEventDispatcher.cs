@@ -2,5 +2,7 @@
 
 public interface IDomainEventDispatcher
 {
+	void CollectEvents();
+
 	Task DispatchEventsAsync(CancellationToken cancellationToken);
 }

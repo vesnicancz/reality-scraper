@@ -241,14 +241,14 @@ public class SchedulerHostedService : BackgroundService
 		{
 			logger.LogWarning("Waiting for {Count} running tasks to complete...", runningTasks.Count);
 
-			var terminationDeadline = DateTime.Now.Add(terminationTimeout);
+			var terminationDeadline = dateTimeProvider.GetCurrentTime().Add(terminationTimeout);
 
 			do
 			{
 				await Task.Delay(TimeSpan.FromSeconds(30), cancellationToken);
 				runningTasks = scheduledTasks.Where(t => t.IsRunning).ToList();
 			}
-			while ((runningTasks.Count != 0) && (DateTime.Now < terminationDeadline) && !cancellationToken.IsCancellationRequested);
+			while ((runningTasks.Count != 0) && (dateTimeProvider.GetCurrentTime() < terminationDeadline) && !cancellationToken.IsCancellationRequested);
 
 			if (runningTasks.Count != 0)
 			{

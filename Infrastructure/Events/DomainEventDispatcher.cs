@@ -11,6 +11,7 @@ internal sealed class DomainEventDispatcher : IDomainEventDispatcher
 	private readonly IDbContext dbContext;
 	private readonly IServiceProvider serviceProvider;
 	private readonly ILogger<DomainEventDispatcher> logger;
+	private readonly List<IDomainEvent> pendingEvents = [];
 
 	public DomainEventDispatcher(IDbContext dbContext, IServiceProvider serviceProvider, ILogger<DomainEventDispatcher> logger)
 	{
@@ -19,7 +20,7 @@ internal sealed class DomainEventDispatcher : IDomainEventDispatcher
 		this.logger = logger;
 	}
 
-	public async Task DispatchEventsAsync(CancellationToken cancellationToken)
+	public void CollectEvents()
 	{
 		var aggregateRoots = dbContext.ChangeTracker
 			.Entries<AggregateRoot>()
@@ -27,23 +28,22 @@ internal sealed class DomainEventDispatcher : IDomainEventDispatcher
 			.Select(e => e.Entity)
 			.ToList();
 
-		var domainEvents = aggregateRoots
-			.SelectMany(a => a.DomainEvents)
-			.ToList();
+		pendingEvents.AddRange(aggregateRoots.SelectMany(a => a.DomainEvents));
 
-		try
+		foreach (var aggregateRoot in aggregateRoots)
 		{
-			foreach (var domainEvent in domainEvents)
-			{
-				await DispatchEventAsync(domainEvent, cancellationToken);
-			}
+			aggregateRoot.ClearDomainEvents();
 		}
-		finally
+	}
+
+	public async Task DispatchEventsAsync(CancellationToken cancellationToken)
+	{
+		var eventsToDispatch = pendingEvents.ToList();
+		pendingEvents.Clear();
+
+		foreach (var domainEvent in eventsToDispatch)
 		{
-			foreach (var aggregateRoot in aggregateRoots)
-			{
-				aggregateRoot.ClearDomainEvents();
-			}
+			await DispatchEventAsync(domainEvent, cancellationToken);
 		}
 	}
 

@@ -19,6 +19,8 @@ internal class UnitOfWork : IUnitOfWork
 
 	public async Task SaveChangesAsync(CancellationToken cancellationToken)
 	{
+		domainEventDispatcher.CollectEvents();
+
 		await dbContext.SaveChangesAsync(cancellationToken);
 
 		try
