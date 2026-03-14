@@ -15,14 +15,26 @@ public partial class ScraperTaskListPage(
 
 	private async Task<GridDataProviderResult<ScraperTaskResult>> LoadData(GridDataProviderRequest<ScraperTaskResult> request)
 	{
-		var tasks = await http.GetFromJsonAsync<List<ScraperTaskResult>>("/api/scraper-tasks", request.CancellationToken)
-			?? [];
-
-		return new GridDataProviderResult<ScraperTaskResult>
+		try
 		{
-			Data = tasks,
-			TotalCount = tasks.Count
-		};
+			var tasks = await http.GetFromJsonAsync<List<ScraperTaskResult>>("/api/scraper-tasks", request.CancellationToken)
+				?? [];
+
+			return new GridDataProviderResult<ScraperTaskResult>
+			{
+				Data = tasks,
+				TotalCount = tasks.Count
+			};
+		}
+		catch (HttpRequestException)
+		{
+			messenger.AddError("Nepodarilo se nacist seznam tasku.");
+			return new GridDataProviderResult<ScraperTaskResult>
+			{
+				Data = [],
+				TotalCount = 0
+			};
+		}
 	}
 
 	private void HandleCreateClick()
