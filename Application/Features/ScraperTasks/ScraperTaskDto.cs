@@ -1,4 +1,7 @@
-﻿namespace RealityScraper.Application.Features.ScraperTasks;
+﻿using RealityScraper.Application.Features.ScraperTaskRecipients;
+using RealityScraper.Application.Features.ScraperTaskTargets;
+
+namespace RealityScraper.Application.Features.ScraperTasks;
 
 public class ScraperTaskDto
 {
@@ -9,4 +12,12 @@ public class ScraperTaskDto
 	public string CronExpression { get; set; } = null!;
 
 	public bool Enabled { get; set; }
+
+	public DateTimeOffset? LastRunAt { get; set; }
+
+	public DateTimeOffset? NextRunAt { get; set; }
+
+	public List<ScraperTaskRecipientDto> Recipients { get; set; } = [];
+
+	public List<ScraperTaskTargetDto> Targets { get; set; } = [];
 }

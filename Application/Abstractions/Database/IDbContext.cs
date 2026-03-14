@@ -9,6 +9,8 @@ public interface IDbContext
 {
 	DatabaseFacade Database { get; }
 
+	ChangeTracker ChangeTracker { get; }
+
 	DbSet<T> Set<T>()
 		where T : Entity;
 

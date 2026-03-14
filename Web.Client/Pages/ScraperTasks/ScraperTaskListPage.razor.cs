@@ -1,0 +1,63 @@
+﻿using System.Net.Http.Json;
+using Havit.Blazor.Components.Web;
+using Havit.Blazor.Components.Web.Bootstrap;
+using Microsoft.AspNetCore.Components;
+using RealityScraper.Web.Shared.Models.ScraperTasks;
+
+namespace RealityScraper.Web.Client.Pages.ScraperTasks;
+
+public partial class ScraperTaskListPage(
+	HttpClient http,
+	IHxMessengerService messenger,
+	NavigationManager nav)
+{
+	private HxGrid<ScraperTaskResult> grid = null!;
+
+	private async Task<GridDataProviderResult<ScraperTaskResult>> LoadData(GridDataProviderRequest<ScraperTaskResult> request)
+	{
+		try
+		{
+			var tasks = await http.GetFromJsonAsync<List<ScraperTaskResult>>("/api/scraper-tasks", request.CancellationToken)
+				?? [];
+
+			return new GridDataProviderResult<ScraperTaskResult>
+			{
+				Data = tasks,
+				TotalCount = tasks.Count
+			};
+		}
+		catch (HttpRequestException)
+		{
+			messenger.AddError("Nepodarilo se nacist seznam tasku.");
+			return new GridDataProviderResult<ScraperTaskResult>
+			{
+				Data = [],
+				TotalCount = 0
+			};
+		}
+	}
+
+	private void HandleCreateClick()
+	{
+		nav.NavigateTo("/scraper-tasks/create");
+	}
+
+	private void HandleEditClick(ScraperTaskResult task)
+	{
+		nav.NavigateTo($"/scraper-tasks/{task.Id}/edit");
+	}
+
+	private async Task HandleDeleteClick(ScraperTaskResult task)
+	{
+		var response = await http.DeleteAsync($"/api/scraper-tasks/{task.Id}");
+		if (response.IsSuccessStatusCode)
+		{
+			messenger.AddInformation($"Task '{task.Name}' byl smazan.");
+			await grid.RefreshDataAsync();
+		}
+		else
+		{
+			messenger.AddError("Nepodarilo se smazat task.");
+		}
+	}
+}

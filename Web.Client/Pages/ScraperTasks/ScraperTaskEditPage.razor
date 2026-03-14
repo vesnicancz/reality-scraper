@@ -1,0 +1,71 @@
+﻿@attribute [AllowAnonymous]
+@page "/scraper-tasks/create"
+@page "/scraper-tasks/{Id:guid}/edit"
+<PageTitle>@(IsEdit ? "Upravit task" : "Novy task")</PageTitle>
+
+<h3>@(IsEdit ? "Upravit task" : "Novy task")</h3>
+
+@if (isLoading)
+{
+    <HxSpinner />
+}
+else
+{
+    <EditForm Model="model" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
+
+        <div class="row">
+            <div class="col-md-6">
+                <HxInputText @bind-Value="model.Name" Label="Nazev" />
+            </div>
+            <div class="col-md-4">
+                <HxInputText @bind-Value="model.CronExpression" Label="Cron vyraz" Hint="Napr. 0 8 * * 1 (kazde pondeli v 8:00)" />
+            </div>
+            <div class="col-md-2">
+                <HxCheckbox @bind-Value="model.Enabled" Label="Aktivni" />
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <h5>Prijemci</h5>
+                @for (var i = 0; i < model.Recipients.Count; i++)
+                {
+                    var index = i;
+                    <div class="d-flex gap-2 mb-2 align-items-end">
+                        <HxInputText @bind-Value="model.Recipients[index].Email" Label="@(index == 0 ? "Email" : null)" CssClass="flex-grow-1" />
+                        <HxButton Color="ThemeColor.Danger" Icon="BootstrapIcon.Trash" Size="ButtonSize.Small" OnClick="() => RemoveRecipient(index)" />
+                    </div>
+                }
+                <HxButton Text="Pridat prijemce" Color="ThemeColor.Secondary" Size="ButtonSize.Small" Icon="BootstrapIcon.PlusLg" OnClick="AddRecipient" />
+            </div>
+            <div class="col-md-6">
+                <h5>Cile scraperu</h5>
+                @for (var i = 0; i < model.Targets.Count; i++)
+                {
+                    var index = i;
+                    <div class="d-flex gap-2 mb-2 align-items-end">
+                        <HxSelect TItem="ScraperTypeOption" TValue="int"
+                                  @bind-Value="model.Targets[index].ScraperType"
+                                  Label="@(index == 0 ? "Typ" : null)"
+                                  Data="scraperTypeOptions"
+                                  TextSelector="o => o.Name"
+                                  ValueSelector="o => o.Value"
+                                  CssClass="flex-shrink-0" style="min-width: 200px;"
+                                  NullText=""
+                                  NullDataText=""
+                                  Nullable="false" />
+                        <HxInputText @bind-Value="model.Targets[index].Url" Label="@(index == 0 ? "URL" : null)" CssClass="flex-grow-1" />
+                        <HxButton Color="ThemeColor.Danger" Icon="BootstrapIcon.Trash" Size="ButtonSize.Small" OnClick="() => RemoveTarget(index)" />
+                    </div>
+                }
+                <HxButton Text="Pridat cil" Color="ThemeColor.Secondary" Size="ButtonSize.Small" Icon="BootstrapIcon.PlusLg" OnClick="AddTarget" />
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <HxSubmit Text="@(IsEdit ? "Ulozit" : "Vytvorit")" Color="ThemeColor.Primary" />
+            <HxButton Text="Zpet" Color="ThemeColor.Secondary" Outline="true" OnClick="HandleCancel" />
+        </div>
+    </EditForm>
+}
