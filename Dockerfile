@@ -1,7 +1,7 @@
 ﻿FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY *.slnx .
+COPY *.slnx Directory.Build.props Directory.Packages.props ./
 COPY SharedKernel/*.csproj SharedKernel/
 COPY Domain/*.csproj Domain/
 COPY Application/*.csproj Application/
