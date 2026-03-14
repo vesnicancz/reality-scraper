@@ -3,12 +3,17 @@
 public interface IDateTimeProvider
 {
 	/// <summary>
-	/// Returns the current date (without time).
+	/// Returns the current time in UTC.
 	/// </summary>
-	DateTimeOffset GetCurrentDate();
+	DateTimeOffset UtcNow { get; }
 
 	/// <summary>
-	/// Returns the current time.
+	/// The application's display timezone.
 	/// </summary>
-	DateTimeOffset GetCurrentTime();
+	TimeZoneInfo ApplicationTimeZone { get; }
+
+	/// <summary>
+	/// Converts a UTC time to the application timezone for display purposes.
+	/// </summary>
+	DateTimeOffset ToApplicationTime(DateTimeOffset utcTime);
 }

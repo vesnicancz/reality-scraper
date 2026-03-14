@@ -40,7 +40,7 @@ public class SchedulerHostedService : BackgroundService
 	/// </summary>
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 	{
-		logger.LogInformation("Scheduler service started at: {Time}", dateTimeProvider.GetCurrentTime());
+		logger.LogInformation("Scheduler service started at: {Time}", dateTimeProvider.UtcNow);
 
 		// Initial load from database
 		await RefreshTasksFromDatabaseAsync(stoppingToken);
@@ -66,7 +66,7 @@ public class SchedulerHostedService : BackgroundService
 			}
 		}
 
-		logger.LogInformation("Scheduler service terminated at: {Time}", dateTimeProvider.GetCurrentTime());
+		logger.LogInformation("Scheduler service terminated at: {Time}", dateTimeProvider.UtcNow);
 	}
 
 	/// <summary>
@@ -85,7 +85,7 @@ public class SchedulerHostedService : BackgroundService
 			return (maxSleepInterval, null);
 		}
 
-		var delay = nextRunTime.Value - dateTimeProvider.GetCurrentTime();
+		var delay = nextRunTime.Value - dateTimeProvider.UtcNow;
 
 		if (delay <= TimeSpan.Zero)
 		{
@@ -157,7 +157,7 @@ public class SchedulerHostedService : BackgroundService
 	/// </summary>
 	private async Task CheckAndExecuteScheduledTasksAsync(CancellationToken cancellationToken)
 	{
-		var now = dateTimeProvider.GetCurrentTime();
+		var now = dateTimeProvider.UtcNow;
 
 		foreach (var taskInfo in scheduledTasks.Where(t => !t.IsRunning && t.NextRunTime.HasValue && t.NextRunTime.Value <= now))
 		{
@@ -184,7 +184,7 @@ public class SchedulerHostedService : BackgroundService
 
 				var schedulerService = scope.ServiceProvider.GetRequiredService<ITaskSchedulerService>();
 
-				var lastRunTime = dateTimeProvider.GetCurrentTime();
+				var lastRunTime = dateTimeProvider.UtcNow;
 				var nextRunTime = await schedulerService.CalculateNextRunTimeAsync(taskInfo.CronExpression, lastRunTime, cancellationToken);
 
 				await schedulerService.UpdateTaskExecutionTimesAsync(taskInfo.Id, lastRunTime, nextRunTime, cancellationToken);
@@ -209,11 +209,11 @@ public class SchedulerHostedService : BackgroundService
 				using (var scope = serviceScopeFactory.CreateScope())
 				{
 					var schedulerService = scope.ServiceProvider.GetRequiredService<ITaskSchedulerService>();
-					var nextRunTime = await schedulerService.CalculateNextRunTimeAsync(taskInfo.CronExpression, dateTimeProvider.GetCurrentTime(), cancellationToken);
+					var nextRunTime = await schedulerService.CalculateNextRunTimeAsync(taskInfo.CronExpression, dateTimeProvider.UtcNow, cancellationToken);
 
 					taskInfo.NextRunTime = nextRunTime;
 
-					await schedulerService.UpdateTaskExecutionTimesAsync(taskInfo.Id, taskInfo.LastRunTime ?? dateTimeProvider.GetCurrentTime(), nextRunTime, cancellationToken);
+					await schedulerService.UpdateTaskExecutionTimesAsync(taskInfo.Id, taskInfo.LastRunTime ?? dateTimeProvider.UtcNow, nextRunTime, cancellationToken);
 
 					logger.LogWarning("Task '{Name}' will be run again at: {NextRunTime}", taskInfo.Name, nextRunTime);
 				}
@@ -241,14 +241,14 @@ public class SchedulerHostedService : BackgroundService
 		{
 			logger.LogWarning("Waiting for {Count} running tasks to complete...", runningTasks.Count);
 
-			var terminationDeadline = dateTimeProvider.GetCurrentTime().Add(terminationTimeout);
+			var terminationDeadline = dateTimeProvider.UtcNow.Add(terminationTimeout);
 
 			do
 			{
 				await Task.Delay(TimeSpan.FromSeconds(30), cancellationToken);
 				runningTasks = scheduledTasks.Where(t => t.IsRunning).ToList();
 			}
-			while ((runningTasks.Count != 0) && (dateTimeProvider.GetCurrentTime() < terminationDeadline) && !cancellationToken.IsCancellationRequested);
+			while ((runningTasks.Count != 0) && (dateTimeProvider.UtcNow < terminationDeadline) && !cancellationToken.IsCancellationRequested);
 
 			if (runningTasks.Count != 0)
 			{

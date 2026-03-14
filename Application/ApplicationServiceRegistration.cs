@@ -50,6 +50,9 @@ public static class DependencyInjection
 		services.AddTransient<IRealityScraperService, SRealityScraperService>();
 		services.AddTransient<IRealityScraperService, RealityIdnesScraperService>();
 
+		services.AddTransient<IListingChangeProcessor, ListingChangeProcessor>();
+		services.AddTransient<IListingNotificationService, ListingNotificationService>();
+		services.AddTransient<IListingImageDownloader, ListingImageDownloader>();
 		services.AddTransient<IScrapingReportProcessor, ScrapingReportProcessor>();
 
 		// task scheduler

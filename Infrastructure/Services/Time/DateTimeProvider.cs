@@ -1,41 +1,18 @@
-﻿using System.Runtime.InteropServices;
-using RealityScraper.SharedKernel;
+﻿using RealityScraper.SharedKernel;
 
 namespace RealityScraper.Infrastructure.Services.Time;
 
-/// <summary>
-/// Provides current time in local time-zone ("Central Europe Standard Time", "Europe/Prague" for non-Windows platforms).
-/// </summary>
 public class DateTimeProvider : IDateTimeProvider
 {
-	/// <summary>
-	/// Returns time-zone you want to treat as local ("Central Europe Standard Time", "Europe/Prague" for non-Windows platforms).
-	/// </summary>
-	private static TimeZoneInfo CurrentTimeZone
-	{
-		get
-		{
-			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-			{
-				return TimeZoneInfo.FindSystemTimeZoneById("Central Europe Standard Time");
-			}
-			return TimeZoneInfo.FindSystemTimeZoneById("Europe/Prague"); // MacOS
-		}
-	}
+	private static readonly TimeZoneInfo PragueTimeZone =
+		TimeZoneInfo.FindSystemTimeZoneById("Europe/Prague");
 
-	/// <summary>
-	/// Vrací aktuální datum (bez času).
-	/// </summary>
-	public DateTimeOffset GetCurrentDate()
-	{
-		return GetCurrentTime().Date;
-	}
+	public DateTimeOffset UtcNow => DateTimeOffset.UtcNow;
 
-	/// <summary>
-	/// Vrací aktuální čas.
-	/// </summary>
-	public DateTimeOffset GetCurrentTime()
+	public TimeZoneInfo ApplicationTimeZone => PragueTimeZone;
+
+	public DateTimeOffset ToApplicationTime(DateTimeOffset utcTime)
 	{
-		return TimeZoneInfo.ConvertTime(DateTimeOffset.Now, CurrentTimeZone).ToUniversalTime();
+		return TimeZoneInfo.ConvertTime(utcTime, PragueTimeZone);
 	}
 }

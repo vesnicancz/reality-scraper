@@ -3,7 +3,7 @@ using RealityScraper.Application.Abstractions.Database;
 using RealityScraper.Application.Features.Scraping.Configuration;
 using RealityScraper.Application.Interfaces.Repositories.Configuration;
 using RealityScraper.Application.Interfaces.Scheduler;
-using RealityScraper.Domain.Entities.Tasks;
+using RealityScraper.SharedKernel;
 
 namespace RealityScraper.Application.Features.Scheduler;
 
@@ -12,17 +12,20 @@ public class TaskSchedulerService : ITaskSchedulerService
 	private readonly IScraperTaskRepository taskRepository;
 	private readonly IUnitOfWork unitOfWork;
 	private readonly IScheduleTimeCalculator timeCalculator;
+	private readonly IDateTimeProvider dateTimeProvider;
 	private readonly ILogger<TaskSchedulerService> logger;
 
 	public TaskSchedulerService(
 		IScraperTaskRepository taskRepository,
 		IUnitOfWork unitOfWork,
 		IScheduleTimeCalculator timeCalculator,
+		IDateTimeProvider dateTimeProvider,
 		ILogger<TaskSchedulerService> logger)
 	{
 		this.taskRepository = taskRepository;
 		this.unitOfWork = unitOfWork;
 		this.timeCalculator = timeCalculator;
+		this.dateTimeProvider = dateTimeProvider;
 		this.logger = logger;
 	}
 
@@ -44,7 +47,7 @@ public class TaskSchedulerService : ITaskSchedulerService
 				continue;
 			}
 
-			var nextRunTime = dbTask.NextRunAt ?? timeCalculator.GetNextExecutionTime(dbTask.CronExpression, DateTime.UtcNow);
+			var nextRunTime = dbTask.NextRunAt ?? timeCalculator.GetNextExecutionTime(dbTask.CronExpression, dateTimeProvider.UtcNow);
 
 			result.Add(new ScheduledTaskInfo
 			{

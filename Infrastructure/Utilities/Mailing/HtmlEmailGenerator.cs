@@ -19,7 +19,7 @@ public class HtmlEmailGenerator : IEmailGenerator
 		body.AppendLine("</head>");
 		body.AppendLine("<body>");
 		body.AppendLine("<h1>Nové realitní nabídky</h1>");
-		body.AppendLine($"<p>Datum: {DateTime.Now:dd.MM.yyyy HH:mm}</p>");
+		body.AppendLine($"<p>Datum: {scrapingReport.ReportDate:dd.MM.yyyy HH:mm}</p>");
 		body.AppendLine($"<p>Celkem nalezeno: {GetPluralForm(scrapingReport.NewListingsCount, "nová nabídka", "nové nabídky", "nových nabídek")}</p>");
 
 		foreach (var result in scrapingReport.Results.Where(i => i.NewListingsCount > 0 || i.PriceChangedListingsCount > 0))

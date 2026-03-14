@@ -31,16 +31,20 @@ public static class DependencyInjection
 
 		// HttpClient for SSR (so components can inject HttpClient during server render)
 		services.AddHttpContextAccessor();
+		services.AddHttpClient("BlazorSSR");
 		services.AddScoped(sp =>
 		{
+			var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
+			var httpClient = httpClientFactory.CreateClient("BlazorSSR");
+
 			var httpContext = sp.GetRequiredService<IHttpContextAccessor>().HttpContext;
 			var request = httpContext?.Request;
 			if (request is not null)
 			{
-				var baseUri = new Uri($"{request.Scheme}://{request.Host}");
-				return new HttpClient { BaseAddress = baseUri };
+				httpClient.BaseAddress = new Uri($"{request.Scheme}://{request.Host}");
 			}
-			return new HttpClient();
+
+			return httpClient;
 		});
 
 		// blazor end

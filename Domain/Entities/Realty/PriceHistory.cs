@@ -10,5 +10,5 @@ public class PriceHistory : Entity
 
 	public decimal? Price { get; set; }
 
-	public DateTime RecordedAt { get; set; }
+	public DateTimeOffset RecordedAt { get; set; }
 }

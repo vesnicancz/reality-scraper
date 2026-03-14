@@ -46,7 +46,7 @@ internal sealed class UpdateScraperTaskCommandHandler : ICommandHandler<UpdateSc
 		if (cronChanged || enabledChanged)
 		{
 			var nextRunTime = command.Enabled
-				? timeCalculator.GetNextExecutionTime(command.CronExpression, dateTimeProvider.GetCurrentTime())
+				? timeCalculator.GetNextExecutionTime(command.CronExpression, dateTimeProvider.UtcNow)
 				: null;
 			scraperTask.SetNextRunAt(nextRunTime);
 		}
