@@ -1,7 +1,5 @@
 ﻿using RealityScraper.Application.Abstractions.Database;
 using RealityScraper.Application.Abstractions.Messaging;
-using RealityScraper.Application.Features.ScraperTaskRecipients;
-using RealityScraper.Application.Features.ScraperTaskTargets;
 using RealityScraper.Application.Interfaces.Repositories.Configuration;
 using RealityScraper.Application.Interfaces.Scheduler;
 using RealityScraper.Domain.Entities.Tasks;
@@ -38,14 +36,20 @@ internal sealed class UpdateScraperTaskCommandHandler : ICommandHandler<UpdateSc
 			return Result.Failure<ScraperTaskDto>(Error.NotFound("ScraperTask.NotFound", $"ScraperTask with ID {command.Id} was not found."));
 		}
 
+		var cronChanged = scraperTask.CronExpression != command.CronExpression;
+		var enabledChanged = scraperTask.Enabled != command.Enabled;
+
 		scraperTask.SetName(command.Name);
 		scraperTask.SetCronExpression(command.CronExpression);
 		scraperTask.SetEnabled(command.Enabled);
 
-		var nextRunTime = command.Enabled
-			? timeCalculator.GetNextExecutionTime(command.CronExpression, dateTimeProvider.GetCurrentTime())
-			: null;
-		scraperTask.SetNextRunAt(nextRunTime);
+		if (cronChanged || enabledChanged)
+		{
+			var nextRunTime = command.Enabled
+				? timeCalculator.GetNextExecutionTime(command.CronExpression, dateTimeProvider.GetCurrentTime())
+				: null;
+			scraperTask.SetNextRunAt(nextRunTime);
+		}
 
 		// Replace recipients
 		foreach (var existing in scraperTask.Recipients.ToList())
@@ -74,29 +78,6 @@ internal sealed class UpdateScraperTaskCommandHandler : ICommandHandler<UpdateSc
 		scraperTaskRepository.Update(scraperTask);
 		await unitOfWork.SaveChangesAsync(cancellationToken);
 
-		var result = new ScraperTaskDto
-		{
-			Id = scraperTask.Id,
-			Name = scraperTask.Name,
-			CronExpression = scraperTask.CronExpression,
-			Enabled = scraperTask.Enabled,
-			LastRunAt = scraperTask.LastRunAt,
-			NextRunAt = scraperTask.NextRunAt,
-			Recipients = scraperTask.Recipients.Select(r => new ScraperTaskRecipientDto
-			{
-				Id = r.Id,
-				ScraperTaskId = r.ScraperTaskId,
-				Email = r.Email
-			}).ToList(),
-			Targets = scraperTask.Targets.Select(t => new ScraperTaskTargetDto
-			{
-				Id = t.Id,
-				ScraperTaskId = t.ScraperTaskId,
-				ScraperType = (int)t.ScraperType,
-				Url = t.Url
-			}).ToList()
-		};
-
-		return Result.Success(result);
+		return Result.Success(ScraperTaskMapper.MapToDetailDto(scraperTask));
 	}
 }

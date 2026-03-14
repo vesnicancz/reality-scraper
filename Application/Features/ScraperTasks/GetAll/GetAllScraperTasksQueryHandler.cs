@@ -17,15 +17,7 @@ internal sealed class GetAllScraperTasksQueryHandler : IQueryHandler<GetAllScrap
 	{
 		var tasks = await scraperTaskRepository.GetAllAsync(cancellationToken);
 
-		var result = tasks.Select(t => new ScraperTaskDto
-		{
-			Id = t.Id,
-			Name = t.Name,
-			CronExpression = t.CronExpression,
-			Enabled = t.Enabled,
-			LastRunAt = t.LastRunAt,
-			NextRunAt = t.NextRunAt
-		}).ToList();
+		var result = tasks.Select(t => ScraperTaskMapper.MapToListDto(t)).ToList();
 
 		return Result.Success(result);
 	}
