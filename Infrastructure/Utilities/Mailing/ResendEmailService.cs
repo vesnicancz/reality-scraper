@@ -23,7 +23,7 @@ public class ResendEmailService : IEmailService
 		this.logger = logger;
 	}
 
-	public async Task SendEmailNotificationAsync(string mailBody, List<string> recipients, CancellationToken cancellationToken)
+	public async Task SendEmailNotificationAsync(string subject, string mailBody, List<string> recipients, CancellationToken cancellationToken)
 	{
 		if (recipients == null || recipients.Count == 0)
 		{
@@ -33,7 +33,6 @@ public class ResendEmailService : IEmailService
 
 		try
 		{
-			var subject = $"Nové realitní nabídky ({DateTime.Now:dd.MM.yyyy})";
 			var fromAddress = !string.IsNullOrWhiteSpace(options.FromName) ? $"{options.FromName} <{options.FromEmail}>" : options.FromEmail;
 
 			// Create a message for each recipient (or use BCC for multiple recipients)

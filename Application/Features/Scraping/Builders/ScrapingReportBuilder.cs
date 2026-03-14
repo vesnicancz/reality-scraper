@@ -9,6 +9,7 @@ namespace RealityScraper.Application.Features.Scraping.Builders;
 public class ScrapingReportBuilder
 {
 	private Guid scraperTaskId;
+	private string scraperTaskName = string.Empty;
 	private readonly Dictionary<string, ScraperResultBuilder> scraperBuilders = new();
 	private readonly HashSet<string> processedListings = new(); // Prevence duplikátů
 
@@ -26,9 +27,10 @@ public class ScrapingReportBuilder
 		this.logger = logger;
 	}
 
-	public ScrapingReportBuilder ForScrapingReport(Guid taskId)
+	public ScrapingReportBuilder ForScrapingReport(Guid taskId, string taskName)
 	{
 		scraperTaskId = taskId;
+		scraperTaskName = taskName;
 		return this;
 	}
 
@@ -128,6 +130,7 @@ public class ScrapingReportBuilder
 		{
 			ReportDate = dateTimeProvider.GetCurrentTime(),
 			ScraperTaskId = scraperTaskId,
+			TaskName = scraperTaskName,
 			Results = results
 		};
 	}

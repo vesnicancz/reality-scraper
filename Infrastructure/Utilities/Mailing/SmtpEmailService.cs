@@ -21,7 +21,7 @@ public class SmtpEmailService : IEmailService
 		this.logger = logger;
 	}
 
-	public async Task SendEmailNotificationAsync(string emailBody, List<string> recipients, CancellationToken cancellationToken)
+	public async Task SendEmailNotificationAsync(string subject, string emailBody, List<string> recipients, CancellationToken cancellationToken)
 	{
 		if (recipients == null || !recipients.Any())
 		{
@@ -41,7 +41,7 @@ public class SmtpEmailService : IEmailService
 				var mailMessage = new MailMessage
 				{
 					From = new MailAddress(options.FromAddress, options.FromName),
-					Subject = $"Nové realitní nabídky ({DateTime.Now:dd.MM.yyyy})",
+					Subject = subject,
 					IsBodyHtml = true,
 					Body = emailBody
 				};

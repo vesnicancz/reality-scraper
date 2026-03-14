@@ -9,6 +9,7 @@ public static class ScrapingConfigurationFactory
 		return new ScrapingConfiguration
 		{
 			Id = task.Id,
+			Name = task.Name,
 			EmailRecipients = task.Recipients?.Select(r => r.Email).ToList() ?? new List<string>(),
 			Scrapers = task.Targets?.Select(t => new ScraperConfiguration
 			{
