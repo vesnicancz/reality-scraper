@@ -1,7 +1,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY *.sln .
+COPY *.slnx .
 COPY SharedKernel/*.csproj SharedKernel/
 COPY Domain/*.csproj Domain/
 COPY Application/*.csproj Application/
@@ -31,6 +31,6 @@ VOLUME ["/app/files"]
 USER appuser
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:5000/health || exit 1
+    CMD wget -qO- http://localhost:5000/health || exit 1
 
 ENTRYPOINT ["dotnet", "RealityScraper.Web.Api.dll"]

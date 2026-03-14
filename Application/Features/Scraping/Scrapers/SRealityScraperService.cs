@@ -40,7 +40,7 @@ public class SRealityScraperService : BaseScraperService
 			var shadowRoot = await shadowHost.First().GetShadowRootAsync(cancellationToken);
 			var agreeButtons = await shadowRoot.FindElementsAsync(options.CpmAgreeButtonsSelector, cancellationToken);
 			await agreeButtons.First().ClickAsync(cancellationToken);
-			await Task.Delay(5000);
+			await Task.Delay(5000, cancellationToken);
 		}
 	}
 
@@ -55,7 +55,7 @@ public class SRealityScraperService : BaseScraperService
 		{
 			await nextButtons.First().ClickAsync(cancellationToken);
 		}
-		await Task.Delay(5000);
+		await Task.Delay(5000, cancellationToken);
 		return true;
 	}
 }

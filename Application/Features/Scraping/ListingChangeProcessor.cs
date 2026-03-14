@@ -70,6 +70,8 @@ public class ListingChangeProcessor : IListingChangeProcessor
 			}
 		}
 
+		logger.LogInformation("Zpracováno {NewCount} nových a {ChangedCount} cenově změněných listingů.", report.NewListingsCount, report.PriceChangedListingsCount);
+
 		return listingsToDownload;
 	}
 }

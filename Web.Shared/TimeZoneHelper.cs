@@ -2,7 +2,19 @@
 
 public static class TimeZoneHelper
 {
-	private static readonly TimeZoneInfo AppTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Prague");
+	private static readonly TimeZoneInfo AppTimeZone = GetAppTimeZone();
+
+	private static TimeZoneInfo GetAppTimeZone()
+	{
+		try
+		{
+			return TimeZoneInfo.FindSystemTimeZoneById("Europe/Prague");
+		}
+		catch (TimeZoneNotFoundException)
+		{
+			return TimeZoneInfo.Utc;
+		}
+	}
 
 	public static string FormatLocal(DateTimeOffset? value, string format = "g")
 	{

@@ -53,7 +53,7 @@ public abstract class BaseScraperService : IRealityScraperService
 			logger.LogTrace("Načítám stránku: {url}", url);
 			await driver.NavigateToUrlAsync(url, cancellationToken);
 
-			await Task.Delay(2000);
+			await Task.Delay(2000, cancellationToken);
 
 			await OnPreScrapingAsync(driver, cancellationToken);
 
