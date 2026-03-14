@@ -22,7 +22,7 @@ public class CronosScheduleTimeCalculator : IScheduleTimeCalculator
 
 		if (CronExpression.TryParse(cronExpression, out var cronExp))
 		{
-			return cronExp.GetNextOccurrence(fromTime, timeZone);
+			return cronExp.GetNextOccurrence(fromTime, timeZone)?.ToUniversalTime();
 		}
 
 		return null;
