@@ -6,6 +6,8 @@ public record ScrapingReport
 
 	public Guid ScraperTaskId { get; init; }
 
+	public string TaskName { get; init; } = string.Empty;
+
 	public List<PortalReport> Results { get; init; } = new List<PortalReport>();
 
 	public int NewListingsCount => Results.Sum(r => r.NewListings.Count);

@@ -2,5 +2,5 @@
 
 public interface IEmailService
 {
-	Task SendEmailNotificationAsync(string mailBody, List<string> recipients, CancellationToken cancellationToken);
+	Task SendEmailNotificationAsync(string subject, string mailBody, List<string> recipients, CancellationToken cancellationToken);
 }

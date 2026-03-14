@@ -33,7 +33,7 @@ public class ScraperServiceTask : IScheduledTask
 	{
 		var scrapersDictionary = scraperServices.ToDictionary(s => s.ScrapersEnum);
 
-		scrapingReportBuilder.ForScrapingReport(configuration.Id);
+		scrapingReportBuilder.ForScrapingReport(configuration.Id, configuration.Name);
 
 		// Spuštění scraperů a sestavení reportu
 		foreach (var scraperConfig in configuration.Scrapers)
