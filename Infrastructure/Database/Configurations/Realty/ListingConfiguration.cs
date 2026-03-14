@@ -11,6 +11,21 @@ public class ListingConfiguration : IEntityTypeConfiguration<Listing>
 	{
 		builder.HasKey(e => e.Id);
 
+		builder.Property(e => e.ExternalId)
+			.HasMaxLength(100);
+
+		builder.Property(e => e.Title)
+			.HasMaxLength(300);
+
+		builder.Property(e => e.Location)
+			.HasMaxLength(300);
+
+		builder.Property(e => e.Url)
+			.HasMaxLength(500);
+
+		builder.Property(e => e.ImageUrl)
+			.HasMaxLength(500);
+
 		builder.HasIndex(e => new { e.ExternalId, e.ScraperTaskId }) // TODO: ScraperType?
 			.IsUnique();
 
