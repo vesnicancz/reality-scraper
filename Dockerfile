@@ -9,6 +9,10 @@ COPY Infrastructure/*.csproj Infrastructure/
 COPY Web.Api/*.csproj Web.Api/
 COPY Web.Client/*.csproj Web.Client/
 COPY Web.Shared/*.csproj Web.Shared/
+COPY Application.Tests/*.csproj Application.Tests/
+COPY Domain.Tests/*.csproj Domain.Tests/
+COPY Infrastructure.Tests/*.csproj Infrastructure.Tests/
+COPY IntegrationTests/*.csproj IntegrationTests/
 RUN dotnet restore
 
 COPY . .
