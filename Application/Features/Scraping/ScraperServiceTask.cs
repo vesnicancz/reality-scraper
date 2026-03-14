@@ -40,11 +40,11 @@ public class ScraperServiceTask : IScheduledTask
 		{
 			if (!scrapersDictionary.TryGetValue(scraperConfig.ScraperType, out var scraperService))
 			{
-				logger.LogWarning("Scraper '{scraperName}' not found.", scraperConfig.ScraperType);
+				logger.LogWarning("Scraper '{ScraperName}' nebyl nalezen.", scraperConfig.ScraperType);
 				continue;
 			}
 
-			logger.LogInformation("Spouštím scraper: {scraperName}", scraperService.SiteName);
+			logger.LogInformation("Spouštím scraper: {ScraperName}", scraperService.SiteName);
 			var listings = await scraperService.ScrapeListingsAsync(scraperConfig, cancellationToken);
 
 			// Použití builderu pro zpracování výsledků
@@ -55,8 +55,6 @@ public class ScraperServiceTask : IScheduledTask
 
 		// Vytvoření finálního reportu
 		var report = scrapingReportBuilder.Build();
-
-		logger.LogInformation("Report vytvořen.");
 
 		await scrapingReportProcessor.ProcessReportAsync(report, configuration.EmailRecipients, cancellationToken);
 	}

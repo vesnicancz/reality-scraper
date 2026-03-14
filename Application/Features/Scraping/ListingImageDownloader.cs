@@ -24,11 +24,20 @@ public class ListingImageDownloader : IListingImageDownloader
 			return;
 		}
 
+		var failedCount = 0;
 		foreach (var listing in listings)
 		{
-			await imageDownloadService.DownloadImageAsync(listing, cancellationToken);
+			try
+			{
+				await imageDownloadService.DownloadImageAsync(listing, cancellationToken);
+			}
+			catch (Exception ex) when (ex is not OperationCanceledException)
+			{
+				failedCount++;
+				logger.LogWarning(ex, "Nepodařilo se stáhnout obrázek pro inzerát {ListingId}", listing.Id);
+			}
 		}
 
-		logger.LogInformation("Obrázky pro {count} inzerátů byly staženy.", listings.Count);
+		logger.LogInformation("Stahování obrázků dokončeno: {SucceededCount} úspěšně, {FailedCount} selhalo.", listings.Count - failedCount, failedCount);
 	}
 }

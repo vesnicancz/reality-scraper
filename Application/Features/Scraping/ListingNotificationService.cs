@@ -23,11 +23,11 @@ public class ListingNotificationService : IListingNotificationService
 		{
 			logger.LogInformation("Nalezeno {newCount} nových inzerátů a {priceChangedCount} upravených cen.", report.NewListingsCount, report.PriceChangedListingsCount);
 			await mailerService.SendNewListingsAsync(report, recipients, cancellationToken);
-			logger.LogInformation("Notifikace o nových inzerátech odeslána.");
+			logger.LogInformation("Notifikace odeslána.");
 		}
 		else
 		{
-			logger.LogInformation("Žádné nové inzeráty nebyly nalezeny.");
+			logger.LogDebug("Žádné nové inzeráty nebyly nalezeny.");
 		}
 	}
 }

@@ -40,7 +40,7 @@ public class SchedulerHostedService : BackgroundService
 	/// </summary>
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 	{
-		logger.LogInformation("Scheduler service started at: {Time}", dateTimeProvider.UtcNow);
+		logger.LogInformation("Služba scheduleru spuštěna");
 
 		// Initial load from database
 		await RefreshTasksFromDatabaseAsync(stoppingToken);
@@ -49,14 +49,14 @@ public class SchedulerHostedService : BackgroundService
 		{
 			var (timeToNextTask, nextTaskDueAt) = CalculateTimeToNextTask();
 
-			logger.LogTrace("Scheduler sleeping for {SleepTime}, next task due at {NextDue}", timeToNextTask, nextTaskDueAt.HasValue ? nextTaskDueAt.Value : "no tasks scheduled");
+			logger.LogTrace("Scheduler spí po dobu {SleepTime}, další úloha: {NextDue}", timeToNextTask, nextTaskDueAt);
 
 			// Wait for either: a refresh signal (task changed) or timeout (next task is due)
 			var wasSignaled = await refreshSignal.WaitForRefreshAsync(timeToNextTask, stoppingToken);
 
 			if (wasSignaled)
 			{
-				logger.LogInformation("Scheduler woke up due to task change signal, refreshing from database");
+				logger.LogInformation("Přijat signál o změně úloh, obnovuji seznam z databáze");
 				await RefreshTasksFromDatabaseAsync(stoppingToken);
 			}
 			else
@@ -66,7 +66,7 @@ public class SchedulerHostedService : BackgroundService
 			}
 		}
 
-		logger.LogInformation("Scheduler service terminated at: {Time}", dateTimeProvider.UtcNow);
+		logger.LogInformation("Služba scheduleru ukončena");
 	}
 
 	/// <summary>
@@ -100,7 +100,7 @@ public class SchedulerHostedService : BackgroundService
 	/// </summary>
 	private async Task RefreshTasksFromDatabaseAsync(CancellationToken cancellationToken)
 	{
-		logger.LogTrace("Refreshing task list from database");
+		logger.LogTrace("Obnovuji seznam úloh z databáze");
 
 		try
 		{
@@ -119,7 +119,7 @@ public class SchedulerHostedService : BackgroundService
 			foreach (var taskToRemove in tasksToRemove)
 			{
 				scheduledTasks.Remove(taskToRemove);
-				logger.LogTrace("Task '{Name}' was removed from the list", taskToRemove.Name);
+				logger.LogTrace("Úloha '{Name}' odebrána ze seznamu", taskToRemove.Name);
 			}
 
 			// Add or update tasks
@@ -129,7 +129,7 @@ public class SchedulerHostedService : BackgroundService
 				if (existingTask == null)
 				{
 					scheduledTasks.Add(dbTask);
-					logger.LogInformation("New task added '{Name}', next run: {NextRunTime}", dbTask.Name, dbTask.NextRunTime);
+					logger.LogInformation("Nová úloha '{Name}' přidána, další spuštění: {NextRunTime}", dbTask.Name, dbTask.NextRunTime);
 				}
 				else if (!existingTask.IsRunning)
 				{
@@ -139,15 +139,15 @@ public class SchedulerHostedService : BackgroundService
 					existingTask.NextRunTime = dbTask.NextRunTime;
 					existingTask.LastRunTime = dbTask.LastRunTime;
 
-					logger.LogTrace("Updated task '{Name}' from database, next run: {NextRunTime}", existingTask.Name, existingTask.NextRunTime);
+					logger.LogTrace("Úloha '{Name}' aktualizována, další spuštění: {NextRunTime}", existingTask.Name, existingTask.NextRunTime);
 				}
 			}
 
-			logger.LogInformation("Loaded and processed {Count} active tasks", activeTasks.Count);
+			logger.LogInformation("Načteno {Count} aktivních úloh", activeTasks.Count);
 		}
 		catch (Exception ex)
 		{
-			logger.LogError(ex, "Error loading tasks from database");
+			logger.LogError(ex, "Chyba při načítání úloh z databáze");
 			throw;
 		}
 	}
@@ -174,7 +174,7 @@ public class SchedulerHostedService : BackgroundService
 
 		try
 		{
-			logger.LogInformation("Starting task '{Name}'", taskInfo.Name);
+			logger.LogInformation("Spouštím úlohu '{Name}'", taskInfo.Name);
 
 			using (var scope = serviceScopeFactory.CreateScope())
 			{
@@ -192,17 +192,17 @@ public class SchedulerHostedService : BackgroundService
 				taskInfo.LastRunTime = lastRunTime;
 				taskInfo.NextRunTime = nextRunTime;
 
-				logger.LogInformation("Task '{Name}' completed successfully, next execution: {NextRunTime}", taskInfo.Name, nextRunTime);
+				logger.LogInformation("Úloha '{Name}' dokončena, další spuštění: {NextRunTime}", taskInfo.Name, nextRunTime);
 			}
 		}
 		catch (OperationCanceledException)
 		{
-			logger.LogWarning("Task '{Name}' was cancelled", taskInfo.Name);
+			logger.LogWarning("Úloha '{Name}' byla zrušena", taskInfo.Name);
 			throw;
 		}
 		catch (Exception ex)
 		{
-			logger.LogError(ex, "Error executing task '{Name}'", taskInfo.Name);
+			logger.LogError(ex, "Chyba při provádění úlohy '{Name}'", taskInfo.Name);
 
 			try
 			{
@@ -215,12 +215,12 @@ public class SchedulerHostedService : BackgroundService
 
 					await schedulerService.UpdateTaskExecutionTimesAsync(taskInfo.Id, taskInfo.LastRunTime ?? dateTimeProvider.UtcNow, nextRunTime, cancellationToken);
 
-					logger.LogWarning("Task '{Name}' will be run again at: {NextRunTime}", taskInfo.Name, nextRunTime);
+					logger.LogWarning("Úloha '{Name}' bude znovu spuštěna v: {NextRunTime}", taskInfo.Name, nextRunTime);
 				}
 			}
 			catch (Exception innerEx)
 			{
-				logger.LogError(innerEx, "Error calculating next run time for task '{Name}' after failure", taskInfo.Name);
+				logger.LogError(innerEx, "Chyba při výpočtu dalšího spuštění úlohy '{Name}'", taskInfo.Name);
 			}
 		}
 		finally
@@ -234,12 +234,12 @@ public class SchedulerHostedService : BackgroundService
 	/// </summary>
 	public override async Task StopAsync(CancellationToken cancellationToken)
 	{
-		logger.LogInformation("Stopping Scheduler service");
+		logger.LogInformation("Zastavuji službu scheduleru");
 
 		var runningTasks = scheduledTasks.Where(t => t.IsRunning).ToList();
 		if (runningTasks.Count != 0)
 		{
-			logger.LogWarning("Waiting for {Count} running tasks to complete...", runningTasks.Count);
+			logger.LogWarning("Čekám na dokončení {Count} běžících úloh...", runningTasks.Count);
 
 			var terminationDeadline = dateTimeProvider.UtcNow.Add(terminationTimeout);
 
@@ -252,11 +252,11 @@ public class SchedulerHostedService : BackgroundService
 
 			if (runningTasks.Count != 0)
 			{
-				logger.LogError("Some tasks could not be completed in time. Terminating service.");
+				logger.LogError("Některé úlohy se nepodařilo dokončit včas. Ukončuji službu.");
 			}
 			else
 			{
-				logger.LogInformation("All tasks completed successfully.");
+				logger.LogInformation("Všechny úlohy dokončeny.");
 			}
 		}
 

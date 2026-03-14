@@ -7,9 +7,7 @@ internal sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> log
 {
 	public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
 	{
-#pragma warning disable CA1848 // Use the LoggerMessage delegates
 		logger.LogError(exception, "Unhandled exception occurred");
-#pragma warning restore CA1848 // Use the LoggerMessage delegates
 
 		var problemDetails = new ProblemDetails
 		{

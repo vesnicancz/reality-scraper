@@ -27,7 +27,7 @@ public class ResendEmailService : IEmailService
 	{
 		if (recipients == null || recipients.Count == 0)
 		{
-			logger.LogWarning("No email recipients are set.");
+			logger.LogWarning("Nejsou nastaveni žádní příjemci e-mailů.");
 			return;
 		}
 
@@ -49,17 +49,17 @@ public class ResendEmailService : IEmailService
 				var response = await resend.EmailSendAsync(message, cancellationToken);
 				if (response.Success)
 				{
-					logger.LogTrace("Email sent successfully to {recipientEmail}", recipientEmail);
+					logger.LogTrace("E-mail úspěšně odeslán na {RecipientEmail}.", recipientEmail);
 				}
 				else
 				{
-					logger.LogWarning("Failed to send email to {recipientEmail}: {exception}", recipientEmail, response.Exception);
+					logger.LogWarning(response.Exception, "Nepodařilo se odeslat e-mail na {RecipientEmail}.", recipientEmail);
 				}
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.LogError(ex, "Error sending email via Resend.");
+			logger.LogError(ex, "Chyba při odesílání e-mailu přes Resend.");
 		}
 	}
 }
