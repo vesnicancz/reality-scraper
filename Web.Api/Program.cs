@@ -31,11 +31,14 @@ public static class Program
 			loggerConfig.WriteTo.Sink(new TaskLogSink(services.GetRequiredService<ITaskLogWriter>()));
 		});
 		builder.Services.AddPresentation();
+		builder.Services.AddOidcAuthentication(builder.Configuration);
 		builder.Services.AddHealthChecks();
 
 		var app = builder.Build();
 
 		await app.ApplyMigrationsAsync();
+
+		app.UseForwardedHeaders();
 
 		if (app.Environment.IsDevelopment())
 		{
@@ -69,17 +72,11 @@ public static class Program
 
 		app.UseExceptionHandler();
 
-		//app.UseAuthentication();
-
-		//app.UseAuthorization();
+		app.UseOidcAuthentication();
 
 		app.MapHealthChecks("/health");
+		app.MapAuthenticationEndpoints();
 		app.MapEndpoints();
-
-		// Mapuje Identity API endpointy
-		//app.MapGroup("/identity")
-		//	.WithTags(Tags.Identity)
-		//	.MapIdentityApi<ApplicationUser>();
 
 		await app.RunAsync();
 	}

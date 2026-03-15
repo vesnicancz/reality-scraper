@@ -1,4 +1,4 @@
-# Reality Scraper
+﻿# Reality Scraper
 
 [![.NET Build](https://github.com/vesnicancz/reality-scraper/actions/workflows/dotnet.yml/badge.svg)](https://github.com/vesnicancz/reality-scraper/actions/workflows/dotnet.yml)
 
@@ -79,6 +79,47 @@ Konfigurace v `appsettings.json`:
   }
 }
 ```
+
+## Autentizace (volitelná)
+
+Aplikace podporuje volitelnou autentizaci přes **OpenID Connect** (OIDC). Ve výchozím stavu je autentizace vypnutá a aplikace funguje bez přihlášení.
+
+Po zapnutí (`"Enabled": true`) se aktivuje:
+- OIDC Authorization Code flow s cookie session
+- Aplikační API endpointy vyžadují přihlášení (kromě `/health` a `/account/*`)
+- Blazor stránky s `[Authorize]` přesměrují na login
+- Endpointy `/account/login`, `/account/logout`, `/account/user-info`
+
+### Konfigurace
+
+```json
+{
+  "Authentication": {
+    "Enabled": true,
+    "Authority": "https://login.microsoftonline.com/{tenant-id}/v2.0",
+    "ClientId": "your-client-id",
+    "ClientSecret": "your-client-secret",
+    "Scopes": ["openid", "profile", "email"],
+    "RequireHttpsMetadata": true,
+    "CallbackPath": "/signin-oidc",
+    "SignedOutCallbackPath": "/signout-callback-oidc"
+  }
+}
+```
+
+### Příklady providerů
+
+**Microsoft Entra ID:**
+```json
+"Authority": "https://login.microsoftonline.com/{tenant-id}/v2.0"
+```
+
+**Keycloak:**
+```json
+"Authority": "https://keycloak.example.com/realms/{realm}"
+```
+
+**Další OIDC providery** (Google, Auth0, Okta, …) – stačí nastavit správné `Authority`, `ClientId` a `ClientSecret`.
 
 ## Spuštění
 
