@@ -1,7 +1,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY *.slnx Directory.Build.props Directory.Packages.props ./
+COPY *.slnx Directory.Build.props Directory.Packages.props global.json ./
 COPY SharedKernel/*.csproj SharedKernel/
 COPY Domain/*.csproj Domain/
 COPY Application/*.csproj Application/
@@ -16,7 +16,7 @@ COPY IntegrationTests/*.csproj IntegrationTests/
 RUN dotnet restore
 
 COPY . .
-RUN dotnet publish Web.Api/Web.Api.csproj -c Release -o /app/publish --no-restore
+RUN dotnet publish Web.Api/Web.Api.csproj -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
