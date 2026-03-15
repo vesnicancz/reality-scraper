@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
@@ -19,6 +19,16 @@ internal static class AuthenticationExtensions
 		if (authOptions is not { Enabled: true })
 		{
 			return services;
+		}
+
+		if (string.IsNullOrWhiteSpace(authOptions.Authority))
+		{
+			throw new InvalidOperationException("Authentication:Authority must be configured when authentication is enabled.");
+		}
+
+		if (string.IsNullOrWhiteSpace(authOptions.ClientId))
+		{
+			throw new InvalidOperationException("Authentication:ClientId must be configured when authentication is enabled.");
 		}
 
 		services
@@ -85,14 +95,16 @@ internal static class AuthenticationExtensions
 			return app;
 		}
 
-		app.MapGet("/account/login", (string? returnUrl) =>
-			Results.Challenge(
-				new AuthenticationProperties
-				{
-					RedirectUri = returnUrl ?? "/"
-				},
-				[OpenIdConnectDefaults.AuthenticationScheme]))
-			.AllowAnonymous();
+		app.MapGet("/account/login", (string? returnUrl, HttpContext context) =>
+		{
+			var redirectUri = "/";
+			if (!string.IsNullOrEmpty(returnUrl) && Uri.TryCreate(returnUrl, UriKind.Relative, out _))
+			{
+				redirectUri = returnUrl;
+			}
+
+			return Results.Challenge(new AuthenticationProperties { RedirectUri = redirectUri }, [OpenIdConnectDefaults.AuthenticationScheme]);
+		}).AllowAnonymous();
 
 		app.MapPost("/account/logout", async (HttpContext context) =>
 		{
