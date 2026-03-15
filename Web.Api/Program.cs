@@ -38,6 +38,8 @@ public static class Program
 
 		await app.ApplyMigrationsAsync();
 
+		app.UseForwardedHeaders();
+
 		if (app.Environment.IsDevelopment())
 		{
 			app.UseOpenApiWithScalarUi();
@@ -52,8 +54,6 @@ public static class Program
 			// The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
 			app.UseHsts();
 		}
-
-		app.UseForwardedHeaders();
 
 		// blazor: start
 		//app.UseStatusCodePagesWithReExecute("/not-found", createScopeForErrors: true); //.net 10
