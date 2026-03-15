@@ -62,7 +62,7 @@ public abstract class BaseScraperService : IRealityScraperService
 			while (load)
 			{
 				var listingElements = await driver.FindElementsAsync(Options.ListingSelector, cancellationToken);
-				logger.LogDebug("Nalezeno {Count} inzerátů na stránce.", listingElements.Count);
+				logger.LogInformation("Stránka {Page}: nalezeno {Count} inzerátů", page, listingElements.Count);
 
 				foreach (var element in listingElements)
 				{

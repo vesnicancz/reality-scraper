@@ -39,7 +39,7 @@ public class TaskSchedulerService : ITaskSchedulerService
 		var activeTasks = await taskRepository.GetActiveTasksAsync(cancellationToken);
 		var result = new List<ScheduledTaskInfo>();
 
-		foreach (var dbTask in activeTasks.Where(t => t.Enabled))
+		foreach (var dbTask in activeTasks)
 		{
 			if (!timeCalculator.IsValidExpression(dbTask.CronExpression))
 			{
@@ -66,11 +66,9 @@ public class TaskSchedulerService : ITaskSchedulerService
 		return result;
 	}
 
-	public async Task UpdateTaskExecutionTimesAsync(Guid taskId, DateTimeOffset lastRunTime, DateTimeOffset? nextRunTime, CancellationToken cancellationToken)
+	public async Task UpdateTaskExecutionTimesAsync(Guid taskId, TaskExecutionResult result, CancellationToken cancellationToken)
 	{
-		await taskRepository.UpdateLastRunTimeAsync(taskId, lastRunTime, cancellationToken);
-		await taskRepository.UpdateNextRunTimeAsync(taskId, nextRunTime, cancellationToken);
-
+		await taskRepository.UpdateTaskExecutionResultAsync(taskId, result, cancellationToken);
 		await unitOfWork.SaveChangesAsync(cancellationToken);
 	}
 }

@@ -17,6 +17,8 @@ public static class ScraperTaskDtoMapper
 			Enabled = dto.Enabled,
 			LastRunAt = dto.LastRunAt,
 			NextRunAt = dto.NextRunAt,
+			LastRunSucceeded = dto.LastRunSucceeded,
+			LastRunLog = dto.LastRunLog,
 			Recipients = dto.Recipients.Select(ScraperTaskRecipientDtoMapper.MapToResult).ToList(),
 			Targets = dto.Targets.Select(ScraperTaskTargetDtoMapper.MapToResult).ToList()
 		};

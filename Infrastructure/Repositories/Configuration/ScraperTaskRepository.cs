@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using RealityScraper.Application.Abstractions.Database;
+using RealityScraper.Application.Features.Scheduler;
 using RealityScraper.Application.Interfaces.Repositories.Configuration;
 using RealityScraper.Domain.Entities.Tasks;
 
@@ -29,25 +30,16 @@ internal class ScraperTaskRepository : Repository<ScraperTask>, IScraperTaskRepo
 			.FirstOrDefaultAsync(t => t.Id == taskId, cancellationToken);
 	}
 
-	public async Task UpdateNextRunTimeAsync(Guid taskId, DateTimeOffset? nextRunTime, CancellationToken cancellationToken)
+	public async Task UpdateTaskExecutionResultAsync(Guid taskId, TaskExecutionResult result, CancellationToken cancellationToken)
 	{
 		var task = await dbContext.Set<ScraperTask>().FindAsync(new object[] { taskId }, cancellationToken);
 
 		if (task != null)
 		{
-			task.SetNextRunAt(nextRunTime);
-			dbContext.Entry(task).State = EntityState.Modified;
-		}
-	}
-
-	public async Task UpdateLastRunTimeAsync(Guid taskId, DateTimeOffset lastRunTime, CancellationToken cancellationToken)
-	{
-		var task = await dbContext.Set<ScraperTask>().FindAsync(new object[] { taskId }, cancellationToken);
-
-		if (task != null)
-		{
-			task.SetLastRunAt(lastRunTime);
-			dbContext.Entry(task).State = EntityState.Modified;
+			task.SetLastRunAt(result.LastRunTime);
+			task.SetNextRunAt(result.NextRunTime);
+			task.SetLastRunLog(result.LastRunLog);
+			task.SetLastRunSucceeded(result.Succeeded);
 		}
 	}
 }

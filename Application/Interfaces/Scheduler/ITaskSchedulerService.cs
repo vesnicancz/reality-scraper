@@ -8,5 +8,5 @@ public interface ITaskSchedulerService
 
 	Task<List<ScheduledTaskInfo>> LoadActiveTasksAsync(CancellationToken cancellationToken);
 
-	Task UpdateTaskExecutionTimesAsync(Guid taskId, DateTimeOffset lastRunTime, DateTimeOffset? nextRunTime, CancellationToken cancellationToken);
+	Task UpdateTaskExecutionTimesAsync(Guid taskId, TaskExecutionResult result, CancellationToken cancellationToken);
 }

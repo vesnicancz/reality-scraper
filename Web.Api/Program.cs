@@ -1,6 +1,8 @@
 ﻿using System.Globalization;
 using RealityScraper.Application;
 using RealityScraper.Infrastructure;
+using RealityScraper.Application.Interfaces.Logging;
+using RealityScraper.Infrastructure.Logging;
 using RealityScraper.Web.Api.Components;
 using RealityScraper.Web.Api.Extensions;
 using Serilog;
@@ -17,15 +19,17 @@ public static class Program
 			.SetBasePath(Directory.GetCurrentDirectory())
 			.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.local.json", true); // .gitignored
 
-		builder.Host.UseSerilog((context, loggerConfig) =>
-		{
-			loggerConfig.ReadFrom.Configuration(context.Configuration);
-			loggerConfig.WriteTo.Console(formatProvider: CultureInfo.InvariantCulture);
-		});
-
 		// Registrace závislostí
 		builder.Services.AddApplicationServices(builder.Configuration);
 		builder.Services.AddInfrastructureServices(builder.Configuration);
+
+		builder.Host.UseSerilog((context, services, loggerConfig) =>
+		{
+			loggerConfig.ReadFrom.Configuration(context.Configuration);
+			loggerConfig.Enrich.FromLogContext();
+			loggerConfig.WriteTo.Console(formatProvider: CultureInfo.InvariantCulture);
+			loggerConfig.WriteTo.Sink(new TaskLogSink(services.GetRequiredService<ITaskLogWriter>()));
+		});
 		builder.Services.AddPresentation();
 		builder.Services.AddHealthChecks();
 

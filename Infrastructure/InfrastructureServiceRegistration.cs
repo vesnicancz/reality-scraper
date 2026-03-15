@@ -7,7 +7,9 @@ using RealityScraper.Application.Abstractions.Events;
 using RealityScraper.Application.Interfaces.Mailing;
 using RealityScraper.Application.Interfaces.Scheduler;
 using RealityScraper.Application.Interfaces.Scraping;
+using RealityScraper.Application.Interfaces.Logging;
 using RealityScraper.Infrastructure.BackgroundServices.Scheduler;
+using RealityScraper.Infrastructure.Logging;
 using RealityScraper.Infrastructure.Configuration;
 using RealityScraper.Infrastructure.Contexts;
 using RealityScraper.Infrastructure.Database;
@@ -60,6 +62,10 @@ public static class InfrastructureServiceRegistration
 		services.AddTransient<IWebDriverFactory, SeleniumChromeDriverFactory>();
 
 		services.AddTransient<IScheduleTimeCalculator, CronosScheduleTimeCalculator>();
+
+		services.AddSingleton<TaskLogStore>();
+		services.AddSingleton<ITaskLogStore>(sp => sp.GetRequiredService<TaskLogStore>());
+		services.AddSingleton<ITaskLogWriter>(sp => sp.GetRequiredService<TaskLogStore>());
 
 		services.AddSingleton<ISchedulerRefreshSignal, SchedulerRefreshSignal>();
 		services.AddHostedService<SchedulerHostedService>();

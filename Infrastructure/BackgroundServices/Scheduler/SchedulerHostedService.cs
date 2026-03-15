@@ -3,8 +3,10 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RealityScraper.Application.Features.Scheduler;
 using RealityScraper.Application.Features.Scraping;
+using RealityScraper.Application.Interfaces.Logging;
 using RealityScraper.Application.Interfaces.Scheduler;
 using RealityScraper.SharedKernel;
+using Serilog.Context;
 
 namespace RealityScraper.Infrastructure.BackgroundServices.Scheduler;
 
@@ -17,6 +19,7 @@ public class SchedulerHostedService : BackgroundService
 	private readonly IServiceScopeFactory serviceScopeFactory;
 	private readonly ISchedulerRefreshSignal refreshSignal;
 	private readonly IDateTimeProvider dateTimeProvider;
+	private readonly ITaskLogStore taskLogStore;
 	private readonly ILogger<SchedulerHostedService> logger;
 
 	private readonly List<ScheduledTaskInfo> scheduledTasks = new();
@@ -27,11 +30,13 @@ public class SchedulerHostedService : BackgroundService
 		IServiceScopeFactory serviceScopeFactory,
 		ISchedulerRefreshSignal refreshSignal,
 		IDateTimeProvider dateTimeProvider,
+		ITaskLogStore taskLogStore,
 		ILogger<SchedulerHostedService> logger)
 	{
 		this.serviceScopeFactory = serviceScopeFactory;
 		this.refreshSignal = refreshSignal;
 		this.dateTimeProvider = dateTimeProvider;
+		this.taskLogStore = taskLogStore;
 		this.logger = logger;
 	}
 
@@ -171,57 +176,71 @@ public class SchedulerHostedService : BackgroundService
 	private async Task ExecuteTaskAsync(ScheduledTaskInfo taskInfo, CancellationToken cancellationToken)
 	{
 		taskInfo.IsRunning = true;
+		taskLogStore.StartCapture(taskInfo.Id);
+		var succeeded = true;
 
 		try
 		{
-			logger.LogInformation("Spouštím úlohu '{Name}'", taskInfo.Name);
-
-			using (var scope = serviceScopeFactory.CreateScope())
+			using (LogContext.PushProperty("TaskId", taskInfo.Id))
 			{
-				var task = (IScheduledTask)scope.ServiceProvider.GetRequiredService(typeof(ScraperServiceTask));
+				logger.LogInformation("Spouštím úlohu '{Name}'", taskInfo.Name);
 
-				await task.ExecuteAsync(taskInfo.ScrapingConfiguration, cancellationToken);
+				using (var scope = serviceScopeFactory.CreateScope())
+				{
+					var task = (IScheduledTask)scope.ServiceProvider.GetRequiredService(typeof(ScraperServiceTask));
 
-				var schedulerService = scope.ServiceProvider.GetRequiredService<ITaskSchedulerService>();
+					try
+					{
+						await task.ExecuteAsync(taskInfo.ScrapingConfiguration, cancellationToken);
+					}
+					catch (OperationCanceledException)
+					{
+						logger.LogWarning("Úloha '{Name}' byla zrušena", taskInfo.Name);
+						throw;
+					}
+					catch (Exception ex)
+					{
+						logger.LogError(ex, "Chyba při provádění úlohy '{Name}'", taskInfo.Name);
+						succeeded = false;
+					}
 
-				var lastRunTime = dateTimeProvider.UtcNow;
-				var nextRunTime = await schedulerService.CalculateNextRunTimeAsync(taskInfo.CronExpression, lastRunTime, cancellationToken);
+					var schedulerService = scope.ServiceProvider.GetRequiredService<ITaskSchedulerService>();
 
-				await schedulerService.UpdateTaskExecutionTimesAsync(taskInfo.Id, lastRunTime, nextRunTime, cancellationToken);
+					var lastRunTime = dateTimeProvider.UtcNow;
+					var nextRunTime = await schedulerService.CalculateNextRunTimeAsync(taskInfo.CronExpression, lastRunTime, cancellationToken);
 
-				taskInfo.LastRunTime = lastRunTime;
-				taskInfo.NextRunTime = nextRunTime;
+					if (succeeded)
+					{
+						logger.LogInformation("Úloha '{Name}' úspěšně dokončena, další spuštění: {NextRunTime}", taskInfo.Name, nextRunTime);
+					}
+					else
+					{
+						logger.LogWarning("Úloha '{Name}' dokončena s chybou, další spuštění: {NextRunTime}", taskInfo.Name, nextRunTime);
+					}
 
-				logger.LogInformation("Úloha '{Name}' dokončena, další spuštění: {NextRunTime}", taskInfo.Name, nextRunTime);
+					var log = taskLogStore.GetAndClear(taskInfo.Id);
+					var result = new TaskExecutionResult(lastRunTime, nextRunTime, log, succeeded);
+					await schedulerService.UpdateTaskExecutionTimesAsync(taskInfo.Id, result, cancellationToken);
+
+					taskInfo.LastRunTime = lastRunTime;
+					taskInfo.NextRunTime = nextRunTime;
+				}
 			}
 		}
 		catch (OperationCanceledException)
 		{
-			logger.LogWarning("Úloha '{Name}' byla zrušena", taskInfo.Name);
+			taskLogStore.GetAndClear(taskInfo.Id);
 			throw;
 		}
 		catch (Exception ex)
 		{
-			logger.LogError(ex, "Chyba při provádění úlohy '{Name}'", taskInfo.Name);
+			logger.LogError(ex, "Chyba při ukládání výsledků úlohy '{Name}'", taskInfo.Name);
+			taskLogStore.GetAndClear(taskInfo.Id);
 
-			try
-			{
-				using (var scope = serviceScopeFactory.CreateScope())
-				{
-					var schedulerService = scope.ServiceProvider.GetRequiredService<ITaskSchedulerService>();
-					var nextRunTime = await schedulerService.CalculateNextRunTimeAsync(taskInfo.CronExpression, dateTimeProvider.UtcNow, cancellationToken);
-
-					taskInfo.NextRunTime = nextRunTime;
-
-					await schedulerService.UpdateTaskExecutionTimesAsync(taskInfo.Id, taskInfo.LastRunTime ?? dateTimeProvider.UtcNow, nextRunTime, cancellationToken);
-
-					logger.LogWarning("Úloha '{Name}' bude znovu spuštěna v: {NextRunTime}", taskInfo.Name, nextRunTime);
-				}
-			}
-			catch (Exception innerEx)
-			{
-				logger.LogError(innerEx, "Chyba při výpočtu dalšího spuštění úlohy '{Name}'", taskInfo.Name);
-			}
+			// Prevent tight retry loop on persistent errors
+			var backoff = TimeSpan.FromMinutes(5);
+			taskInfo.NextRunTime = dateTimeProvider.UtcNow.Add(backoff);
+			logger.LogWarning("Další spuštění úlohy '{Name}' odloženo o {Backoff} min kvůli chybě při ukládání", taskInfo.Name, backoff.TotalMinutes);
 		}
 		finally
 		{
