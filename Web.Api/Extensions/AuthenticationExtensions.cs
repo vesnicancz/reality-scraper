@@ -40,6 +40,8 @@ internal static class AuthenticationExtensions
 		services.Configure<ForwardedHeadersOptions>(options =>
 		{
 			options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+			options.KnownIPNetworks.Clear();
+			options.KnownProxies.Clear();
 		});
 
 		services
@@ -73,6 +75,7 @@ internal static class AuthenticationExtensions
 					options.Scope.Add(scope);
 				}
 
+				options.MapInboundClaims = false;
 				options.TokenValidationParameters.NameClaimType = "name";
 				options.TokenValidationParameters.RoleClaimType = "role";
 			});
@@ -105,7 +108,7 @@ internal static class AuthenticationExtensions
 			return app;
 		}
 
-		app.MapGet("/account/login", (string? returnUrl, HttpContext context) =>
+		app.MapGet("/account/login", (string? returnUrl) =>
 		{
 			var redirectUri = "/";
 			if (!string.IsNullOrEmpty(returnUrl)
