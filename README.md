@@ -42,10 +42,10 @@ Web.Shared/         – Sdílené DTO a validační modely
 |---|---|
 | Runtime | .NET 10, ASP.NET Core 10 |
 | Frontend | Blazor WebAssembly, Havit Bootstrap komponenty |
-| Databáze | PostgreSQL (Npgsql), SQLite (alternativa) |
+| Databáze | PostgreSQL (Npgsql) |
 | ORM | Entity Framework Core 10 |
 | Scrapování | Selenium WebDriver 4.41 |
-| E-maily | Resend, SendGrid (alternativa), RazorEngineCore |
+| E-maily | Resend, RazorEngineCore |
 | Plánování | Cronos |
 | Validace | FluentValidation |
 | Logování | Serilog |
@@ -55,7 +55,7 @@ Web.Shared/         – Sdílené DTO a validační modely
 ## Požadavky
 
 - .NET 10 SDK
-- PostgreSQL (nebo SQLite)
+- PostgreSQL
 - Chrome/Chromium pro Selenium (nebo Selenium Standalone kontejner)
 - E-mailová služba – Resend API klíč nebo SMTP server
 
@@ -68,31 +68,9 @@ Konfigurace v `appsettings.json`:
   "ConnectionStrings": {
     "DefaultConnection": "Host=localhost;Port=5432;Database=reality-scraper;Username=postgres;Password=..."
   },
-  "SchedulerSettings": {
-    "Tasks": [
-      {
-        "Name": "Reality Praha",
-        "CronExpression": "0 0,12 * * *",
-        "Enabled": true,
-        "ScrapingConfiguration": {
-          "EmailRecipients": ["vas-email@example.com"],
-          "Scrapers": [
-            {
-              "ScraperType": "SReality",
-              "Url": "https://www.sreality.cz/hledani/prodej/domy/praha"
-            },
-            {
-              "ScraperType": "RealityIdnes",
-              "Url": "https://reality.idnes.cz/s/prodej/domy/praha/"
-            }
-          ]
-        }
-      }
-    ]
-  },
   "SeleniumSettings": {
     "UseRemoteDriver": true,
-    "RemoteDriverUrl": "http://localhost:4444/wd/hub"
+    "SeleniumHubUrl": "http://localhost:4444/wd/hub"
   },
   "ResendSettings": {
     "ApiKey": "re_...",
