@@ -231,7 +231,9 @@ public class SchedulerHostedService : BackgroundService
 			taskLogStore.GetAndClear(taskInfo.Id);
 
 			// Prevent tight retry loop on persistent errors
-			taskInfo.NextRunTime = dateTimeProvider.UtcNow.Add(TimeSpan.FromMinutes(5));
+			var backoff = TimeSpan.FromMinutes(5);
+			taskInfo.NextRunTime = dateTimeProvider.UtcNow.Add(backoff);
+			logger.LogWarning("Další spuštění úlohy '{Name}' odloženo o {Backoff} min kvůli chybě při ukládání", taskInfo.Name, backoff.TotalMinutes);
 		}
 		finally
 		{
