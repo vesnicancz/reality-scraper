@@ -53,22 +53,28 @@ internal sealed class RunScraperTaskNowCommandHandler : ICommandHandler<RunScrap
 		var config = ScrapingConfigurationFactory.CreateFromTask(scraperTask);
 		var succeeded = true;
 
+		string? log = null;
 		taskLogStore.StartCapture(scraperTask.Id);
 
-		using (LogContext.PushProperty("TaskId", scraperTask.Id))
+		try
 		{
-			try
+			using (LogContext.PushProperty("TaskId", scraperTask.Id))
 			{
-				await scraperServiceTask.ExecuteAsync(config, cancellationToken);
-			}
-			catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
-			{
-				logger.LogError(ex, "Task '{Name}' ({Id}) failed during manual execution", scraperTask.Name, scraperTask.Id);
-				succeeded = false;
+				try
+				{
+					await scraperServiceTask.ExecuteAsync(config, cancellationToken);
+				}
+				catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+				{
+					logger.LogError(ex, "Task '{Name}' ({Id}) failed during manual execution", scraperTask.Name, scraperTask.Id);
+					succeeded = false;
+				}
 			}
 		}
-
-		var log = taskLogStore.GetAndClear(scraperTask.Id);
+		finally
+		{
+			log = taskLogStore.GetAndClear(scraperTask.Id);
+		}
 
 		var lastRunTime = dateTimeProvider.UtcNow;
 		var nextRunTime = scraperTask.Enabled

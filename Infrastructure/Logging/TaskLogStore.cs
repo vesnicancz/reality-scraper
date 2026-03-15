@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Text;
 using RealityScraper.Application.Interfaces.Logging;
 
@@ -7,44 +7,67 @@ namespace RealityScraper.Infrastructure.Logging;
 public class TaskLogStore : ITaskLogStore, ITaskLogWriter
 {
 	private const int MaxLines = 1000;
+	private const int MaxChars = 512 * 1024;
 
-	private readonly ConcurrentDictionary<Guid, (StringBuilder sb, int lineCount)> logs = new();
+	private readonly ConcurrentDictionary<Guid, LogCapture> logs = new();
 
 	public void StartCapture(Guid taskId)
 	{
-		logs[taskId] = (new StringBuilder(), 0);
+		logs[taskId] = new LogCapture();
 	}
 
 	public void Append(Guid taskId, string line)
 	{
-		if (logs.TryGetValue(taskId, out var entry))
+		if (logs.TryGetValue(taskId, out var capture))
 		{
-			lock (entry.sb)
-			{
-				if (entry.lineCount < MaxLines)
-				{
-					entry.sb.AppendLine(line);
-					logs[taskId] = (entry.sb, entry.lineCount + 1);
-				}
-				else if (entry.lineCount == MaxLines)
-				{
-					entry.sb.AppendLine("--- Log byl zkrácen (max " + MaxLines + " řádků) ---");
-					logs[taskId] = (entry.sb, entry.lineCount + 1);
-				}
-			}
+			capture.Append(line);
 		}
 	}
 
 	public string? GetAndClear(Guid taskId)
 	{
-		if (logs.TryRemove(taskId, out var entry))
+		if (logs.TryRemove(taskId, out var capture))
 		{
-			lock (entry.sb)
-			{
-				return entry.sb.ToString().TrimEnd();
-			}
+			return capture.GetResult();
 		}
 
 		return null;
+	}
+
+	private sealed class LogCapture
+	{
+		private readonly StringBuilder sb = new();
+		private readonly Lock lockObj = new();
+		private int lineCount;
+		private bool truncated;
+
+		public void Append(string line)
+		{
+			lock (lockObj)
+			{
+				if (truncated)
+				{
+					return;
+				}
+
+				if (lineCount >= MaxLines || sb.Length + line.Length > MaxChars)
+				{
+					sb.AppendLine("--- Log byl zkrácen (max " + MaxLines + " řádků / " + MaxChars / 1024 + " KB) ---");
+					truncated = true;
+					return;
+				}
+
+				sb.AppendLine(line);
+				lineCount++;
+			}
+		}
+
+		public string GetResult()
+		{
+			lock (lockObj)
+			{
+				return sb.ToString().TrimEnd();
+			}
+		}
 	}
 }
