@@ -1,74 +1,156 @@
-﻿# Reality Scraper
+# Reality Scraper
 
-Reality Scraper je .NET Worker Service aplikace, která automaticky monitoruje realitní nabídky z několika českých realitních portálů (jako SReality a Reality iDNES), sleduje změny a zasílá e-mailové notifikace o nových nabídkách a změnách cen.
+.NET 10 aplikace pro automatické monitorování českých realitních portálů. Sleduje nové nabídky a změny cen na portálech **SReality** a **Reality iDNES** a zasílá e-mailové notifikace.
 
 ## Funkce
 
-- **Automatizované webové scrapování**: Pravidelně prochází realitní weby a sbírá nové nabídky
-- **Monitorování změn cen**: Detekuje a sleduje změny cen u existujících nabídek
-- **E-mailové notifikace**: Zasílá krásně formátované HTML e-maily s aktualizacemi
-- **Plánované spouštění**: Používá cron výrazy k plánování úloh scrapování
-- **Databázové úložiště**: Ukládá data o nabídkách do SQLite databáze
-- **Stahování obrázků**: Automaticky stahuje a ukládá obrázky nabídek
+- **Webové scrapování** – Selenium-based automatizace prohlížeče pro SReality a Reality iDNES
+- **Detekce změn** – Porovnání nových dat s databází, sledování nových nabídek a cenové historie
+- **E-mailové notifikace** – HTML e-maily generované přes Razor šablony (Resend / SMTP)
+- **Plánování úloh** – Cron výrazy pro pravidelné spouštění scrapování
+- **REST API + Web UI** – Správa úloh přes API a Blazor WebAssembly dashboard
+- **Stahování obrázků** – Automatické ukládání obrázků z nabídek
+- **Health check** – Endpoint `/health` pro monitoring
 
-## Jak to funguje
+## Architektura
 
-Aplikace běží jako background service, která spouští úlohy scrapování na základě konfigurovatelného plánu.
-Porovnává nově scrapované nabídky s těmi, které jsou již v databázi, aby detekovala nové nabídky a změny cen.
-Když jsou zjištěny změny, zasílá e-mailové notifikace konfigurovaným příjemcům.
-Pro vyhledávání nabídek používá Selenium Standalone(https://hub.docker.com/r/selenium/standalone-chrome) v docker containeru.
+Projekt využívá **Clean Architecture** s oddělením vrstev:
 
-### Hlavní komponenty
+```
+SharedKernel/       – Bázové třídy (Entity, AggregateRoot, Result<T>, IDomainEvent)
+Domain/             – Doménové entity, enumy, události
+Application/        – CQRS handlery (commands, queries), validace (FluentValidation)
+Infrastructure/     – EF Core repositáře, Selenium services, e-mail, scheduler
+Web.Api/            – ASP.NET Core backend, REST endpointy, Blazor server
+Web.Client/         – Blazor WebAssembly klient
+Web.Shared/         – Sdílené DTO a validační modely
+```
 
-1. **Scheduler Service**: Spravuje naplánované úlohy pomocí cron výrazů
-2. **Scraper Services**: Implementace specifické pro jednotlivé realitní portály
-3. **Databázová vrstva**: Ukládá a spravuje data o nabídkách
-4. **E-mail Service**: Generuje a odesílá HTML e-mailové notifikace
+### Doménové entity
+
+- `Listing` – Realitní nabídka (URL, cena, lokace, metadata)
+- `PriceHistory` – Historie změn cen
+- `ScraperTask` – Konfigurace naplánované úlohy
+- `ScraperTaskRecipient` – E-mailoví příjemci notifikací
+- `ScraperTaskTarget` – Cílové URL a typ portálu
+
+## Tech stack
+
+| Kategorie | Technologie |
+|---|---|
+| Runtime | .NET 10, ASP.NET Core 10 |
+| Frontend | Blazor WebAssembly, Havit Bootstrap komponenty |
+| Databáze | PostgreSQL (Npgsql), SQLite (alternativa) |
+| ORM | Entity Framework Core 10 |
+| Scrapování | Selenium WebDriver 4.41 |
+| E-maily | Resend, SendGrid (alternativa), RazorEngineCore |
+| Plánování | Cronos |
+| Validace | FluentValidation |
+| Logování | Serilog |
+| API dokumentace | Scalar (OpenAPI) |
+| Testy | xUnit v3, Moq, FluentAssertions |
+
+## Požadavky
+
+- .NET 10 SDK
+- PostgreSQL (nebo SQLite)
+- Chrome/Chromium pro Selenium (nebo Selenium Standalone kontejner)
+- E-mailová služba – Resend API klíč nebo SMTP server
 
 ## Konfigurace
 
-Aplikace je konfigurována prostřednictvím souboru `appsettings.json`. Zde je ukázka konfigurace:
+Konfigurace v `appsettings.json`:
 
 ```json
 {
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=localhost;Port=5432;Database=reality-scraper;Username=postgres;Password=..."
+  },
   "SchedulerSettings": {
-	"Tasks": [
-	  {
-		"Name": "Reality Praha+10",
-		"CronExpression": "0 0,12 * * *",
-		"Enabled": true,
-		"ScrapingConfiguration": {
-		  "EmailRecipients": [
-			"your-email@example.com"
-		  ],
-		  "Scrapers": [
-			{
-			  "ScraperType": "SReality",
-			  "Url": "https://www.sreality.cz/hledani/prodej/domy/praha"
-			},
-			{
-			  "ScraperType": "RealityIdnes",
-			  "Url": "https://reality.idnes.cz/s/prodej/domy/praha/?s-rd=4"
-			}
-		  ]
-		}
-	  }
-	]
+    "Tasks": [
+      {
+        "Name": "Reality Praha",
+        "CronExpression": "0 0,12 * * *",
+        "Enabled": true,
+        "ScrapingConfiguration": {
+          "EmailRecipients": ["vas-email@example.com"],
+          "Scrapers": [
+            {
+              "ScraperType": "SReality",
+              "Url": "https://www.sreality.cz/hledani/prodej/domy/praha"
+            },
+            {
+              "ScraperType": "RealityIdnes",
+              "Url": "https://reality.idnes.cz/s/prodej/domy/praha/"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "SeleniumSettings": {
+    "UseRemoteDriver": true,
+    "RemoteDriverUrl": "http://localhost:4444/wd/hub"
+  },
+  "ResendSettings": {
+    "ApiKey": "re_...",
+    "FromEmail": "noreply@example.com",
+    "FromName": "Reality Scraper"
   }
 }
 ```
 
-## Požadavky
+## Spuštění
 
-- .NET 9
-- Selenium WebDriver
-- Chrome nebo kompatibilní prohlížeč pro webové scrapování
-- SendGrid účet pro e-mailové notifikace (volitelné)
+### Lokální vývoj
 
-## Instalace a použití
+```bash
+dotnet restore
+dotnet run --project Web.Api
+```
 
-1. Naklonujte repozitář
-2. Nakonfigurujte `appsettings.json` s vašimi nastaveními
-3. Spusťte aplikaci pomocí `dotnet run` nebo ji nasaďte jako službu
+Aplikace poběží na výchozím portu. V development módu je dostupná OpenAPI dokumentace přes Scalar.
 
-Aplikace bude spuštěna jako background service, bude provádět úlohy scrapování na základě nakonfigurovaného plánu a zasílat e-mailové notifikace při zjištění nových nabídek nebo změn cen.
+### Docker
+
+```bash
+docker build -t reality-scraper .
+docker run -p 5000:5000 \
+  -v reality-data:/app/files \
+  -e ConnectionStrings__DefaultConnection="Host=..." \
+  -e ResendSettings__ApiKey="re_..." \
+  reality-scraper
+```
+
+Docker image je dostupný i z GitHub Container Registry:
+
+```
+ghcr.io/vesnicancz/reality-scraper:latest
+```
+
+Kontejner běží pod neprivilegovaným uživatelem, exponuje port `5000` a obsahuje health check.
+
+## Testy
+
+```bash
+dotnet test
+```
+
+Projekt obsahuje 4 testovací projekty:
+
+- `Application.Tests` – Testy handlerů a features
+- `Domain.Tests` – Testy doménových entit
+- `Infrastructure.Tests` – Testy služeb a repositářů
+- `IntegrationTests` – Integrační testy
+
+## CI/CD
+
+GitHub Actions workflow:
+
+- **Build & Test** – Automaticky při push na `master` a pull requestech
+- **Publish Docker** – Manuální dispatch, build a push do GitHub Container Registry
+- **PR Assignment** – Automatické přiřazení autora PR
+
+## Licence
+
+Viz [LICENSE](LICENSE) soubor.
