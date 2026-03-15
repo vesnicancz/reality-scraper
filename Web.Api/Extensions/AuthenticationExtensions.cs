@@ -31,6 +31,11 @@ internal static class AuthenticationExtensions
 			throw new InvalidOperationException("Authentication:ClientId must be configured when authentication is enabled.");
 		}
 
+		if (authOptions.Scopes is not { Length: > 0 } || !authOptions.Scopes.Contains("openid"))
+		{
+			throw new InvalidOperationException("Authentication:Scopes must contain 'openid' when authentication is enabled.");
+		}
+
 		services
 			.AddAuthentication(options =>
 			{
@@ -98,7 +103,9 @@ internal static class AuthenticationExtensions
 		app.MapGet("/account/login", (string? returnUrl, HttpContext context) =>
 		{
 			var redirectUri = "/";
-			if (!string.IsNullOrEmpty(returnUrl) && Uri.TryCreate(returnUrl, UriKind.Relative, out _))
+			if (!string.IsNullOrEmpty(returnUrl)
+				&& Uri.TryCreate(returnUrl, UriKind.Relative, out _)
+				&& returnUrl.StartsWith('/') && !returnUrl.StartsWith("//") && !returnUrl.StartsWith("/\\"))
 			{
 				redirectUri = returnUrl;
 			}
