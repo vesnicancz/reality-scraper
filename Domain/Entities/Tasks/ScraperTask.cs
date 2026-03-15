@@ -46,6 +46,16 @@ public class ScraperTask : TaskBase
 		Name = name;
 	}
 
+	public void SetLastRunLog(string? log)
+	{
+		LastRunLog = log;
+	}
+
+	public void SetLastRunSucceeded(bool? succeeded)
+	{
+		LastRunSucceeded = succeeded;
+	}
+
 	public void AddRecipient(ScraperTaskRecipient recipient)
 	{
 		recipient.SetScraperTask(this);

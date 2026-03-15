@@ -1,4 +1,4 @@
-using RealityScraper.SharedKernel;
+﻿using RealityScraper.SharedKernel;
 
 namespace RealityScraper.Domain.Entities.Tasks;
 
@@ -15,4 +15,8 @@ public abstract class TaskBase : AggregateRoot
 	public DateTimeOffset? LastRunAt { get; protected set; }
 
 	public DateTimeOffset? NextRunAt { get; protected set; }
+
+	public string? LastRunLog { get; protected set; }
+
+	public bool? LastRunSucceeded { get; protected set; }
 }

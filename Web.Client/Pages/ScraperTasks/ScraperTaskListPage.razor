@@ -24,6 +24,18 @@
                 }
             </ItemTemplate>
         </HxGridColumn>
+        <HxGridColumn HeaderText="Status">
+            <ItemTemplate Context="task">
+                @if (task.LastRunSucceeded == true)
+                {
+                    <HxBadge Color="ThemeColor.Success">OK</HxBadge>
+                }
+                else if (task.LastRunSucceeded == false)
+                {
+                    <HxBadge Color="ThemeColor.Danger">Chyba</HxBadge>
+                }
+            </ItemTemplate>
+        </HxGridColumn>
         <HxGridColumn HeaderText="Poslední běh">
             <ItemTemplate Context="task">
                 @TimeZoneHelper.FormatLocal(task.LastRunAt)
@@ -36,6 +48,7 @@
         </HxGridColumn>
         <HxGridColumn HeaderText="Akce">
             <ItemTemplate Context="task">
+                <HxButton Icon="BootstrapIcon.JournalText" Color="ThemeColor.Info" Size="ButtonSize.Small" Outline="true" Tooltip="Logy" OnClick="() => HandleShowLogClick(task)" CssClass="me-1" />
                 <HxButton Icon="BootstrapIcon.PlayFill" Color="ThemeColor.Success" Size="ButtonSize.Small" Outline="true" Tooltip="Spustit" OnClick="() => HandleRunNowClick(task)" CssClass="me-1" />
                 <HxButton Icon="BootstrapIcon.PencilSquare" Color="ThemeColor.Warning" Size="ButtonSize.Small" Outline="true" Tooltip="Upravit" OnClick="() => HandleEditClick(task)" CssClass="me-1" />
                 <HxButton Icon="BootstrapIcon.Trash" Color="ThemeColor.Danger" Size="ButtonSize.Small" Outline="true" Tooltip="Smazat" OnClick="() => HandleDeleteClick(task)" />
@@ -43,3 +56,16 @@
         </HxGridColumn>
     </Columns>
 </HxGrid>
+
+<HxOffcanvas @ref="logOffcanvas" Title="@logOffcanvasTitle" Size="OffcanvasSize.Large">
+    <BodyTemplate>
+        @if (selectedTaskLog != null)
+        {
+            <pre style="white-space: pre-wrap; word-break: break-word; font-size: 0.85rem;">@selectedTaskLog</pre>
+        }
+        else
+        {
+            <p class="text-muted">Žádné logy nejsou k dispozici.</p>
+        }
+    </BodyTemplate>
+</HxOffcanvas>

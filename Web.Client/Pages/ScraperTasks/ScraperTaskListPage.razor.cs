@@ -12,6 +12,9 @@ public partial class ScraperTaskListPage(
 	NavigationManager nav)
 {
 	private HxGrid<ScraperTaskResult> grid = null!;
+	private HxOffcanvas logOffcanvas = null!;
+	private string? selectedTaskLog;
+	private string logOffcanvasTitle = "Logy";
 
 	private async Task<GridDataProviderResult<ScraperTaskResult>> LoadData(GridDataProviderRequest<ScraperTaskResult> request)
 	{
@@ -40,6 +43,21 @@ public partial class ScraperTaskListPage(
 	private void HandleCreateClick()
 	{
 		nav.NavigateTo("/scraper-tasks/create");
+	}
+
+	private async Task HandleShowLogClick(ScraperTaskResult task)
+	{
+		try
+		{
+			var detail = await http.GetFromJsonAsync<ScraperTaskResult>($"/api/scraper-tasks/{task.Id}");
+			selectedTaskLog = detail?.LastRunLog;
+			logOffcanvasTitle = $"Logy – {task.Name}";
+			await logOffcanvas.ShowAsync();
+		}
+		catch (HttpRequestException)
+		{
+			messenger.AddError("Nepodařilo se načíst logy.");
+		}
 	}
 
 	private void HandleEditClick(ScraperTaskResult task)

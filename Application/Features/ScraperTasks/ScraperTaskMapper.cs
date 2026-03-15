@@ -15,13 +15,16 @@ internal static class ScraperTaskMapper
 			CronExpression = entity.CronExpression,
 			Enabled = entity.Enabled,
 			LastRunAt = entity.LastRunAt,
-			NextRunAt = entity.NextRunAt
+			NextRunAt = entity.NextRunAt,
+			LastRunSucceeded = entity.LastRunSucceeded
 		};
 	}
 
 	public static ScraperTaskDto MapToDetailDto(ScraperTask entity)
 	{
 		var dto = MapToListDto(entity);
+
+		dto.LastRunLog = entity.LastRunLog;
 
 		dto.Recipients = entity.Recipients.Select(r => new ScraperTaskRecipientDto
 		{

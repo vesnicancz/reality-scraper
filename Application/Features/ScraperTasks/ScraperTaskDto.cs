@@ -17,6 +17,10 @@ public class ScraperTaskDto
 
 	public DateTimeOffset? NextRunAt { get; set; }
 
+	public bool? LastRunSucceeded { get; set; }
+
+	public string? LastRunLog { get; set; }
+
 	public List<ScraperTaskRecipientDto> Recipients { get; set; } = [];
 
 	public List<ScraperTaskTargetDto> Targets { get; set; } = [];
