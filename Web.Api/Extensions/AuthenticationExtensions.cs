@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using RealityScraper.Web.Api.Configuration;
 
@@ -45,7 +46,7 @@ internal static class AuthenticationExtensions
 			.AddCookie(options =>
 			{
 				options.Cookie.HttpOnly = true;
-				options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+				options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
 				options.Cookie.SameSite = SameSiteMode.Lax;
 				options.ExpireTimeSpan = TimeSpan.FromHours(8);
 				options.SlidingExpiration = true;
@@ -86,6 +87,11 @@ internal static class AuthenticationExtensions
 		{
 			return app;
 		}
+
+		app.UseForwardedHeaders(new ForwardedHeadersOptions
+		{
+			ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+		});
 
 		app.UseAuthentication();
 		app.UseAuthorization();
