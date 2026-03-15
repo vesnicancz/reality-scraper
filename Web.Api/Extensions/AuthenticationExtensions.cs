@@ -37,6 +37,11 @@ internal static class AuthenticationExtensions
 			throw new InvalidOperationException("Authentication:Scopes must contain 'openid' when authentication is enabled.");
 		}
 
+		services.Configure<ForwardedHeadersOptions>(options =>
+		{
+			options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+		});
+
 		services
 			.AddAuthentication(options =>
 			{
@@ -57,7 +62,6 @@ internal static class AuthenticationExtensions
 				options.ClientId = authOptions.ClientId;
 				options.ClientSecret = authOptions.ClientSecret;
 				options.ResponseType = OpenIdConnectResponseType.Code;
-				options.SaveTokens = true;
 				options.GetClaimsFromUserInfoEndpoint = true;
 				options.RequireHttpsMetadata = authOptions.RequireHttpsMetadata;
 				options.CallbackPath = authOptions.CallbackPath;
@@ -88,11 +92,6 @@ internal static class AuthenticationExtensions
 			return app;
 		}
 
-		app.UseForwardedHeaders(new ForwardedHeadersOptions
-		{
-			ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-		});
-
 		app.UseAuthentication();
 		app.UseAuthorization();
 
@@ -119,11 +118,11 @@ internal static class AuthenticationExtensions
 			return Results.Challenge(new AuthenticationProperties { RedirectUri = redirectUri }, [OpenIdConnectDefaults.AuthenticationScheme]);
 		}).AllowAnonymous();
 
-		app.MapPost("/account/logout", async (HttpContext context) =>
-		{
-			await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-			await context.SignOutAsync(OpenIdConnectDefaults.AuthenticationScheme);
-		}).AllowAnonymous();
+		app.MapPost("/account/logout", () =>
+			Results.SignOut(
+				new AuthenticationProperties { RedirectUri = "/" },
+				[CookieAuthenticationDefaults.AuthenticationScheme, OpenIdConnectDefaults.AuthenticationScheme]))
+			.AllowAnonymous();
 
 		app.MapGet("/account/user-info", (HttpContext context) =>
 		{

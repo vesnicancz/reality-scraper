@@ -53,6 +53,8 @@ public static class Program
 			app.UseHsts();
 		}
 
+		app.UseForwardedHeaders();
+
 		// blazor: start
 		//app.UseStatusCodePagesWithReExecute("/not-found", createScopeForErrors: true); //.net 10
 		app.UseStatusCodePagesWithReExecute("/not-found");
