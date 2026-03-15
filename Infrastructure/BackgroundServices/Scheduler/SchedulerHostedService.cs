@@ -209,7 +209,14 @@ public class SchedulerHostedService : BackgroundService
 					var lastRunTime = dateTimeProvider.UtcNow;
 					var nextRunTime = await schedulerService.CalculateNextRunTimeAsync(taskInfo.CronExpression, lastRunTime, cancellationToken);
 
-					logger.LogInformation("Úloha '{Name}' dokončena, další spuštění: {NextRunTime}", taskInfo.Name, nextRunTime);
+					if (succeeded)
+					{
+						logger.LogInformation("Úloha '{Name}' úspěšně dokončena, další spuštění: {NextRunTime}", taskInfo.Name, nextRunTime);
+					}
+					else
+					{
+						logger.LogWarning("Úloha '{Name}' dokončena s chybou, další spuštění: {NextRunTime}", taskInfo.Name, nextRunTime);
+					}
 
 					var log = taskLogStore.GetAndClear(taskInfo.Id);
 					var result = new TaskExecutionResult(lastRunTime, nextRunTime, log, succeeded);

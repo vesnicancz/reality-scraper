@@ -38,13 +38,15 @@ public class TaskLogSink : ILogEventSink
 		};
 
 		var message = logEvent.RenderMessage(CultureInfo.InvariantCulture);
-		var line = $"{logEvent.Timestamp:yyyy-MM-dd HH:mm:ss} [{level}] {message}";
+		var line = $"{logEvent.Timestamp:yyyy-MM-dd HH:mm:sszzz} [{level}] {message}";
+		taskLogWriter.Append(taskId, line);
 
 		if (logEvent.Exception != null)
 		{
-			line += Environment.NewLine + logEvent.Exception;
+			foreach (var exceptionLine in logEvent.Exception.ToString().Split(Environment.NewLine))
+			{
+				taskLogWriter.Append(taskId, exceptionLine);
+			}
 		}
-
-		taskLogWriter.Append(taskId, line);
 	}
 }
