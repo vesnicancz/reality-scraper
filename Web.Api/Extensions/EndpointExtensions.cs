@@ -28,6 +28,11 @@ internal static class EndpointExtensions
 
 		IEndpointRouteBuilder builder = routeGroupBuilder is null ? app : routeGroupBuilder;
 
+		if (app.Configuration.IsAuthenticationEnabled() && routeGroupBuilder is null)
+		{
+			builder = app.MapGroup(string.Empty).RequireAuthorization();
+		}
+
 		foreach (IEndpoint endpoint in endpoints)
 		{
 			endpoint.MapEndpoint(builder);
