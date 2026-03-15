@@ -1,5 +1,7 @@
 # Reality Scraper
 
+[![.NET Build](https://github.com/vesnicancz/reality-scraper/actions/workflows/dotnet.yml/badge.svg)](https://github.com/vesnicancz/reality-scraper/actions/workflows/dotnet.yml)
+
 .NET 10 aplikace pro automatické monitorování českých realitních portálů. Sleduje nové nabídky a změny cen na portálech **SReality** a **Reality iDNES** a zasílá e-mailové notifikace.
 
 ## Funkce
