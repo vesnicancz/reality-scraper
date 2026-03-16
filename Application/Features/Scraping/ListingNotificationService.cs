@@ -21,7 +21,6 @@ public class ListingNotificationService : IListingNotificationService
 	{
 		if (report.NewListingsCount > 0 || report.PriceChangedListingsCount > 0)
 		{
-			logger.LogInformation("Nalezeno {newCount} nových inzerátů a {priceChangedCount} upravených cen.", report.NewListingsCount, report.PriceChangedListingsCount);
 			await mailerService.SendNewListingsAsync(report, recipients, cancellationToken);
 			logger.LogInformation("Notifikace odeslána.");
 		}
