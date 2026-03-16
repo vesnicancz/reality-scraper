@@ -72,7 +72,7 @@ public partial class ScraperTaskListPage(
 			using var response = await http.PostAsync($"/api/scraper-tasks/{task.Id}/run-now", null);
 			if (response.IsSuccessStatusCode)
 			{
-				messenger.AddInformation($"Task '{task.Name}' byl úspěšně spuštěn.");
+				messenger.AddInformation($"Task '{task.Name}' byl naplánován ke spuštění.");
 			}
 			else
 			{
@@ -80,10 +80,6 @@ public partial class ScraperTaskListPage(
 			}
 
 			await grid.RefreshDataAsync();
-		}
-		catch (TaskCanceledException)
-		{
-			messenger.AddError($"Spuštění tasku '{task.Name}' vypršelo (timeout).");
 		}
 		catch (HttpRequestException)
 		{

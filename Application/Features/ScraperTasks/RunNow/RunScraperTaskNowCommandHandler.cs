@@ -1,44 +1,31 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
+using RealityScraper.Application.Abstractions.Database;
 using RealityScraper.Application.Abstractions.Messaging;
-using RealityScraper.Application.Features.Scheduler;
-using RealityScraper.Application.Features.Scraping;
-using RealityScraper.Application.Features.Scraping.Configuration;
-using RealityScraper.Application.Interfaces.Logging;
 using RealityScraper.Application.Interfaces.Repositories.Configuration;
 using RealityScraper.Application.Interfaces.Scheduler;
 using RealityScraper.SharedKernel;
-using Serilog.Context;
 
 namespace RealityScraper.Application.Features.ScraperTasks.RunNow;
 
 internal sealed class RunScraperTaskNowCommandHandler : ICommandHandler<RunScraperTaskNowCommand>
 {
 	private readonly IScraperTaskRepository scraperTaskRepository;
-	private readonly ScraperServiceTask scraperServiceTask;
-	private readonly ITaskSchedulerService taskSchedulerService;
-	private readonly IScheduleTimeCalculator timeCalculator;
+	private readonly IUnitOfWork unitOfWork;
 	private readonly IDateTimeProvider dateTimeProvider;
 	private readonly ISchedulerRefreshSignal schedulerRefreshSignal;
-	private readonly ITaskLogStore taskLogStore;
 	private readonly ILogger<RunScraperTaskNowCommandHandler> logger;
 
 	public RunScraperTaskNowCommandHandler(
 		IScraperTaskRepository scraperTaskRepository,
-		ScraperServiceTask scraperServiceTask,
-		ITaskSchedulerService taskSchedulerService,
-		IScheduleTimeCalculator timeCalculator,
+		IUnitOfWork unitOfWork,
 		IDateTimeProvider dateTimeProvider,
 		ISchedulerRefreshSignal schedulerRefreshSignal,
-		ITaskLogStore taskLogStore,
 		ILogger<RunScraperTaskNowCommandHandler> logger)
 	{
 		this.scraperTaskRepository = scraperTaskRepository;
-		this.scraperServiceTask = scraperServiceTask;
-		this.taskSchedulerService = taskSchedulerService;
-		this.timeCalculator = timeCalculator;
+		this.unitOfWork = unitOfWork;
 		this.dateTimeProvider = dateTimeProvider;
 		this.schedulerRefreshSignal = schedulerRefreshSignal;
-		this.taskLogStore = taskLogStore;
 		this.logger = logger;
 	}
 
@@ -50,43 +37,13 @@ internal sealed class RunScraperTaskNowCommandHandler : ICommandHandler<RunScrap
 			return Result.Failure(Error.NotFound("ScraperTask.NotFound", $"ScraperTask with ID {command.Id} was not found."));
 		}
 
-		var config = ScrapingConfigurationFactory.CreateFromTask(scraperTask);
-		var succeeded = true;
+		scraperTask.SetNextRunAt(dateTimeProvider.UtcNow);
+		await unitOfWork.SaveChangesAsync(cancellationToken);
 
-		string? log = null;
-		taskLogStore.StartCapture(scraperTask.Id);
-
-		try
-		{
-			using (LogContext.PushProperty("TaskId", scraperTask.Id))
-			{
-				try
-				{
-					await scraperServiceTask.ExecuteAsync(config, cancellationToken);
-				}
-				catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
-				{
-					logger.LogError(ex, "Task '{Name}' ({Id}) failed during manual execution", scraperTask.Name, scraperTask.Id);
-					succeeded = false;
-				}
-			}
-		}
-		finally
-		{
-			log = taskLogStore.GetAndClear(scraperTask.Id);
-		}
-
-		var lastRunTime = dateTimeProvider.UtcNow;
-		var nextRunTime = scraperTask.Enabled
-			? timeCalculator.GetNextExecutionTime(scraperTask.CronExpression, lastRunTime)
-			: null;
-
-		var result = new TaskExecutionResult(lastRunTime, nextRunTime, log, succeeded);
-		await taskSchedulerService.UpdateTaskExecutionTimesAsync(scraperTask.Id, result, cancellationToken);
 		schedulerRefreshSignal.RequestRefresh();
 
-		return succeeded
-			? Result.Success()
-			: Result.Failure(Error.Failure("ScraperTask.RunFailed", $"Task '{scraperTask.Name}' failed during execution."));
+		logger.LogInformation("Task '{Name}' ({Id}) scheduled for immediate execution", scraperTask.Name, scraperTask.Id);
+
+		return Result.Success();
 	}
 }
