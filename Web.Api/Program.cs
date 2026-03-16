@@ -58,21 +58,24 @@ public static class Program
 		// blazor: start
 		//app.UseStatusCodePagesWithReExecute("/not-found", createScopeForErrors: true); //.net 10
 		app.UseStatusCodePagesWithReExecute("/not-found");
-		app.UseHttpsRedirection();
-		app.UseAntiforgery();
-		app.MapStaticAssets();
-		app.MapRazorComponents<App>()
-			.AddInteractiveWebAssemblyRenderMode()
-			.AddAdditionalAssemblies(typeof(Client._Imports).Assembly);
-		// blazor: end
-
-		//app.UseRequestContextLogging();
+		if (!app.Environment.IsDevelopment())
+		{
+			app.UseHttpsRedirection();
+		}
 
 		app.UseSerilogRequestLogging();
 
 		app.UseExceptionHandler();
 
 		app.UseOidcAuthentication();
+
+		app.UseAntiforgery();
+		app.MapStaticAssets();
+		app.MapRazorComponents<App>()
+			.AddInteractiveWebAssemblyRenderMode()
+			.AddAdditionalAssemblies(typeof(Client._Imports).Assembly)
+			.RequireAuthorization();
+		// blazor: end
 
 		app.MapHealthChecks("/health");
 		app.MapAuthenticationEndpoints();
