@@ -51,8 +51,6 @@ public class ScraperServiceTask : IScheduledTask
 			await scrapingReportBuilder.ProcessScraperResultsAsync(scraperService.SiteName, listings, cancellationToken);
 		}
 
-		logger.LogInformation("Všechny scrapery dokončeny. Zpracovávám report...");
-
 		// Vytvoření finálního reportu
 		var report = scrapingReportBuilder.Build();
 
