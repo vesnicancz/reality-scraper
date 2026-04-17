@@ -21,18 +21,6 @@ public static class DependencyInjection
 	public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
 	{
 		RegisterMessaging(services);
-		//// Registrace MediatR
-		//services.AddMediatR(cfg =>
-		//{
-		//	cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly);
-
-		//	// Registrace chování
-		//	cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
-		//	cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
-		//});
-
-		//// Registrace AutoMapperu
-		//services.AddAutoMapper(typeof(DependencyInjection).Assembly);
 
 		//// Registrace validátorů
 		//services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);

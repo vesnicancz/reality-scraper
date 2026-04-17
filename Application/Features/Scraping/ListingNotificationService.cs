@@ -21,7 +21,7 @@ public class ListingNotificationService : IListingNotificationService
 	{
 		if (report.NewListingsCount > 0 || report.PriceChangedListingsCount > 0)
 		{
-			await mailerService.SendNewListingsAsync(report, recipients, cancellationToken);
+			await mailerService.SendListingReportAsync(report, recipients, cancellationToken);
 			logger.LogInformation("Notifikace odeslána.");
 		}
 		else
