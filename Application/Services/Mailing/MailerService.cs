@@ -5,27 +5,22 @@ namespace RealityScraper.Application.Services.Mailing;
 
 public class MailerService : IMailerService
 {
-	private readonly IEmailGenerator htmlMailBodyGenerator;
+	private readonly IEmailGenerator emailGenerator;
 	private readonly IEmailService emailService;
 
-	public MailerService(IEmailGenerator htmlMailBodyGenerator, IEmailService emailService)
+	public MailerService(IEmailGenerator emailGenerator, IEmailService emailService)
 	{
-		this.htmlMailBodyGenerator = htmlMailBodyGenerator;
+		this.emailGenerator = emailGenerator;
 		this.emailService = emailService;
 	}
 
-	//public async Task SendEmailAsync(string to, string subject, string body)
-	//{
-	//	throw new NotImplementedException();
-	//}
-
-	public async Task SendNewListingsAsync(ScrapingReport scrapingReport, List<string> recipients, CancellationToken cancellationToken)
+	public async Task SendListingReportAsync(ScrapingReport scrapingReport, List<string> recipients, CancellationToken cancellationToken)
 	{
 		var date = scrapingReport.ReportDate.ToString("dd.MM.yyyy");
 		var subject = string.IsNullOrWhiteSpace(scrapingReport.TaskName)
 			? $"Nové realitní nabídky ({date})"
 			: $"{scrapingReport.TaskName} – nové nabídky ({date})";
-		var emailBody = await htmlMailBodyGenerator.GenerateHtmlBodyAsync(scrapingReport, cancellationToken);
+		var emailBody = await emailGenerator.GenerateHtmlBodyAsync(scrapingReport, cancellationToken);
 		await emailService.SendEmailNotificationAsync(subject, emailBody, recipients, cancellationToken);
 	}
 }
