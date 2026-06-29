@@ -143,13 +143,18 @@ docker run -p 5000:5000 \
   reality-scraper
 ```
 
-Docker image je dostupný i z GitHub Container Registry:
+Docker image je dostupný z GitHub Container Registry ve dvou pohyblivých tazích podle prostředí:
 
 ```
-ghcr.io/vesnicancz/reality-scraper:latest
+ghcr.io/vesnicancz/reality-scraper:test     # poslední build (workflow „Build and push image (test)")
+ghcr.io/vesnicancz/reality-scraper:stable   # otestovaný build pro produkci
 ```
 
-Kontejner běží pod neprivilegovaným uživatelem, exponuje port `5000` a obsahuje health check.
+Každý build navíc dostane neměnný tag `:sha-<short>` podle commitu. Tok: build → `:test` (+ `:sha-…`); po
+otestování workflow „Promote image to stable" přeznačí stejný digest na `:stable` (bez rebuildu). Test
+prostředí tedy pulluje `:test`, produkce `:stable`.
+
+Kontejner běží pod neprivilegovaným uživatelem (UID 1654), exponuje port `5000` a obsahuje health check na `/health`.
 
 ## Testy
 
