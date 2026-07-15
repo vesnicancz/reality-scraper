@@ -23,13 +23,20 @@ public class ResendEmailService : IEmailService
 		this.logger = logger;
 	}
 
-	public async Task SendEmailNotificationAsync(string subject, string mailBody, List<string> recipients, CancellationToken cancellationToken)
+	public Task SendEmailNotificationAsync(string subject, string mailBody, List<string> recipients, CancellationToken cancellationToken)
+	{
+		return SendEmailNotificationAsync(subject, mailBody, recipients, Array.Empty<EmailAttachmentData>(), cancellationToken);
+	}
+
+	public async Task<bool> SendEmailNotificationAsync(string subject, string mailBody, List<string> recipients, IReadOnlyList<EmailAttachmentData> attachments, CancellationToken cancellationToken)
 	{
 		if (recipients == null || recipients.Count == 0)
 		{
 			logger.LogWarning("Nejsou nastaveni žádní příjemci e-mailů.");
-			return;
+			return false;
 		}
+
+		var allSucceeded = true;
 
 		try
 		{
@@ -45,6 +52,18 @@ public class ResendEmailService : IEmailService
 					HtmlBody = mailBody
 				};
 
+				foreach (var attachment in attachments)
+				{
+					message.Attachments ??= new List<EmailAttachment>();
+					message.Attachments.Add(new EmailAttachment
+					{
+						Filename = attachment.FileName,
+						Content = attachment.Content,
+						ContentType = attachment.ContentType,
+						ContentId = attachment.ContentId
+					});
+				}
+
 				message.To.Add(recipientEmail);
 				var response = await resend.EmailSendAsync(message, cancellationToken);
 				if (response.Success)
@@ -54,12 +73,20 @@ public class ResendEmailService : IEmailService
 				else
 				{
 					logger.LogWarning(response.Exception, "Nepodařilo se odeslat e-mail na {RecipientEmail}.", recipientEmail);
+					allSucceeded = false;
 				}
 			}
+		}
+		catch (OperationCanceledException)
+		{
+			throw;
 		}
 		catch (Exception ex)
 		{
 			logger.LogError(ex, "Chyba při odesílání e-mailu přes Resend.");
+			allSucceeded = false;
 		}
+
+		return allSucceeded;
 	}
 }

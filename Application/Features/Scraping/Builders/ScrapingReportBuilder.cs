@@ -10,6 +10,7 @@ public class ScrapingReportBuilder
 {
 	private Guid scraperTaskId;
 	private string scraperTaskName = string.Empty;
+	private bool allScrapersSucceeded = true;
 	private readonly Dictionary<string, ScraperResultBuilder> scraperBuilders = new();
 	private readonly HashSet<string> processedListings = new(); // Prevence duplikátů
 
@@ -31,17 +32,33 @@ public class ScrapingReportBuilder
 	{
 		scraperTaskId = taskId;
 		scraperTaskName = taskName;
+		allScrapersSucceeded = true;
 		scraperBuilders.Clear();
 		processedListings.Clear();
 		return this;
 	}
 
 	/// <summary>
+	/// Označí běh scrapování jako neúspěšný (např. scraper nebyl nalezen nebo selhal).
+	/// </summary>
+	public ScrapingReportBuilder MarkScraperFailed()
+	{
+		allScrapersSucceeded = false;
+		return this;
+	}
+
+	/// <summary>
 	/// Batch zpracování všech listingů z jednoho scraperu
 	/// </summary>
-	public async Task<ScrapingReportBuilder> ProcessScraperResultsAsync(string siteName, List<ScraperListingItem> listings, CancellationToken cancellationToken)
+	public async Task<ScrapingReportBuilder> ProcessScraperResultsAsync(string siteName, ScraperRunResult scraperResult, CancellationToken cancellationToken)
 	{
+		var listings = scraperResult.Listings;
 		logger.LogInformation("Zpracovávám {Count} listingů z {SiteName}", listings.Count, siteName);
+
+		if (!scraperResult.Success)
+		{
+			allScrapersSucceeded = false;
+		}
 
 		var builder = GetOrCreateScraperBuilder(siteName, listings.Count);
 
@@ -133,7 +150,9 @@ public class ScrapingReportBuilder
 			ReportDate = dateTimeProvider.ToApplicationTime(dateTimeProvider.UtcNow),
 			ScraperTaskId = scraperTaskId,
 			TaskName = scraperTaskName,
-			Results = results
+			Results = results,
+			ScrapingSucceeded = allScrapersSucceeded,
+			SeenExternalIds = new HashSet<string>(processedListings)
 		};
 	}
 }

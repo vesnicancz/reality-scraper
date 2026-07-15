@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using RealityScraper.Application.Abstractions.Behaviors;
 using RealityScraper.Application.Abstractions.Messaging;
 using RealityScraper.Application.Configuration;
+using RealityScraper.Application.Features.Reporting;
 using RealityScraper.Application.Features.Scheduler;
 using RealityScraper.Application.Features.Scraping;
 using RealityScraper.Application.Features.Scraping.Builders;
@@ -12,6 +13,7 @@ using RealityScraper.Application.Interfaces.Mailing;
 using RealityScraper.Application.Interfaces.Scheduler;
 using RealityScraper.Application.Interfaces.Scraping;
 using RealityScraper.Application.Services.Mailing;
+using RealityScraper.Domain.Enums;
 using RealityScraper.SharedKernel;
 
 namespace RealityScraper.Application;
@@ -31,14 +33,16 @@ public static class DependencyInjection
 
 		services.AddTransient<ScrapingReportBuilder>();
 
-		// registrace úloh
-		services.AddTransient<ScraperServiceTask>();
+		// registrace plánovaných úloh podle typu
+		services.AddKeyedTransient<IScheduledJob, ScraperServiceTask>(ScheduledTaskType.Scraper);
+		services.AddKeyedTransient<IScheduledJob, RemovedListingsReportJob>(ScheduledTaskType.RemovedListingsReport);
 
 		// scrapers
 		services.AddTransient<IRealityScraperService, SRealityScraperService>();
 		services.AddTransient<IRealityScraperService, RealityIdnesScraperService>();
 
 		services.AddTransient<IListingChangeProcessor, ListingChangeProcessor>();
+		services.AddTransient<IRemovedListingDetector, RemovedListingDetector>();
 		services.AddTransient<IListingNotificationService, ListingNotificationService>();
 		services.AddTransient<IListingImageDownloader, ListingImageDownloader>();
 		services.AddTransient<IScrapingReportProcessor, ScrapingReportProcessor>();

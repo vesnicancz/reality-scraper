@@ -10,5 +10,5 @@ public interface IRealityScraperService
 
 	ScrapersEnum ScrapersEnum { get; }
 
-	Task<List<ScraperListingItem>> ScrapeListingsAsync(ScraperConfiguration scraperConfiguration, CancellationToken cancellationToken);
+	Task<ScraperRunResult> ScrapeListingsAsync(ScraperConfiguration scraperConfiguration, CancellationToken cancellationToken);
 }

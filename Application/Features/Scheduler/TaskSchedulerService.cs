@@ -1,22 +1,23 @@
 ﻿using Microsoft.Extensions.Logging;
 using RealityScraper.Application.Abstractions.Database;
-using RealityScraper.Application.Features.Scraping.Configuration;
 using RealityScraper.Application.Interfaces.Repositories.Configuration;
 using RealityScraper.Application.Interfaces.Scheduler;
+using RealityScraper.Domain.Entities.Tasks;
+using RealityScraper.Domain.Enums;
 using RealityScraper.SharedKernel;
 
 namespace RealityScraper.Application.Features.Scheduler;
 
 public class TaskSchedulerService : ITaskSchedulerService
 {
-	private readonly IScraperTaskRepository taskRepository;
+	private readonly ITaskRepository taskRepository;
 	private readonly IUnitOfWork unitOfWork;
 	private readonly IScheduleTimeCalculator timeCalculator;
 	private readonly IDateTimeProvider dateTimeProvider;
 	private readonly ILogger<TaskSchedulerService> logger;
 
 	public TaskSchedulerService(
-		IScraperTaskRepository taskRepository,
+		ITaskRepository taskRepository,
 		IUnitOfWork unitOfWork,
 		IScheduleTimeCalculator timeCalculator,
 		IDateTimeProvider dateTimeProvider,
@@ -54,7 +55,7 @@ public class TaskSchedulerService : ITaskSchedulerService
 				Id = dbTask.Id,
 				Name = dbTask.Name,
 				CronExpression = dbTask.CronExpression,
-				ScrapingConfiguration = ScrapingConfigurationFactory.CreateFromTask(dbTask),
+				TaskType = GetTaskType(dbTask),
 				NextRunTime = nextRunTime,
 				LastRunTime = dbTask.LastRunAt,
 				IsRunning = false
@@ -70,5 +71,15 @@ public class TaskSchedulerService : ITaskSchedulerService
 	{
 		await taskRepository.UpdateTaskExecutionResultAsync(taskId, result, cancellationToken);
 		await unitOfWork.SaveChangesAsync(cancellationToken);
+	}
+
+	private static ScheduledTaskType GetTaskType(TaskBase task)
+	{
+		return task switch
+		{
+			ScraperTask => ScheduledTaskType.Scraper,
+			RemovedListingsReportTask => ScheduledTaskType.RemovedListingsReport,
+			_ => throw new NotSupportedException($"Neznámý typ úlohy: {task.GetType().Name}")
+		};
 	}
 }

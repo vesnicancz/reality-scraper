@@ -1,0 +1,65 @@
+@page "/report-tasks/create"
+@page "/report-tasks/{Id:guid}/edit"
+<PageTitle>@(IsEdit ? "Upravit report" : "Nový report")</PageTitle>
+
+<h3>@(IsEdit ? "Upravit report" : "Nový report")</h3>
+
+@if (isLoading)
+{
+    <HxSpinner />
+}
+else
+{
+    <EditForm Model="model" OnValidSubmit="HandleValidSubmit" autocomplete="off" data-1p-ignore data-lpignore="true">
+        <DataAnnotationsValidator />
+
+        <div class="row">
+            <div class="col-md-6">
+                <HxInputText @bind-Value="model.Name" Label="Název" />
+            </div>
+            <div class="col-md-4">
+                <HxInputText @bind-Value="model.CronExpression" Label="Cron výraz" Hint="Např. 0 6 * * 0 (každou neděli v 6:00 UTC). Report pokrývá období od posledního úspěšného odeslání." />
+            </div>
+            <div class="col-md-2">
+                <HxCheckbox @bind-Value="model.Enabled" Label="Aktivní" />
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <h5>Příjemci</h5>
+                @for (var i = 0; i < model.Recipients.Count; i++)
+                {
+                    var index = i;
+                    <div class="d-flex gap-2 mb-2 align-items-end">
+                        <HxInputText @bind-Value="model.Recipients[index].Email" Label="@(index == 0 ? "Email" : null)" CssClass="flex-grow-1" />
+                        <HxButton Color="ThemeColor.Danger" Icon="BootstrapIcon.Trash" Size="ButtonSize.Small" OnClick="() => RemoveRecipient(index)" />
+                    </div>
+                }
+                <HxButton Text="Přidat příjemce" Color="ThemeColor.Secondary" Size="ButtonSize.Small" Icon="BootstrapIcon.PlusLg" OnClick="AddRecipient" />
+            </div>
+            <div class="col-md-6">
+                <h5>Sledované scraper tasky</h5>
+                @if (scraperTaskOptions.Count == 0)
+                {
+                    <p class="text-muted">Žádné scraper tasky nejsou k dispozici.</p>
+                }
+                else
+                {
+                    @foreach (var option in scraperTaskOptions)
+                    {
+                        <HxCheckbox Value="model.ScraperTaskIds.Contains(option.Id)"
+                                    ValueChanged="(bool value) => ToggleScraperTask(option.Id, value)"
+                                    ValueExpression="() => dummyCheckboxValue"
+                                    Label="@option.Name" />
+                    }
+                }
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <HxSubmit Text="@(IsEdit ? "Uložit" : "Vytvořit")" Color="ThemeColor.Primary" />
+            <HxButton Text="Zpět" Color="ThemeColor.Secondary" Outline="true" OnClick="HandleCancel" />
+        </div>
+    </EditForm>
+}

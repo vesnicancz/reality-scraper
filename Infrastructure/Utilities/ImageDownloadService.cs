@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using RealityScraper.Application.Interfaces.Scraping;
 using RealityScraper.Domain.Entities.Realty;
 
@@ -8,17 +7,17 @@ namespace RealityScraper.Infrastructure.Utilities;
 public class ImageDownloadService : IImageDownloadService
 {
 	private readonly IHttpClientFactory httpClientFactory;
-	private readonly IConfiguration configuration;
+	private readonly ListingImagePathResolver pathResolver;
 	private readonly ILogger<ImageDownloadService> logger;
 
 	public ImageDownloadService(
 		IHttpClientFactory httpClientFactory,
-		IConfiguration configuration,
+		ListingImagePathResolver pathResolver,
 		ILogger<ImageDownloadService> logger
 		)
 	{
 		this.httpClientFactory = httpClientFactory;
-		this.configuration = configuration;
+		this.pathResolver = pathResolver;
 		this.logger = logger;
 	}
 
@@ -42,19 +41,13 @@ public class ImageDownloadService : IImageDownloadService
 			imageBytes = await response.Content.ReadAsByteArrayAsync(cancellationToken);
 		}
 
-		var rootPath = configuration.GetValue<string>("FileStorage:ImagePath");
-		if (string.IsNullOrWhiteSpace(rootPath))
-		{
-			logger.LogWarning("Konfigurace 'FileStorage:ImagePath' chybí nebo je prázdná. Používám výchozí 'files/images'.");
-			rootPath = "files/images";
-		}
-		var folder = Path.Combine(Directory.GetCurrentDirectory(), rootPath, listing.Id.ToString()[..2]);
+		var folder = pathResolver.GetImageFolderPath(listing.Id);
 		if (!Directory.Exists(folder))
 		{
 			Directory.CreateDirectory(folder);
 		}
 
-		var imageFilePath = Path.Combine(folder, $"{listing.Id}.jpg");
+		var imageFilePath = pathResolver.GetImageFilePath(listing.Id);
 		await File.WriteAllBytesAsync(imageFilePath, imageBytes, cancellationToken);
 	}
 }

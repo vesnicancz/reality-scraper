@@ -21,41 +21,6 @@ public class ScraperTask : TaskBase
 		NextRunAt = nextRunAt;
 	}
 
-	public void SetNextRunAt(DateTimeOffset? nextRunAt)
-	{
-		NextRunAt = nextRunAt;
-	}
-
-	public void SetLastRunAt(DateTimeOffset lastRunAt)
-	{
-		LastRunAt = lastRunAt;
-	}
-
-	public void SetEnabled(bool enabled)
-	{
-		Enabled = enabled;
-	}
-
-	public void SetCronExpression(string cronExpression)
-	{
-		CronExpression = cronExpression;
-	}
-
-	public void SetName(string name)
-	{
-		Name = name;
-	}
-
-	public void SetLastRunLog(string? log)
-	{
-		LastRunLog = log;
-	}
-
-	public void SetLastRunSucceeded(bool? succeeded)
-	{
-		LastRunSucceeded = succeeded;
-	}
-
 	public void AddRecipient(ScraperTaskRecipient recipient)
 	{
 		recipient.SetScraperTask(this);

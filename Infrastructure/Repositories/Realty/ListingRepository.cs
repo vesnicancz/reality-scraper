@@ -18,4 +18,25 @@ internal class ListingRepository : Repository<Listing>, IListingRepository
 			.Set<Listing>()
 			.FirstOrDefaultAsync(x => x.ScraperTaskId == scraperTaskId && x.ExternalId == externalId, cancellationToken);
 	}
+
+	public Task<List<Listing>> GetByScraperTaskIdAsync(Guid scraperTaskId, CancellationToken cancellationToken)
+	{
+		return dbContext
+			.Set<Listing>()
+			.Where(x => x.ScraperTaskId == scraperTaskId)
+			.ToListAsync(cancellationToken);
+	}
+
+	public Task<List<Listing>> GetRemovedInPeriodAsync(Guid scraperTaskId, DateTimeOffset fromExclusive, DateTimeOffset toInclusive, CancellationToken cancellationToken)
+	{
+		return dbContext
+			.Set<Listing>()
+			.AsNoTracking()
+			.Where(x => x.ScraperTaskId == scraperTaskId
+				&& x.RemovedAt != null
+				&& x.RemovedAt > fromExclusive
+				&& x.RemovedAt <= toInclusive)
+			.OrderByDescending(x => x.RemovedAt)
+			.ToListAsync(cancellationToken);
+	}
 }

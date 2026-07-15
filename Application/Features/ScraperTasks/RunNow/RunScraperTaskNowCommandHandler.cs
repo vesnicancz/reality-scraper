@@ -9,20 +9,20 @@ namespace RealityScraper.Application.Features.ScraperTasks.RunNow;
 
 internal sealed class RunScraperTaskNowCommandHandler : ICommandHandler<RunScraperTaskNowCommand>
 {
-	private readonly IScraperTaskRepository scraperTaskRepository;
+	private readonly ITaskRepository taskRepository;
 	private readonly IUnitOfWork unitOfWork;
 	private readonly IDateTimeProvider dateTimeProvider;
 	private readonly ISchedulerRefreshSignal schedulerRefreshSignal;
 	private readonly ILogger<RunScraperTaskNowCommandHandler> logger;
 
 	public RunScraperTaskNowCommandHandler(
-		IScraperTaskRepository scraperTaskRepository,
+		ITaskRepository taskRepository,
 		IUnitOfWork unitOfWork,
 		IDateTimeProvider dateTimeProvider,
 		ISchedulerRefreshSignal schedulerRefreshSignal,
 		ILogger<RunScraperTaskNowCommandHandler> logger)
 	{
-		this.scraperTaskRepository = scraperTaskRepository;
+		this.taskRepository = taskRepository;
 		this.unitOfWork = unitOfWork;
 		this.dateTimeProvider = dateTimeProvider;
 		this.schedulerRefreshSignal = schedulerRefreshSignal;
@@ -31,18 +31,18 @@ internal sealed class RunScraperTaskNowCommandHandler : ICommandHandler<RunScrap
 
 	public async Task<Result> Handle(RunScraperTaskNowCommand command, CancellationToken cancellationToken)
 	{
-		var scraperTask = await scraperTaskRepository.GetTaskWithDetailsAsync(command.Id, cancellationToken);
-		if (scraperTask == null)
+		var task = await taskRepository.GetByIdAsync(command.Id, cancellationToken);
+		if (task == null)
 		{
-			return Result.Failure(Error.NotFound("ScraperTask.NotFound", $"ScraperTask with ID {command.Id} was not found."));
+			return Result.Failure(Error.NotFound("Task.NotFound", $"Task with ID {command.Id} was not found."));
 		}
 
-		scraperTask.SetNextRunAt(dateTimeProvider.UtcNow);
+		task.SetNextRunAt(dateTimeProvider.UtcNow);
 		await unitOfWork.SaveChangesAsync(cancellationToken);
 
 		schedulerRefreshSignal.RequestRefresh();
 
-		logger.LogInformation("Task '{Name}' ({Id}) scheduled for immediate execution", scraperTask.Name, scraperTask.Id);
+		logger.LogInformation("Task '{Name}' ({Id}) scheduled for immediate execution", task.Name, task.Id);
 
 		return Result.Success();
 	}

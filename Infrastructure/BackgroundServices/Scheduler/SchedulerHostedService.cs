@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RealityScraper.Application.Features.Scheduler;
-using RealityScraper.Application.Features.Scraping;
 using RealityScraper.Application.Interfaces.Logging;
 using RealityScraper.Application.Interfaces.Scheduler;
 using RealityScraper.SharedKernel;
@@ -140,7 +139,7 @@ public class SchedulerHostedService : BackgroundService
 				{
 					existingTask.Name = dbTask.Name;
 					existingTask.CronExpression = dbTask.CronExpression;
-					existingTask.ScrapingConfiguration = dbTask.ScrapingConfiguration;
+					existingTask.TaskType = dbTask.TaskType;
 					existingTask.NextRunTime = dbTask.NextRunTime;
 					existingTask.LastRunTime = dbTask.LastRunTime;
 
@@ -187,11 +186,11 @@ public class SchedulerHostedService : BackgroundService
 
 				using (var scope = serviceScopeFactory.CreateScope())
 				{
-					var task = (IScheduledTask)scope.ServiceProvider.GetRequiredService(typeof(ScraperServiceTask));
+					var job = scope.ServiceProvider.GetRequiredKeyedService<IScheduledJob>(taskInfo.TaskType);
 
 					try
 					{
-						await task.ExecuteAsync(taskInfo.ScrapingConfiguration, cancellationToken);
+						await job.ExecuteAsync(taskInfo.Id, cancellationToken);
 					}
 					catch (OperationCanceledException)
 					{

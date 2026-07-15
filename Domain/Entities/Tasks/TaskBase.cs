@@ -19,4 +19,39 @@ public abstract class TaskBase : AggregateRoot
 	public string? LastRunLog { get; protected set; }
 
 	public bool? LastRunSucceeded { get; protected set; }
+
+	public void SetNextRunAt(DateTimeOffset? nextRunAt)
+	{
+		NextRunAt = nextRunAt;
+	}
+
+	public void SetLastRunAt(DateTimeOffset lastRunAt)
+	{
+		LastRunAt = lastRunAt;
+	}
+
+	public void SetEnabled(bool enabled)
+	{
+		Enabled = enabled;
+	}
+
+	public void SetCronExpression(string cronExpression)
+	{
+		CronExpression = cronExpression;
+	}
+
+	public void SetName(string name)
+	{
+		Name = name;
+	}
+
+	public void SetLastRunLog(string? log)
+	{
+		LastRunLog = log;
+	}
+
+	public void SetLastRunSucceeded(bool? succeeded)
+	{
+		LastRunSucceeded = succeeded;
+	}
 }

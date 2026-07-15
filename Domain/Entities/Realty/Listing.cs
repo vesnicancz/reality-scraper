@@ -20,6 +20,8 @@ public class Listing : Entity
 
 	public DateTimeOffset LastSeenAt { get; set; }
 
+	public DateTimeOffset? RemovedAt { get; set; }
+
 	public DateTimeOffset PriceFrom { get; set; }
 
 	public Guid? ScraperTaskId { get; set; }

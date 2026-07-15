@@ -34,6 +34,9 @@
     <None Update="Utilities\Mailing\Templates\ListingReport.cshtml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Utilities\Mailing\Templates\RemovedListingsReport.cshtml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
