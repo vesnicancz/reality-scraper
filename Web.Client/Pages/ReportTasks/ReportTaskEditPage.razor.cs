@@ -19,7 +19,8 @@ public partial class ReportTaskEditPage(
 	private bool isLoading;
 	private ReportTaskFormModel model = new();
 	private List<ScraperTaskOption> scraperTaskOptions = [];
-	private bool dummyCheckboxValue;
+	// Slouží jen jako ValueExpression pro HxCheckbox se scraper tasky; nikdy se do něj nezapisuje.
+	private bool dummyCheckboxValue = false;
 
 	protected override async Task OnInitializedAsync()
 	{
