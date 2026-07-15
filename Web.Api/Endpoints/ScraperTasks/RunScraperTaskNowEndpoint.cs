@@ -18,7 +18,7 @@ internal sealed class RunScraperTaskNowEndpoint : IEndpoint
 			var result = await commandHandler.Handle(command, cancellationToken);
 
 			return result.IsSuccess
-				? Results.Ok()
+				? Results.Accepted()
 				: CustomResults.Problem(result);
 		});
 	}

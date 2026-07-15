@@ -58,7 +58,7 @@ else
         </div>
 
         <div class="mt-4">
-            <HxSubmit Text="@(IsEdit ? "Uložit" : "Vytvořit")" Color="ThemeColor.Primary" />
+            <HxSubmit Text="@(IsEdit ? "Uložit" : "Vytvořit")" Color="ThemeColor.Primary" Enabled="!isSubmitting" />
             <HxButton Text="Zpět" Color="ThemeColor.Secondary" Outline="true" OnClick="HandleCancel" />
         </div>
     </EditForm>

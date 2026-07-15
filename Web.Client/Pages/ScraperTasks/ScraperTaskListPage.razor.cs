@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Json;
+using System.Text.Json;
 using Havit.Blazor.Components.Web;
 using Havit.Blazor.Components.Web.Bootstrap;
 using Microsoft.AspNetCore.Components;
@@ -9,6 +10,7 @@ namespace RealityScraper.Web.Client.Pages.ScraperTasks;
 public partial class ScraperTaskListPage(
 	HttpClient http,
 	IHxMessengerService messenger,
+	IHxMessageBoxService messageBox,
 	NavigationManager nav)
 {
 	private HxGrid<ScraperTaskResult> grid = null!;
@@ -29,7 +31,7 @@ public partial class ScraperTaskListPage(
 				TotalCount = tasks.Count
 			};
 		}
-		catch (HttpRequestException)
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or TaskCanceledException)
 		{
 			messenger.AddError("Nepodařilo se načíst seznam tasků.");
 			return new GridDataProviderResult<ScraperTaskResult>
@@ -54,7 +56,7 @@ public partial class ScraperTaskListPage(
 			logOffcanvasTitle = $"Logy – {task.Name}";
 			await logOffcanvas.ShowAsync();
 		}
-		catch (HttpRequestException)
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or TaskCanceledException)
 		{
 			messenger.AddError("Nepodařilo se načíst logy.");
 		}
@@ -81,7 +83,7 @@ public partial class ScraperTaskListPage(
 
 			await grid.RefreshDataAsync();
 		}
-		catch (HttpRequestException)
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or TaskCanceledException)
 		{
 			messenger.AddError($"Nepodařilo se spustit task '{task.Name}'.");
 		}
@@ -89,6 +91,12 @@ public partial class ScraperTaskListPage(
 
 	private async Task HandleDeleteClick(ScraperTaskResult task)
 	{
+		var confirmed = await messageBox.ConfirmAsync("Smazat task", $"Opravdu chcete smazat task '{task.Name}'?");
+		if (!confirmed)
+		{
+			return;
+		}
+
 		try
 		{
 			using var response = await http.DeleteAsync($"/api/scraper-tasks/{task.Id}");
@@ -102,7 +110,7 @@ public partial class ScraperTaskListPage(
 				messenger.AddError("Nepodařilo se smazat task.");
 			}
 		}
-		catch (HttpRequestException)
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or TaskCanceledException)
 		{
 			messenger.AddError("Nepodařilo se smazat task.");
 		}

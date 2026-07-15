@@ -1,6 +1,8 @@
 ﻿using Havit.Blazor.Components.Web;
 using Havit.Blazor.Components.Web.Bootstrap;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using RealityScraper.Web.Client.Infrastructure;
 
 namespace RealityScraper.Web.Client;
 
@@ -16,13 +18,19 @@ internal static class Program
 
 		builder.Services.AddHxServices();
 		builder.Services.AddHxMessenger();
+		builder.Services.AddHxMessageBoxHost();
 
 		SetHxComponents();
 
-		builder.Services.AddScoped(sp => new HttpClient
+		builder.Services.AddTransient<AuthRedirectHandler>();
+
+		builder.Services.AddHttpClient("Default", client =>
 		{
-			BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
-		});
+			client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress);
+		})
+		.AddHttpMessageHandler<AuthRedirectHandler>();
+
+		builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("Default"));
 
 		await builder.Build().RunAsync();
 	}
