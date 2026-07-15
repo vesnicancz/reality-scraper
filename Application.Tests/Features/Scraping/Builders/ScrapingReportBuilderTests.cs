@@ -3,6 +3,7 @@ using Moq;
 using RealityScraper.Application.Features.Scraping.Builders;
 using RealityScraper.Application.Features.Scraping.Model;
 using RealityScraper.Application.Interfaces.Repositories.Realty;
+using RealityScraper.Domain.Entities.Realty;
 using RealityScraper.SharedKernel;
 
 namespace RealityScraper.Application.Tests.Features.Scraping.Builders;
@@ -54,6 +55,90 @@ public class ScrapingReportBuilderTests
 
 		Assert.Equal(1, result.NewListingsCount);
 		Assert.Equal(1, result.TotalListingsCount);
+	}
+
+	[Fact]
+	public async Task ScrapingReportBuilder_ProcessScraperResults_SameExternalIdOnDifferentSitesIsNotDeduplicated()
+	{
+		// arrange
+		var listings1 = new List<ScraperListingItem>
+		{
+			new ScraperListingItem { Title = "T1", Price = 1000, Location = "L1", Url = "U1", ExternalId = "Ext1", ImageUrl = string.Empty }
+		};
+
+		var listings2 = new List<ScraperListingItem>
+		{
+			new ScraperListingItem { Title = "T1", Price = 1000, Location = "L1", Url = "U2", ExternalId = "Ext1", ImageUrl = string.Empty }
+		};
+
+		var sut = CreateBuilder();
+		sut.ForScrapingReport(Guid.NewGuid(), "task");
+
+		// act
+		await sut.ProcessScraperResultsAsync("siteA", new ScraperRunResult(true, listings1), CancellationToken.None);
+		await sut.ProcessScraperResultsAsync("siteB", new ScraperRunResult(true, listings2), CancellationToken.None);
+		var result = sut.Build();
+
+		// assert
+		Assert.Equal(2, result.NewListingsCount);
+		Assert.Equal(2, result.TotalListingsCount);
+		Assert.All(result.Results, r => Assert.Equal(1, r.TotalListingsCount));
+		Assert.Equal(new HashSet<string> { "Ext1" }, result.SeenExternalIds);
+	}
+
+	[Fact]
+	public async Task ScrapingReportBuilder_ProcessScraperResults_TotalCountSumsAcrossTargetsOfSameSite()
+	{
+		// arrange
+		var listings1 = new List<ScraperListingItem>
+		{
+			new ScraperListingItem { Title = "T1", Price = 1000, Location = "L1", Url = "U1", ExternalId = "Ext1", ImageUrl = string.Empty },
+			new ScraperListingItem { Title = "T2", Price = 2000, Location = "L2", Url = "U2", ExternalId = "Ext2", ImageUrl = string.Empty }
+		};
+
+		var listings2 = new List<ScraperListingItem>
+		{
+			new ScraperListingItem { Title = "T3", Price = 3000, Location = "L3", Url = "U3", ExternalId = "Ext3", ImageUrl = string.Empty }
+		};
+
+		var sut = CreateBuilder();
+		sut.ForScrapingReport(Guid.NewGuid(), "task");
+
+		// act
+		await sut.ProcessScraperResultsAsync("siteName", new ScraperRunResult(true, listings1), CancellationToken.None);
+		await sut.ProcessScraperResultsAsync("siteName", new ScraperRunResult(true, listings2), CancellationToken.None);
+		var result = sut.Build();
+
+		// assert
+		Assert.Equal(3, result.TotalListingsCount);
+		Assert.Equal(3, result.NewListingsCount);
+	}
+
+	[Fact]
+	public async Task ScrapingReportBuilder_ProcessScraperResults_UnchangedExistingListingCountsIntoTotal()
+	{
+		// arrange
+		var listings = new List<ScraperListingItem>
+		{
+			new ScraperListingItem { Title = "T1", Price = 1000, Location = "L1", Url = "U1", ExternalId = "Ext1", ImageUrl = string.Empty }
+		};
+
+		var listingRepositoryMock = new Mock<IListingRepository>();
+		listingRepositoryMock
+			.Setup(r => r.GetByExternalIdAsync(It.IsAny<Guid>(), "Ext1", It.IsAny<CancellationToken>()))
+			.ReturnsAsync(new Listing { ExternalId = "Ext1", Price = 1000 });
+
+		var sut = new ScrapingReportBuilder(listingRepositoryMock.Object, new Mock<IDateTimeProvider>().Object, new Mock<ILogger<ScrapingReportBuilder>>().Object);
+		sut.ForScrapingReport(Guid.NewGuid(), "task");
+
+		// act
+		await sut.ProcessScraperResultsAsync("siteName", new ScraperRunResult(true, listings), CancellationToken.None);
+		var result = sut.Build();
+
+		// assert
+		Assert.Equal(1, result.TotalListingsCount);
+		Assert.Equal(0, result.NewListingsCount);
+		Assert.Equal(0, result.PriceChangedListingsCount);
 	}
 
 	[Fact]
