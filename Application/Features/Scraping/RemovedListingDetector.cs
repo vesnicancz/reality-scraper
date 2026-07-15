@@ -23,27 +23,12 @@ public class RemovedListingDetector : IRemovedListingDetector
 
 	public async Task DetectAsync(ScrapingReport report, CancellationToken cancellationToken)
 	{
-		if (!report.ScrapingSucceeded)
-		{
-			logger.LogWarning("Scrapování úlohy '{TaskName}' neproběhlo celé úspěšně, detekce vyřazených inzerátů se přeskakuje.", report.TaskName);
-			return;
-		}
-
 		var listings = await listingRepository.GetByScraperTaskIdAsync(report.ScraperTaskId, cancellationToken);
-		var activeListings = listings.Where(l => l.RemovedAt == null).ToList();
-
-		// Ochrana proti planému poplachu: úspěšný běh s nula inzeráty při neprázdné DB
-		// spíš znamená rozbité selektory než skutečně prázdný portál.
-		if (report.SeenExternalIds.Count == 0 && activeListings.Count > 0)
-		{
-			logger.LogWarning("Scrapování úlohy '{TaskName}' nevrátilo žádné inzeráty, ale v databázi je {Count} aktivních. Detekce vyřazených se přeskakuje.", report.TaskName, activeListings.Count);
-			return;
-		}
-
 		var now = dateTimeProvider.UtcNow;
-		var removedCount = 0;
 		var reappearedCount = 0;
 
+		// Viděný inzerát prokazatelně existuje, takže LastSeenAt (a případný návrat
+		// vyřazeného) se aktualizuje i při částečném selhání scrapování.
 		foreach (var listing in listings)
 		{
 			if (report.SeenExternalIds.Contains(listing.ExternalId))
@@ -56,7 +41,41 @@ public class RemovedListingDetector : IRemovedListingDetector
 					logger.LogInformation("Inzerát {ExternalId} se znovu objevil.", listing.ExternalId);
 				}
 			}
-			else if (listing.RemovedAt == null)
+		}
+
+		if (!report.ScrapingSucceeded)
+		{
+			logger.LogWarning("Scrapování úlohy '{TaskName}' neproběhlo celé úspěšně, detekce vyřazených inzerátů se přeskakuje.", report.TaskName);
+			return;
+		}
+
+		var activeListings = listings.Where(l => l.RemovedAt == null).ToList();
+
+		// Ochrana proti planému poplachu: úspěšný běh s nula inzeráty při neprázdné DB
+		// spíš znamená rozbité selektory než skutečně prázdný portál. Kontroluje se
+		// každý portál zvlášť - inzeráty v DB nenesou informaci o portálu, takže
+		// prázdný výsledek kteréhokoli z nich by mohl chybně vyřadit jeho inzeráty.
+		if (activeListings.Count > 0)
+		{
+			if (report.SeenExternalIds.Count == 0)
+			{
+				logger.LogWarning("Scrapování úlohy '{TaskName}' nevrátilo žádné inzeráty, ale v databázi je {Count} aktivních. Detekce vyřazených se přeskakuje.", report.TaskName, activeListings.Count);
+				return;
+			}
+
+			var emptyPortals = report.Results.Where(r => r.TotalListingsCount == 0).Select(r => r.SiteName).ToList();
+			if (emptyPortals.Count > 0)
+			{
+				logger.LogWarning("Scrapování úlohy '{TaskName}': portály {Portals} nevrátily žádné inzeráty, ale v databázi je {Count} aktivních. Detekce vyřazených se přeskakuje.", report.TaskName, string.Join(", ", emptyPortals), activeListings.Count);
+				return;
+			}
+		}
+
+		var removedCount = 0;
+
+		foreach (var listing in listings)
+		{
+			if (!report.SeenExternalIds.Contains(listing.ExternalId) && listing.RemovedAt == null)
 			{
 				listing.RemovedAt = now;
 				removedCount++;

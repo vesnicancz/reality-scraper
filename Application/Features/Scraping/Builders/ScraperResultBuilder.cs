@@ -8,24 +8,29 @@ public class ScraperResultBuilder
 	private readonly List<ListingItem> newListings = new();
 	private readonly List<ListingItemWithNewPrice> priceChangedListings = new();
 	private int totalCount = 0;
-	private int listingsCount = 0;
 
-	public ScraperResultBuilder(string siteName, int listingsCount)
+	public ScraperResultBuilder(string siteName)
 	{
 		this.siteName = siteName;
-		this.listingsCount = listingsCount;
 	}
 
 	public ScraperResultBuilder AddNewListing(ListingItem listing)
 	{
 		newListings.Add(listing);
-		totalCount++;
 		return this;
 	}
 
 	public ScraperResultBuilder AddPriceChangedListing(ListingItemWithNewPrice listing)
 	{
 		priceChangedListings.Add(listing);
+		return this;
+	}
+
+	/// <summary>
+	/// Započítá jeden unikátní scrapovaný inzerát do celkového počtu (nový, se změnou ceny i beze změny).
+	/// </summary>
+	public ScraperResultBuilder IncrementTotalCount()
+	{
 		totalCount++;
 		return this;
 	}
@@ -35,7 +40,7 @@ public class ScraperResultBuilder
 		return new PortalReport
 		{
 			SiteName = siteName,
-			TotalListingsCount = listingsCount,
+			TotalListingsCount = totalCount,
 			NewListings = new List<ListingItem>(newListings),
 			PriceChangedListings = new List<ListingItemWithNewPrice>(priceChangedListings)
 		};

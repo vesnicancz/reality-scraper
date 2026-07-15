@@ -12,7 +12,8 @@ public class ScrapingReportBuilder
 	private string scraperTaskName = string.Empty;
 	private bool allScrapersSucceeded = true;
 	private readonly Dictionary<string, ScraperResultBuilder> scraperBuilders = new();
-	private readonly HashSet<string> processedListings = new(); // Prevence duplikátů
+	private readonly HashSet<string> processedListings = new(); // Klíč "siteName|externalId" - prevence duplikátů mezi targety téhož portálu
+	private readonly HashSet<string> seenExternalIds = new();
 
 	private readonly IListingRepository listingRepository;
 	private readonly IDateTimeProvider dateTimeProvider;
@@ -35,6 +36,7 @@ public class ScrapingReportBuilder
 		allScrapersSucceeded = true;
 		scraperBuilders.Clear();
 		processedListings.Clear();
+		seenExternalIds.Clear();
 		return this;
 	}
 
@@ -60,7 +62,7 @@ public class ScrapingReportBuilder
 			allScrapersSucceeded = false;
 		}
 
-		var builder = GetOrCreateScraperBuilder(siteName, listings.Count);
+		var builder = GetOrCreateScraperBuilder(siteName);
 
 		foreach (var listing in listings)
 		{
@@ -75,8 +77,8 @@ public class ScrapingReportBuilder
 	/// </summary>
 	private async Task<ScrapingReportBuilder> ProcessListingAsync(ScraperResultBuilder builder, string siteName, ScraperListingItem listing, CancellationToken cancellationToken)
 	{
-		// Prevence duplikátů mezi scrapery
-		var listingKey = listing.ExternalId;
+		// Prevence duplikátů mezi targety téhož portálu
+		var listingKey = $"{siteName}|{listing.ExternalId}";
 		if (processedListings.Contains(listingKey))
 		{
 			logger.LogDebug("Duplikátní listing {ExternalId} přeskočen", listing.ExternalId);
@@ -123,15 +125,17 @@ public class ScrapingReportBuilder
 			// Existující bez změn - jen započítáme do celkového počtu
 		}
 
+		builder.IncrementTotalCount();
 		processedListings.Add(listingKey);
+		seenExternalIds.Add(listing.ExternalId);
 		return this;
 	}
 
-	private ScraperResultBuilder GetOrCreateScraperBuilder(string siteName, int listingsCount)
+	private ScraperResultBuilder GetOrCreateScraperBuilder(string siteName)
 	{
 		if (!scraperBuilders.ContainsKey(siteName))
 		{
-			scraperBuilders[siteName] = new ScraperResultBuilder(siteName, listingsCount);
+			scraperBuilders[siteName] = new ScraperResultBuilder(siteName);
 		}
 		return scraperBuilders[siteName];
 	}
@@ -152,7 +156,7 @@ public class ScrapingReportBuilder
 			TaskName = scraperTaskName,
 			Results = results,
 			ScrapingSucceeded = allScrapersSucceeded,
-			SeenExternalIds = new HashSet<string>(processedListings)
+			SeenExternalIds = new HashSet<string>(seenExternalIds)
 		};
 	}
 }

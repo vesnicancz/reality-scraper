@@ -43,11 +43,17 @@ public class RemovedListingDetectorTests
 
 	private static ScrapingReport CreateReport(Guid taskId, bool succeeded, params string[] seenExternalIds)
 	{
+		return CreateReport(taskId, succeeded, new List<PortalReport>(), seenExternalIds);
+	}
+
+	private static ScrapingReport CreateReport(Guid taskId, bool succeeded, List<PortalReport> results, params string[] seenExternalIds)
+	{
 		return new ScrapingReport
 		{
 			ScraperTaskId = taskId,
 			TaskName = "task",
 			ScrapingSucceeded = succeeded,
+			Results = results,
 			SeenExternalIds = new HashSet<string>(seenExternalIds)
 		};
 	}
@@ -113,17 +119,78 @@ public class RemovedListingDetectorTests
 	}
 
 	[Fact]
-	public async Task DetectAsync_ScrapingFailed_NothingIsChanged()
+	public async Task DetectAsync_ScrapingFailed_SeenListingIsUpdatedButNothingIsRemoved()
 	{
 		// arrange
 		var taskId = Guid.NewGuid();
+		var unseen = CreateListing("Unseen");
+		var seen = CreateListing("Seen");
+		listingRepositoryMock
+			.Setup(x => x.GetByScraperTaskIdAsync(taskId, It.IsAny<CancellationToken>()))
+			.ReturnsAsync([unseen, seen]);
+
 		var sut = CreateSut();
 
 		// act
-		await sut.DetectAsync(CreateReport(taskId, succeeded: false), CancellationToken.None);
+		await sut.DetectAsync(CreateReport(taskId, succeeded: false, "Seen"), CancellationToken.None);
 
 		// assert
-		listingRepositoryMock.Verify(x => x.GetByScraperTaskIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+		Assert.Equal(Now, seen.LastSeenAt);
+		Assert.Null(unseen.RemovedAt);
+		Assert.Equal(Earlier, unseen.LastSeenAt);
+	}
+
+	[Fact]
+	public async Task DetectAsync_PortalReturnedZeroListings_SeenListingIsUpdatedButNothingIsRemoved()
+	{
+		// arrange
+		var taskId = Guid.NewGuid();
+		var unseen = CreateListing("Unseen");
+		var seen = CreateListing("Seen");
+		listingRepositoryMock
+			.Setup(x => x.GetByScraperTaskIdAsync(taskId, It.IsAny<CancellationToken>()))
+			.ReturnsAsync([unseen, seen]);
+
+		var results = new List<PortalReport>
+		{
+			new PortalReport { SiteName = "PortalA", TotalListingsCount = 1 },
+			new PortalReport { SiteName = "PortalB", TotalListingsCount = 0 }
+		};
+
+		var sut = CreateSut();
+
+		// act
+		await sut.DetectAsync(CreateReport(taskId, succeeded: true, results, "Seen"), CancellationToken.None);
+
+		// assert
+		Assert.Equal(Now, seen.LastSeenAt);
+		Assert.Null(unseen.RemovedAt);
+	}
+
+	[Fact]
+	public async Task DetectAsync_AllPortalsReturnedListings_UnseenListingIsRemoved()
+	{
+		// arrange
+		var taskId = Guid.NewGuid();
+		var unseen = CreateListing("Unseen");
+		var seen = CreateListing("Seen");
+		listingRepositoryMock
+			.Setup(x => x.GetByScraperTaskIdAsync(taskId, It.IsAny<CancellationToken>()))
+			.ReturnsAsync([unseen, seen]);
+
+		var results = new List<PortalReport>
+		{
+			new PortalReport { SiteName = "PortalA", TotalListingsCount = 1 },
+			new PortalReport { SiteName = "PortalB", TotalListingsCount = 3 }
+		};
+
+		var sut = CreateSut();
+
+		// act
+		await sut.DetectAsync(CreateReport(taskId, succeeded: true, results, "Seen"), CancellationToken.None);
+
+		// assert
+		Assert.Equal(Now, unseen.RemovedAt);
 	}
 
 	[Fact]
