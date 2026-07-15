@@ -56,7 +56,6 @@ public static class InfrastructureServiceRegistration
 
 		services.AddTransient<IRazorEngine, RazorEngine>();
 		services.AddTransient<IEmailGenerator, RazorEmailGenerator>();
-		//services.AddTransient<IEmailGenerator, HtmlEmailGenerator>();
 
 		services.AddSingleton<ListingImagePathResolver>();
 		services.AddTransient<IImageDownloadService, ImageDownloadService>();

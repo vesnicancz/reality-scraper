@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 using RazorEngineCore;
 using RealityScraper.Application.Features.Reporting.Model;
@@ -10,6 +11,10 @@ public class RazorEmailGenerator : IEmailGenerator
 {
 	private const string ListingReportTemplateFileName = "ListingReport.cshtml";
 	private const string RemovedListingsTemplateFileName = "RemovedListingsReport.cshtml";
+
+	// Kompilace šablony (Roslyn) je drahá a každá vytváří neuvolnitelnou assembly,
+	// proto se kompilovaná šablona cachuje pro celý životní cyklus procesu.
+	private static readonly ConcurrentDictionary<string, Task<IRazorEngineCompiledTemplate>> compiledTemplates = new();
 
 	private readonly IRazorEngine razorEngine;
 	private readonly ILogger<RazorEmailGenerator> logger;
@@ -32,15 +37,17 @@ public class RazorEmailGenerator : IEmailGenerator
 
 	private async Task<string> RenderTemplateAsync(string templateFileName, object model, CancellationToken cancellationToken)
 	{
-		// Načtení šablony ze souboru
+		var compiledTemplate = await compiledTemplates.GetOrAdd(templateFileName, CompileTemplateAsync);
+
+		return compiledTemplate.Run(model);
+	}
+
+	private async Task<IRazorEngineCompiledTemplate> CompileTemplateAsync(string templateFileName)
+	{
 		string templatePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Utilities", "Mailing", "Templates", templateFileName);
 		logger.LogTrace("Loading template from {TemplatePath}", templatePath);
-		string templateContent = await File.ReadAllTextAsync(templatePath, cancellationToken);
+		string templateContent = await File.ReadAllTextAsync(templatePath);
 
-		// Kompilace šablony
-		var compiledTemplate = await razorEngine.CompileAsync(templateContent, cancellationToken: cancellationToken);
-
-		// Generování HTML
-		return compiledTemplate.Run(model);
+		return await razorEngine.CompileAsync(templateContent);
 	}
 }

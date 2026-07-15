@@ -173,8 +173,17 @@ public class RazorEmailGeneratorTests
 		return templateContent.Substring(startLineEnd + 1, end - startLineEnd - 1);
 	}
 
+	/// <summary>
+	/// Vizuální náhled šablony pro lokální ladění - zapisuje se jen na vyžádání,
+	/// aby unit test neměl I/O vedlejší efekt (např. v read-only CI prostředí).
+	/// </summary>
 	private static void WritePreviewFile(string fileName, string html)
 	{
+		if (Environment.GetEnvironmentVariable("WRITE_TEST_PREVIEWS") != "1")
+		{
+			return;
+		}
+
 		File.WriteAllText(Path.Combine(AppContext.BaseDirectory, fileName), html);
 	}
 }
