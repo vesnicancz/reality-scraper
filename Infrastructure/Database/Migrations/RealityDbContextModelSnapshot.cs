@@ -17,7 +17,7 @@ namespace RealityScraper.Infrastructure.Database.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.5")
+                .HasAnnotation("ProductVersion", "10.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -55,6 +55,9 @@ namespace RealityScraper.Infrastructure.Database.Migrations
                     b.Property<DateTimeOffset>("PriceFrom")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTimeOffset?>("RemovedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<Guid?>("ScraperTaskId")
                         .HasColumnType("uuid");
 
@@ -70,10 +73,10 @@ namespace RealityScraper.Infrastructure.Database.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ScraperTaskId");
-
                     b.HasIndex("ExternalId", "ScraperTaskId")
                         .IsUnique();
+
+                    b.HasIndex("ScraperTaskId", "RemovedAt");
 
                     b.ToTable("Listing");
                 });
@@ -98,6 +101,49 @@ namespace RealityScraper.Infrastructure.Database.Migrations
                     b.HasIndex("ListingId");
 
                     b.ToTable("PriceHistory");
+                });
+
+            modelBuilder.Entity("RealityScraper.Domain.Entities.Tasks.ReportTaskRecipient", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid>("ReportTaskId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReportTaskId");
+
+                    b.ToTable("ReportTaskRecipient");
+                });
+
+            modelBuilder.Entity("RealityScraper.Domain.Entities.Tasks.ReportTaskSource", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ReportTaskId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ScraperTaskId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ScraperTaskId");
+
+                    b.HasIndex("ReportTaskId", "ScraperTaskId")
+                        .IsUnique();
+
+                    b.ToTable("ReportTaskSource");
                 });
 
             modelBuilder.Entity("RealityScraper.Domain.Entities.Tasks.ScraperTaskRecipient", b =>
@@ -161,8 +207,8 @@ namespace RealityScraper.Infrastructure.Database.Migrations
 
                     b.Property<string>("Discriminator")
                         .IsRequired()
-                        .HasMaxLength(13)
-                        .HasColumnType("character varying(13)");
+                        .HasMaxLength(34)
+                        .HasColumnType("character varying(34)");
 
                     b.Property<bool>("Enabled")
                         .HasColumnType("boolean");
@@ -193,6 +239,16 @@ namespace RealityScraper.Infrastructure.Database.Migrations
                     b.UseTphMappingStrategy();
                 });
 
+            modelBuilder.Entity("RealityScraper.Domain.Entities.Tasks.RemovedListingsReportTask", b =>
+                {
+                    b.HasBaseType("RealityScraper.Domain.Entities.Tasks.TaskBase");
+
+                    b.Property<DateTimeOffset?>("LastSuccessfulReportAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasDiscriminator().HasValue("RemovedListingsReportTask");
+                });
+
             modelBuilder.Entity("RealityScraper.Domain.Entities.Tasks.ScraperTask", b =>
                 {
                     b.HasBaseType("RealityScraper.Domain.Entities.Tasks.TaskBase");
@@ -217,6 +273,36 @@ namespace RealityScraper.Infrastructure.Database.Migrations
                         .IsRequired();
 
                     b.Navigation("Listing");
+                });
+
+            modelBuilder.Entity("RealityScraper.Domain.Entities.Tasks.ReportTaskRecipient", b =>
+                {
+                    b.HasOne("RealityScraper.Domain.Entities.Tasks.RemovedListingsReportTask", "ReportTask")
+                        .WithMany("Recipients")
+                        .HasForeignKey("ReportTaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ReportTask");
+                });
+
+            modelBuilder.Entity("RealityScraper.Domain.Entities.Tasks.ReportTaskSource", b =>
+                {
+                    b.HasOne("RealityScraper.Domain.Entities.Tasks.RemovedListingsReportTask", "ReportTask")
+                        .WithMany("Sources")
+                        .HasForeignKey("ReportTaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("RealityScraper.Domain.Entities.Tasks.ScraperTask", "ScraperTask")
+                        .WithMany()
+                        .HasForeignKey("ScraperTaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ReportTask");
+
+                    b.Navigation("ScraperTask");
                 });
 
             modelBuilder.Entity("RealityScraper.Domain.Entities.Tasks.ScraperTaskRecipient", b =>
@@ -244,6 +330,13 @@ namespace RealityScraper.Infrastructure.Database.Migrations
             modelBuilder.Entity("RealityScraper.Domain.Entities.Realty.Listing", b =>
                 {
                     b.Navigation("PriceHistories");
+                });
+
+            modelBuilder.Entity("RealityScraper.Domain.Entities.Tasks.RemovedListingsReportTask", b =>
+                {
+                    b.Navigation("Recipients");
+
+                    b.Navigation("Sources");
                 });
 
             modelBuilder.Entity("RealityScraper.Domain.Entities.Tasks.ScraperTask", b =>

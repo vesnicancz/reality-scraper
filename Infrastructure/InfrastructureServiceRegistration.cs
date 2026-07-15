@@ -58,7 +58,9 @@ public static class InfrastructureServiceRegistration
 		services.AddTransient<IEmailGenerator, RazorEmailGenerator>();
 		//services.AddTransient<IEmailGenerator, HtmlEmailGenerator>();
 
+		services.AddSingleton<ListingImagePathResolver>();
 		services.AddTransient<IImageDownloadService, ImageDownloadService>();
+		services.AddTransient<IListingImageReader, ListingImageReader>();
 		services.AddTransient<IWebDriverFactory, SeleniumChromeDriverFactory>();
 
 		services.AddTransient<IScheduleTimeCalculator, CronosScheduleTimeCalculator>();

@@ -1,0 +1,70 @@
+@page "/report-tasks"
+<PageTitle>Reporty</PageTitle>
+
+<h3>Reporty vyřazených inzerátů</h3>
+
+<div class="mb-3">
+    <HxButton Text="Nový report" Color="ThemeColor.Primary" Icon="BootstrapIcon.PlusLg" OnClick="HandleCreateClick" />
+</div>
+
+<HxGrid @ref="grid" TItem="ReportTaskResult" DataProvider="LoadData" Responsive="true">
+    <Columns>
+        <HxGridColumn HeaderText="Název" ItemTextSelector="t => t.Name" />
+        <HxGridColumn HeaderText="Cron" ItemTextSelector="t => t.CronExpression" />
+        <HxGridColumn HeaderText="Aktivní">
+            <ItemTemplate Context="task">
+                @if (task.Enabled)
+                {
+                    <HxBadge Color="ThemeColor.Success">Ano</HxBadge>
+                }
+                else
+                {
+                    <HxBadge Color="ThemeColor.Secondary">Ne</HxBadge>
+                }
+            </ItemTemplate>
+        </HxGridColumn>
+        <HxGridColumn HeaderText="Status">
+            <ItemTemplate Context="task">
+                @if (task.LastRunSucceeded == true)
+                {
+                    <HxBadge Color="ThemeColor.Success">OK</HxBadge>
+                }
+                else if (task.LastRunSucceeded == false)
+                {
+                    <HxBadge Color="ThemeColor.Danger">Chyba</HxBadge>
+                }
+            </ItemTemplate>
+        </HxGridColumn>
+        <HxGridColumn HeaderText="Poslední běh">
+            <ItemTemplate Context="task">
+                @TimeZoneHelper.FormatLocal(task.LastRunAt)
+            </ItemTemplate>
+        </HxGridColumn>
+        <HxGridColumn HeaderText="Následující běh">
+            <ItemTemplate Context="task">
+                @TimeZoneHelper.FormatLocal(task.NextRunAt)
+            </ItemTemplate>
+        </HxGridColumn>
+        <HxGridColumn HeaderText="Akce">
+            <ItemTemplate Context="task">
+                <HxButton Icon="BootstrapIcon.JournalText" Color="ThemeColor.Info" Size="ButtonSize.Small" Outline="true" Tooltip="Logy" OnClick="() => HandleShowLogClick(task)" CssClass="me-1" />
+                <HxButton Icon="BootstrapIcon.PlayFill" Color="ThemeColor.Success" Size="ButtonSize.Small" Outline="true" Tooltip="Spustit" OnClick="() => HandleRunNowClick(task)" CssClass="me-1" />
+                <HxButton Icon="BootstrapIcon.PencilSquare" Color="ThemeColor.Warning" Size="ButtonSize.Small" Outline="true" Tooltip="Upravit" OnClick="() => HandleEditClick(task)" CssClass="me-1" />
+                <HxButton Icon="BootstrapIcon.Trash" Color="ThemeColor.Danger" Size="ButtonSize.Small" Outline="true" Tooltip="Smazat" OnClick="() => HandleDeleteClick(task)" />
+            </ItemTemplate>
+        </HxGridColumn>
+    </Columns>
+</HxGrid>
+
+<HxOffcanvas @ref="logOffcanvas" Title="@logOffcanvasTitle" Size="OffcanvasSize.Large">
+    <BodyTemplate>
+        @if (selectedTaskLog != null)
+        {
+            <pre style="white-space: pre-wrap; word-break: break-word; font-size: 0.85rem;">@selectedTaskLog</pre>
+        }
+        else
+        {
+            <p class="text-muted">Žádné logy nejsou k dispozici.</p>
+        }
+    </BodyTemplate>
+</HxOffcanvas>

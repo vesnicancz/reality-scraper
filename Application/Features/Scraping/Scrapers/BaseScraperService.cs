@@ -40,10 +40,11 @@ public abstract class BaseScraperService : IRealityScraperService
 		IWebDriver driver, string baseUrl, int currentPage,
 		IReadOnlyList<IWebDriverElement> nextButtons, CancellationToken cancellationToken);
 
-	public async Task<List<ScraperListingItem>> ScrapeListingsAsync(ScraperConfiguration scraperConfiguration, CancellationToken cancellationToken)
+	public async Task<ScraperRunResult> ScrapeListingsAsync(ScraperConfiguration scraperConfiguration, CancellationToken cancellationToken)
 	{
 		var listings = new List<ScraperListingItem>();
 		var url = scraperConfiguration.Url;
+		var success = true;
 
 		IWebDriver? driver = null;
 		try
@@ -136,16 +137,21 @@ public abstract class BaseScraperService : IRealityScraperService
 				}
 			}
 		}
+		catch (OperationCanceledException)
+		{
+			throw;
+		}
 		catch (Exception ex)
 		{
 			logger.LogError(ex, "Chyba při scrapování dat z realitního portálu");
+			success = false;
 		}
 		finally
 		{
 			driver?.Dispose();
 		}
 
-		return listings;
+		return new ScraperRunResult(success, listings);
 	}
 
 	protected static decimal? ParseNullableDecimal(string value)

@@ -7,6 +7,7 @@ namespace RealityScraper.Application.Features.Scraping;
 public class ScrapingReportProcessor : IScrapingReportProcessor
 {
 	private readonly IListingChangeProcessor listingChangeProcessor;
+	private readonly IRemovedListingDetector removedListingDetector;
 	private readonly IListingNotificationService notificationService;
 	private readonly IListingImageDownloader imageDownloader;
 	private readonly IUnitOfWork unitOfWork;
@@ -14,12 +15,14 @@ public class ScrapingReportProcessor : IScrapingReportProcessor
 
 	public ScrapingReportProcessor(
 		IListingChangeProcessor listingChangeProcessor,
+		IRemovedListingDetector removedListingDetector,
 		IListingNotificationService notificationService,
 		IListingImageDownloader imageDownloader,
 		IUnitOfWork unitOfWork,
 		ILogger<ScrapingReportProcessor> logger)
 	{
 		this.listingChangeProcessor = listingChangeProcessor;
+		this.removedListingDetector = removedListingDetector;
 		this.notificationService = notificationService;
 		this.imageDownloader = imageDownloader;
 		this.unitOfWork = unitOfWork;
@@ -31,6 +34,8 @@ public class ScrapingReportProcessor : IScrapingReportProcessor
 		logger.LogInformation("Zpracovávám report úlohy '{TaskName}'", report.TaskName);
 
 		var listingsToDownload = await listingChangeProcessor.ProcessChangesAsync(report, cancellationToken);
+
+		await removedListingDetector.DetectAsync(report, cancellationToken);
 
 		await notificationService.SendNotificationsAsync(report, emailRecipients, cancellationToken);
 

@@ -1,4 +1,5 @@
-﻿using RealityScraper.Application.Features.Scraping.Model.Report;
+﻿using RealityScraper.Application.Features.Reporting.Model;
+using RealityScraper.Application.Features.Scraping.Model.Report;
 using RealityScraper.Application.Interfaces.Mailing;
 
 namespace RealityScraper.Infrastructure.Utilities.Mailing;
@@ -70,6 +71,48 @@ public class HtmlEmailGenerator : IEmailGenerator
 					body.AppendLine($"<p><a href='{listing.Url}' target='_blank'>Zobrazit detail nabídky</a></p>");
 					body.AppendLine("</div>");
 				}
+			}
+		}
+
+		body.AppendLine("</body>");
+		body.AppendLine("</html>");
+		return Task.FromResult(body.ToString());
+	}
+
+	public Task<string> GenerateRemovedListingsHtmlAsync(RemovedListingsReport report, CancellationToken cancellationToken)
+	{
+		var body = new System.Text.StringBuilder();
+		body.AppendLine("<!DOCTYPE html>");
+		body.AppendLine("<html>");
+		body.AppendLine("<head>");
+		body.AppendLine("<style>");
+		body.AppendLine("body { font-family: Arial, sans-serif; }");
+		body.AppendLine(".listing { margin-bottom: 20px; border-bottom: 1px solid #ccc; padding-bottom: 15px; }");
+		body.AppendLine(".listing img { max-width: 300px; max-height: 200px; }");
+		body.AppendLine("</style>");
+		body.AppendLine("</head>");
+		body.AppendLine("<body>");
+		body.AppendLine("<h1>Zrušené realitní nabídky</h1>");
+		body.AppendLine($"<p>Období: {report.PeriodFrom:dd.MM.yyyy} – {report.PeriodTo:dd.MM.yyyy}</p>");
+		body.AppendLine($"<p>Celkem zrušeno: {GetPluralForm(report.RemovedListingsCount, "nabídka", "nabídky", "nabídek")}</p>");
+
+		foreach (var section in report.Sections)
+		{
+			body.AppendLine("<h2>" + section.ScraperTaskName + "</h2>");
+
+			foreach (var listing in section.Listings)
+			{
+				body.AppendLine("<div class='listing'>");
+				body.AppendLine($"<h2>{listing.Title}</h2>");
+				body.AppendLine($"<p><strong>Cena:</strong> {listing.Price?.ToString("C0") ?? "Neuvedeno"}</p>");
+				body.AppendLine($"<p><strong>Lokalita:</strong> {listing.Location}</p>");
+				body.AppendLine($"<p><strong>Zrušeno:</strong> {listing.RemovedAt:dd.MM.yyyy}</p>");
+				if (listing.HasImage)
+				{
+					body.AppendLine($"<p><img src='cid:{listing.ListingId}' alt='{listing.Title}'></p>");
+				}
+				body.AppendLine($"<p><a href='{listing.Url}' target='_blank'>Původní odkaz</a></p>");
+				body.AppendLine("</div>");
 			}
 		}
 

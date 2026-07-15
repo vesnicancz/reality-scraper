@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Report zrušených realitních nabídek</title>
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+		}
+
+		body {
+			font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+			line-height: 1.5;
+			color: #1f2937;
+			max-width: 800px;
+			margin: 0 auto;
+			padding: 20px;
+			background-color: #edeef0;
+		}
+
+		.header {
+			text-align: center;
+			margin-bottom: 24px;
+		}
+
+		.header h1 {
+			color: #dc2626;
+			font-size: 24px;
+			font-weight: 700;
+			margin-bottom: 8px;
+		}
+
+		.header p {
+			color: #6b7280;
+			font-size: 16px;
+		}
+
+		.summary {
+			background-color: white;
+			padding: 16px;
+			margin-bottom: 24px;
+			border-radius: 8px;
+			box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+			border-left: 4px solid #ef4444;
+		}
+
+		.portal-section {
+			background-color: white;
+			margin-bottom: 24px;
+			border-radius: 8px;
+			overflow: hidden;
+			box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+		}
+
+		.portal-header {
+			display: flex;
+			align-items: center;
+			padding: 16px;
+			background-color: #ef4444;
+			background: linear-gradient(to right, #ef4444, #dc2626);
+			color: white;
+			justify-content: space-between;
+		}
+
+		.portal-header h2 {
+			font-size: 18px;
+			font-weight: 600;
+		}
+
+		.portal-header .count {
+			background-color: white;
+			color: #ef4444;
+			font-size: 14px;
+			border-radius: 16px;
+			padding: 2px 10px;
+		}
+
+		.property-list {
+			padding: 0;
+			margin: 0;
+			list-style: none;
+		}
+
+		.property-item {
+			padding: 16px;
+			border-bottom: 1px solid rgba(0,0,0,0.05);
+		}
+
+		.property-item:last-child {
+			border-bottom: none;
+		}
+
+		.property-content {
+			display: grid;
+			grid-template-columns: 160px 1fr;
+			gap: 16px;
+		}
+
+		.property-content.no-image {
+			grid-template-columns: 1fr;
+		}
+
+		.property-image-container {
+			position: relative;
+			overflow: hidden;
+			border-radius: 8px;
+			height: 120px;
+		}
+
+		.property-image {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+		}
+
+		.property-info {
+			display: flex;
+			flex-direction: column;
+		}
+
+		.property-title {
+			font-weight: 600;
+			font-size: 16px;
+			margin-bottom: 8px;
+			color: #1f2937;
+		}
+
+		.property-price {
+			font-weight: 700;
+			font-size: 18px;
+			color: #dc2626;
+			margin-bottom: 8px;
+		}
+
+		.property-dates {
+			color: #6b7280;
+			font-size: 14px;
+			margin-bottom: 8px;
+		}
+
+		.property-link {
+			display: inline-flex;
+			align-items: center;
+			background-color: #6b7280;
+			color: white !important;
+			text-decoration: none;
+			padding: 8px 16px;
+			border-radius: 8px;
+			font-weight: 500;
+			font-size: 14px;
+			margin-top: auto;
+			align-self: flex-start;
+		}
+
+		.footer {
+			text-align: center;
+			color: #6b7280;
+			font-size: 14px;
+			margin-top: 16px;
+		}
+
+		@@media only screen and (max-width: 600px) {
+			body {
+				padding: 12px;
+			}
+
+			.property-content {
+				grid-template-columns: 1fr;
+			}
+
+			.property-image-container {
+				height: 180px;
+				margin-bottom: 8px;
+			}
+		}
+	</style>
+</head>
+<body>
+	<div class="header">
+		<h1>Zrušené realitní nabídky</h1>
+		<p>Období @Model.PeriodFrom.ToString("dd.MM.yyyy") – @Model.PeriodTo.ToString("dd.MM.yyyy")</p>
+	</div>
+
+	<div class="summary">
+		<p>Za sledované období @GetPluralForm(Model.RemovedListingsCount, "byla zrušena", "byly zrušeny", "bylo zrušeno")
+			<strong>@GetPluralFormWithNumber(Model.RemovedListingsCount, "nabídka", "nabídky", "nabídek")</strong>.
+		</p>
+	</div>
+
+	@foreach (var section in Model.Sections)
+	{
+		<div class="portal-section">
+			<div class="portal-header">
+				<h2>@section.ScraperTaskName</h2>
+				<span class="count">@section.Listings.Count</span>
+			</div>
+
+			<ul class="property-list">
+				@foreach (var listing in section.Listings)
+				{
+					<li class="property-item">
+						<div class="property-content @(listing.HasImage ? "" : "no-image")">
+							@if (listing.HasImage)
+							{
+								<div class="property-image-container">
+									<img src="cid:@listing.ListingId" alt="@listing.Location" class="property-image">
+								</div>
+							}
+							<div class="property-info">
+								<div class="property-title">@(string.IsNullOrWhiteSpace(listing.Location) ? listing.Title : listing.Location)</div>
+								<div class="property-price">@FormatPrice(listing.Price)</div>
+								<div class="property-dates">
+									Zrušeno: <strong>@(listing.RemovedAt?.ToString("dd.MM.yyyy") ?? "–")</strong>
+									&middot; sledováno od @listing.CreatedAt.ToString("dd.MM.yyyy")
+								</div>
+								<a href="@listing.Url" class="property-link">Původní odkaz (již nemusí fungovat)</a>
+							</div>
+						</div>
+					</li>
+				}
+			</ul>
+		</div>
+	}
+
+	<div class="footer">
+		<p>Toto je automaticky generovaná zpráva z vašeho realitního monitoringu.</p>
+	</div>
+</body>
+</html>
+
+@{
+	string GetPluralForm(int count, string form1, string form2to4, string form5plus)
+	{
+		if (count == 1)
+		{
+			return form1;
+		}
+		else if (count >= 2 && count <= 4)
+		{
+			return form2to4;
+		}
+		else
+		{
+			return form5plus;
+		}
+	}
+
+	string GetPluralFormWithNumber(int count, string form1, string form2to4, string form5plus)
+	{
+		if (count == 1)
+		{
+			return $"{count} {form1}";
+		}
+		else if (count >= 2 && count <= 4)
+		{
+			return $"{count} {form2to4}";
+		}
+		else
+		{
+			return $"{count} {form5plus}";
+		}
+	}
+
+	string FormatPrice(decimal? price)
+	{
+		if (price.HasValue)
+		{
+			return price.Value.ToString("C0", System.Globalization.CultureInfo.GetCultureInfo("cs-CZ"));
+		}
+		else
+		{
+			return "neuvedeno";
+		}
+	}
+}

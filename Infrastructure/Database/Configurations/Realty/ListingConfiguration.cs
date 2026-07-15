@@ -29,6 +29,8 @@ public class ListingConfiguration : IEntityTypeConfiguration<Listing>
 		builder.HasIndex(e => new { e.ExternalId, e.ScraperTaskId }) // TODO: ScraperType?
 			.IsUnique();
 
+		builder.HasIndex(e => new { e.ScraperTaskId, e.RemovedAt });
+
 		builder.HasMany(l => l.PriceHistories)
 			.WithOne(p => p.Listing)
 			.HasForeignKey(p => p.ListingId);
