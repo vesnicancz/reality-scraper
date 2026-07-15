@@ -40,11 +40,7 @@ public class ScrapingReportBuilderTests
 			}
 		};
 
-		var listingRepositoryMock = new Mock<IListingRepository>();
-		var dateTimeProviderMock = new Mock<IDateTimeProvider>();
-		var loggerMock = new Mock<ILogger<ScrapingReportBuilder>>();
-
-		var sut = new ScrapingReportBuilder(listingRepositoryMock.Object, dateTimeProviderMock.Object, loggerMock.Object);
+		var sut = CreateBuilder();
 
 		// act
 		await sut.ProcessScraperResultsAsync("siteName", new ScraperRunResult(true, listings1), CancellationToken.None);
@@ -123,12 +119,7 @@ public class ScrapingReportBuilderTests
 			new ScraperListingItem { Title = "T1", Price = 1000, Location = "L1", Url = "U1", ExternalId = "Ext1", ImageUrl = string.Empty }
 		};
 
-		var listingRepositoryMock = new Mock<IListingRepository>();
-		listingRepositoryMock
-			.Setup(r => r.GetByExternalIdAsync(It.IsAny<Guid>(), "Ext1", It.IsAny<CancellationToken>()))
-			.ReturnsAsync(new Listing { ExternalId = "Ext1", Price = 1000 });
-
-		var sut = new ScrapingReportBuilder(listingRepositoryMock.Object, new Mock<IDateTimeProvider>().Object, new Mock<ILogger<ScrapingReportBuilder>>().Object);
+		var sut = CreateBuilder(new List<Listing> { new Listing { ExternalId = "Ext1", Price = 1000 } });
 		sut.ForScrapingReport(Guid.NewGuid(), "task");
 
 		// act
@@ -139,6 +130,44 @@ public class ScrapingReportBuilderTests
 		Assert.Equal(1, result.TotalListingsCount);
 		Assert.Equal(0, result.NewListingsCount);
 		Assert.Equal(0, result.PriceChangedListingsCount);
+	}
+
+	[Fact]
+	public async Task ScrapingReportBuilder_ProcessScraperResults_NullPriceOnExistingListingIsNotPriceChange()
+	{
+		// arrange - portál zobrazí "Cena na dotaz" u inzerátu s uloženou cenou
+		var listings = new List<ScraperListingItem>
+		{
+			new ScraperListingItem { Title = "T1", Price = null, Location = "L1", Url = "U1", ExternalId = "Ext1", ImageUrl = string.Empty }
+		};
+
+		var sut = CreateBuilder(new List<Listing> { new Listing { ExternalId = "Ext1", Price = 1000 } });
+		sut.ForScrapingReport(Guid.NewGuid(), "task");
+
+		// act
+		await sut.ProcessScraperResultsAsync("siteName", new ScraperRunResult(true, listings), CancellationToken.None);
+		var result = sut.Build();
+
+		// assert
+		Assert.Equal(0, result.PriceChangedListingsCount);
+		Assert.Equal(0, result.NewListingsCount);
+		Assert.Equal(1, result.TotalListingsCount);
+	}
+
+	[Fact]
+	public async Task ScrapingReportBuilder_Build_PropagatesFailedListingsCountAndEmptyTarget()
+	{
+		// arrange
+		var sut = CreateBuilder();
+		sut.ForScrapingReport(Guid.NewGuid(), "task");
+
+		// act
+		await sut.ProcessScraperResultsAsync("siteA", new ScraperRunResult(true, new List<ScraperListingItem>(), FailedListingsCount: 2), CancellationToken.None);
+		var result = sut.Build();
+
+		// assert
+		Assert.Equal(2, result.FailedListingsCount);
+		Assert.True(result.AnyTargetEmpty);
 	}
 
 	[Fact]
@@ -209,9 +238,12 @@ public class ScrapingReportBuilderTests
 		Assert.True(result.ScrapingSucceeded);
 	}
 
-	private static ScrapingReportBuilder CreateBuilder()
+	private static ScrapingReportBuilder CreateBuilder(List<Listing>? existingListings = null)
 	{
 		var listingRepositoryMock = new Mock<IListingRepository>();
+		listingRepositoryMock
+			.Setup(r => r.GetByScraperTaskIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+			.ReturnsAsync(existingListings ?? new List<Listing>());
 		var dateTimeProviderMock = new Mock<IDateTimeProvider>();
 		var loggerMock = new Mock<ILogger<ScrapingReportBuilder>>();
 

@@ -21,7 +21,7 @@ public class SmtpEmailService : IEmailService
 		this.logger = logger;
 	}
 
-	public Task SendEmailNotificationAsync(string subject, string emailBody, List<string> recipients, CancellationToken cancellationToken)
+	public Task<bool> SendEmailNotificationAsync(string subject, string emailBody, List<string> recipients, CancellationToken cancellationToken)
 	{
 		return SendEmailNotificationAsync(subject, emailBody, recipients, Array.Empty<EmailAttachmentData>(), cancellationToken);
 	}

@@ -49,6 +49,14 @@ public class RemovedListingDetector : IRemovedListingDetector
 			return;
 		}
 
+		// Nezpracované inzeráty (selhané selektory) nejsou v SeenExternalIds a vypadaly by
+		// jako vyřazené, přestože na portálu stále existují.
+		if (report.FailedListingsCount > 0)
+		{
+			logger.LogWarning("Scrapování úlohy '{TaskName}': {Count} inzerátů se nepodařilo zpracovat, detekce vyřazených se přeskakuje.", report.TaskName, report.FailedListingsCount);
+			return;
+		}
+
 		var activeListings = listings.Where(l => l.RemovedAt == null).ToList();
 
 		// Ochrana proti planému poplachu: úspěšný běh s nula inzeráty při neprázdné DB
@@ -67,6 +75,14 @@ public class RemovedListingDetector : IRemovedListingDetector
 			if (emptyPortals.Count > 0)
 			{
 				logger.LogWarning("Scrapování úlohy '{TaskName}': portály {Portals} nevrátily žádné inzeráty, ale v databázi je {Count} aktivních. Detekce vyřazených se přeskakuje.", report.TaskName, string.Join(", ", emptyPortals), activeListings.Count);
+				return;
+			}
+
+			// Více cílů téhož portálu se agreguje do jednoho PortalReportu - prázdný cíl
+			// tak kontrola prázdných portálů nezachytí, jeho inzeráty by se chybně vyřadily.
+			if (report.AnyTargetEmpty)
+			{
+				logger.LogWarning("Scrapování úlohy '{TaskName}': některý cíl nevrátil žádné inzeráty, ale v databázi je {Count} aktivních. Detekce vyřazených se přeskakuje.", report.TaskName, activeListings.Count);
 				return;
 			}
 		}

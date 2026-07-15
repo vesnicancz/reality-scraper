@@ -21,6 +21,18 @@ public record ScrapingReport
 	/// </summary>
 	public IReadOnlySet<string> SeenExternalIds { get; init; } = new HashSet<string>();
 
+	/// <summary>
+	/// Počet inzerátů, které se během scrapování nepodařilo zpracovat (selhaly selektory).
+	/// Nenulová hodnota znamená, že SeenExternalIds nemusí být úplné.
+	/// </summary>
+	public int FailedListingsCount { get; init; }
+
+	/// <summary>
+	/// True, pokud některý cíl doběhl úspěšně, ale nevrátil žádný inzerát.
+	/// Jeho inzeráty pak nelze bezpečně odlišit od vyřazených.
+	/// </summary>
+	public bool AnyTargetEmpty { get; init; }
+
 	public int NewListingsCount => Results.Sum(r => r.NewListings.Count);
 
 	public int TotalListingsCount => Results.Sum(r => r.TotalListingsCount);

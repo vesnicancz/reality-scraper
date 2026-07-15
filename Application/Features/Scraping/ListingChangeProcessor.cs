@@ -27,6 +27,13 @@ public class ListingChangeProcessor : IListingChangeProcessor
 		var listingsToDownload = new List<Listing>();
 		var now = dateTimeProvider.UtcNow;
 
+		Dictionary<string, Listing>? existingByExternalId = null;
+		if (report.Results.Any(r => r.PriceChangedListings.Any()))
+		{
+			existingByExternalId = (await listingRepository.GetByScraperTaskIdAsync(report.ScraperTaskId, cancellationToken))
+				.ToDictionary(l => l.ExternalId);
+		}
+
 		foreach (var result in report.Results)
 		{
 			if (result.NewListings.Any())
@@ -54,18 +61,19 @@ public class ListingChangeProcessor : IListingChangeProcessor
 			{
 				foreach (var priceChanged in result.PriceChangedListings)
 				{
-					var existingListing = await listingRepository.GetByExternalIdAsync(report.ScraperTaskId, priceChanged.ExternalId, cancellationToken);
-					if (existingListing != null)
+					if (existingByExternalId == null || !existingByExternalId.TryGetValue(priceChanged.ExternalId, out var existingListing))
 					{
-						existingListing.PriceHistories.Add(new PriceHistory
-						{
-							Price = existingListing.Price,
-							RecordedAt = existingListing.PriceFrom
-						});
-						existingListing.Price = priceChanged.Price;
-						existingListing.LastSeenAt = now;
-						existingListing.PriceFrom = now;
+						continue;
 					}
+
+					existingListing.PriceHistories.Add(new PriceHistory
+					{
+						Price = existingListing.Price,
+						RecordedAt = existingListing.PriceFrom
+					});
+					existingListing.Price = priceChanged.Price;
+					existingListing.LastSeenAt = now;
+					existingListing.PriceFrom = now;
 				}
 			}
 		}

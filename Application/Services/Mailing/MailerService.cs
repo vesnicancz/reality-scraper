@@ -15,14 +15,14 @@ public class MailerService : IMailerService
 		this.emailService = emailService;
 	}
 
-	public async Task SendListingReportAsync(ScrapingReport scrapingReport, List<string> recipients, CancellationToken cancellationToken)
+	public async Task<bool> SendListingReportAsync(ScrapingReport scrapingReport, List<string> recipients, CancellationToken cancellationToken)
 	{
 		var date = scrapingReport.ReportDate.ToString("dd.MM.yyyy");
 		var subject = string.IsNullOrWhiteSpace(scrapingReport.TaskName)
 			? $"Nové realitní nabídky ({date})"
 			: $"{scrapingReport.TaskName} – nové nabídky ({date})";
 		var emailBody = await emailGenerator.GenerateHtmlBodyAsync(scrapingReport, cancellationToken);
-		await emailService.SendEmailNotificationAsync(subject, emailBody, recipients, cancellationToken);
+		return await emailService.SendEmailNotificationAsync(subject, emailBody, recipients, cancellationToken);
 	}
 
 	public async Task<bool> SendRemovedListingsReportAsync(RemovedListingsReport report, List<string> recipients, IReadOnlyList<EmailAttachmentData> attachments, CancellationToken cancellationToken)

@@ -2,6 +2,7 @@
 using RealityScraper.Application.Features.Scraping.Model;
 using RealityScraper.Application.Features.Scraping.Model.Report;
 using RealityScraper.Application.Interfaces.Repositories.Realty;
+using RealityScraper.Domain.Entities.Realty;
 using RealityScraper.SharedKernel;
 
 namespace RealityScraper.Application.Features.Scraping.Builders;
@@ -11,6 +12,9 @@ public class ScrapingReportBuilder
 	private Guid scraperTaskId;
 	private string scraperTaskName = string.Empty;
 	private bool allScrapersSucceeded = true;
+	private int failedListingsCount;
+	private bool anyTargetEmpty;
+	private Dictionary<string, Listing>? existingListingsByExternalId;
 	private readonly Dictionary<string, ScraperResultBuilder> scraperBuilders = new();
 	private readonly HashSet<string> processedListings = new(); // Klíč "siteName|externalId" - prevence duplikátů mezi targety téhož portálu
 	private readonly HashSet<string> seenExternalIds = new();
@@ -34,6 +38,9 @@ public class ScrapingReportBuilder
 		scraperTaskId = taskId;
 		scraperTaskName = taskName;
 		allScrapersSucceeded = true;
+		failedListingsCount = 0;
+		anyTargetEmpty = false;
+		existingListingsByExternalId = null;
 		scraperBuilders.Clear();
 		processedListings.Clear();
 		seenExternalIds.Clear();
@@ -62,6 +69,13 @@ public class ScrapingReportBuilder
 			allScrapersSucceeded = false;
 		}
 
+		failedListingsCount += scraperResult.FailedListingsCount;
+
+		if (scraperResult.Success && listings.Count == 0)
+		{
+			anyTargetEmpty = true;
+		}
+
 		var builder = GetOrCreateScraperBuilder(siteName);
 
 		foreach (var listing in listings)
@@ -85,8 +99,10 @@ public class ScrapingReportBuilder
 			return this;
 		}
 
-		// Kontrola existence v databázi
-		var existingListing = await listingRepository.GetByExternalIdAsync(scraperTaskId, listing.ExternalId, cancellationToken);
+		// Kontrola existence v databázi (všechny inzeráty úlohy se načtou jedním dotazem)
+		existingListingsByExternalId ??= (await listingRepository.GetByScraperTaskIdAsync(scraperTaskId, cancellationToken))
+			.ToDictionary(l => l.ExternalId);
+		existingListingsByExternalId.TryGetValue(listing.ExternalId, out var existingListing);
 
 		if (existingListing == null)
 		{
@@ -102,6 +118,11 @@ public class ScrapingReportBuilder
 			};
 			builder.AddNewListing(newListing);
 			logger.LogDebug("Nový listing {ExternalId} přidán do {SiteName}", listing.ExternalId, siteName);
+		}
+		else if (listing.Price == null && existingListing.Price != null)
+		{
+			// "Cena na dotaz" apod. - nejde o změnu ceny, uložená cena se nepřepisuje
+			logger.LogInformation("Listing {ExternalId}: cena se nepodařila naparsovat, ponechává se uložená hodnota {Price}.", listing.ExternalId, existingListing.Price);
 		}
 		else if (listing.Price != existingListing.Price)
 		{
@@ -156,7 +177,9 @@ public class ScrapingReportBuilder
 			TaskName = scraperTaskName,
 			Results = results,
 			ScrapingSucceeded = allScrapersSucceeded,
-			SeenExternalIds = new HashSet<string>(seenExternalIds)
+			SeenExternalIds = new HashSet<string>(seenExternalIds),
+			FailedListingsCount = failedListingsCount,
+			AnyTargetEmpty = anyTargetEmpty
 		};
 	}
 }
