@@ -1,7 +1,9 @@
 using System.Net.Http.Json;
+using System.Text.Json;
 using Havit.Blazor.Components.Web;
 using Havit.Blazor.Components.Web.Bootstrap;
 using Microsoft.AspNetCore.Components;
+using RealityScraper.Web.Client.Infrastructure;
 using RealityScraper.Web.Shared.Models.ReportTasks;
 using RealityScraper.Web.Shared.Models.ScraperTasks;
 
@@ -17,6 +19,7 @@ public partial class ReportTaskEditPage(
 
 	private bool IsEdit => Id.HasValue;
 	private bool isLoading;
+	private bool isSubmitting;
 	private ReportTaskFormModel model = new();
 	private List<ScraperTaskOption> scraperTaskOptions = [];
 	// Slouží jen jako ValueExpression pro HxCheckbox se scraper tasky; nikdy se do něj nezapisuje.
@@ -50,7 +53,7 @@ public partial class ReportTaskEditPage(
 				};
 			}
 		}
-		catch (HttpRequestException)
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or TaskCanceledException)
 		{
 			messenger.AddError("Nepodařilo se načíst data.");
 			nav.NavigateTo("/report-tasks");
@@ -63,6 +66,12 @@ public partial class ReportTaskEditPage(
 
 	private async Task HandleValidSubmit()
 	{
+		if (isSubmitting)
+		{
+			return;
+		}
+
+		isSubmitting = true;
 		try
 		{
 			HttpResponseMessage response;
@@ -97,12 +106,16 @@ public partial class ReportTaskEditPage(
 			}
 			else
 			{
-				messenger.AddError("Nepodařilo se uložit report.");
+				await response.ShowErrorAsync(messenger, "Nepodařilo se uložit report.");
 			}
 		}
-		catch (HttpRequestException)
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or TaskCanceledException)
 		{
 			messenger.AddError("Nepodařilo se uložit report.");
+		}
+		finally
+		{
+			isSubmitting = false;
 		}
 	}
 

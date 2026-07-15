@@ -1,8 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Havit.Blazor.Components.Web;
 using Havit.Blazor.Components.Web.Bootstrap;
 using Microsoft.AspNetCore.Components;
+using RealityScraper.Web.Client.Infrastructure;
 using RealityScraper.Web.Shared.Models.ScraperTasks;
 using RealityScraper.Web.Shared.Models.ScraperTaskRecipients;
 using RealityScraper.Web.Shared.Models.ScraperTaskTargets;
@@ -19,13 +21,13 @@ public partial class ScraperTaskEditPage(
 
 	private bool IsEdit => Id.HasValue;
 	private bool isLoading;
+	private bool isSubmitting;
 	private ScraperTaskFormModel model = new();
 
-	private readonly List<ScraperTypeOption> scraperTypeOptions =
-	[
-		new(1, "SReality"),
-		new(2, "Reality Idnes")
-	];
+	private static readonly List<ScraperTypeOption> scraperTypeOptions =
+		Enum.GetValues<ScraperType>()
+			.Select(type => new ScraperTypeOption((int)type, ScraperTypeDisplay.GetName(type)))
+			.ToList();
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -51,7 +53,7 @@ public partial class ScraperTaskEditPage(
 					Targets = task.Targets.Select(t => new TargetInputModel { ScraperType = t.ScraperType, Url = t.Url }).ToList()
 				};
 			}
-			catch (HttpRequestException)
+			catch (Exception ex) when (ex is HttpRequestException or JsonException or TaskCanceledException)
 			{
 				messenger.AddError("Nepodařilo se načíst task.");
 				nav.NavigateTo("/scraper-tasks");
@@ -65,6 +67,12 @@ public partial class ScraperTaskEditPage(
 
 	private async Task HandleValidSubmit()
 	{
+		if (isSubmitting)
+		{
+			return;
+		}
+
+		isSubmitting = true;
 		try
 		{
 			HttpResponseMessage response;
@@ -99,12 +107,16 @@ public partial class ScraperTaskEditPage(
 			}
 			else
 			{
-				messenger.AddError("Nepodařilo se uložit task.");
+				await response.ShowErrorAsync(messenger, "Nepodařilo se uložit task.");
 			}
 		}
-		catch (HttpRequestException)
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or TaskCanceledException)
 		{
 			messenger.AddError("Nepodařilo se uložit task.");
+		}
+		finally
+		{
+			isSubmitting = false;
 		}
 	}
 
@@ -120,7 +132,7 @@ public partial class ScraperTaskEditPage(
 
 	private void AddTarget()
 	{
-		model.Targets.Add(new TargetInputModel { ScraperType = 1 });
+		model.Targets.Add(new TargetInputModel { ScraperType = (int)ScraperType.SReality });
 	}
 
 	private void RemoveTarget(int index)
