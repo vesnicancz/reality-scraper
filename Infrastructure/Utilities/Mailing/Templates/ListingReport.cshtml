@@ -1,24 +1,31 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="cs">
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="color-scheme" content="light">
+	<meta name="supported-color-schemes" content="light">
 	<title>Notifikace změn na realitních serverech</title>
 	<style>
+		/* SHARED EMAIL STYLES — keep in sync with RemovedListingsReport.cshtml */
 		* {
 			margin: 0;
 			padding: 0;
 			box-sizing: border-box;
 		}
 
+		:root {
+			color-scheme: light;
+		}
+
 		body {
 			font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 			line-height: 1.5;
 			color: #1f2937;
-			max-width: 800px;
+			max-width: 640px;
 			margin: 0 auto;
 			padding: 20px;
-			background-color: #edeef0;
+			background-color: #f1f2f4;
 		}
 
 		.header {
@@ -26,73 +33,87 @@
 			margin-bottom: 24px;
 		}
 
+		.header .eyebrow {
+			color: #6b7280;
+			font-size: 12px;
+			font-weight: 600;
+			text-transform: uppercase;
+			letter-spacing: 2px;
+			margin-bottom: 4px;
+		}
+
 		.header h1 {
-			color: #2563eb;
 			font-size: 24px;
 			font-weight: 700;
-			margin-bottom: 8px;
+			margin-bottom: 6px;
 		}
 
 		.header p {
 			color: #6b7280;
-			font-size: 16px;
+			font-size: 15px;
 		}
 
 		.summary {
-			background-color: white;
+			background-color: #ffffff;
+			color: #1f2937;
 			padding: 16px;
 			margin-bottom: 24px;
-			border-radius: 8px;
-			box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-			border-left: 4px solid #3b82f6;
+			border: 1px solid #e5e7eb;
+			border-radius: 10px;
 		}
 
 		.portal-section {
-			background-color: white;
+			background-color: #ffffff;
 			margin-bottom: 24px;
-			border-radius: 8px;
+			border: 1px solid #e5e7eb;
+			border-radius: 10px;
 			overflow: hidden;
-			box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 		}
 
 		.portal-header {
-			display: flex;
-			align-items: center;
-			padding: 16px;
-			background-color: #3b82f6;
-			background: linear-gradient(to right, #3b82f6, #2563eb);
-			color: white;
-			justify-content: space-between;
+			width: 100%;
+			border-collapse: collapse;
+		}
+
+		.portal-header td {
+			padding: 14px 16px;
 		}
 
 		.portal-header h2 {
+			color: #ffffff;
 			font-size: 18px;
 			font-weight: 600;
 		}
 
 		.portal-header .count {
-			background-color: white;
-			color: #3b82f6;
+			background-color: #ffffff;
 			font-size: 14px;
+			font-weight: 600;
 			border-radius: 16px;
 			padding: 2px 10px;
 		}
 
 		.section-header {
-			padding: 14px 16px;
+			width: 100%;
+			border-collapse: collapse;
 			background-color: #f3f4f6;
+		}
+
+		.section-header td {
+			padding: 12px 16px;
+			border-bottom: 1px solid #e5e7eb;
+		}
+
+		.section-header .label {
 			font-weight: 600;
-			font-size: 16px;
-			border-bottom: 1px solid rgba(0,0,0,0.05);
+			font-size: 15px;
 			color: #1f2937;
-			display: flex;
-			justify-content: space-between;
 		}
 
 		.section-header .count {
-			background-color: #3b82f6;
-			color: white;
-			font-size: 14px;
+			color: #ffffff;
+			font-size: 13px;
+			font-weight: 600;
 			border-radius: 16px;
 			padding: 2px 10px;
 		}
@@ -105,130 +126,161 @@
 
 		.property-item {
 			padding: 16px;
-			border-bottom: 1px solid rgba(0,0,0,0.05);
+			border-bottom: 1px solid #e5e7eb;
 		}
 
 		.property-item:last-child {
 			border-bottom: none;
 		}
 
-		.property-content {
-			display: grid;
-			grid-template-columns: 160px 1fr;
-			gap: 16px;
+		.property-row {
+			width: 100%;
+			border-collapse: collapse;
 		}
 
-		.property-image-container {
-			position: relative;
-			overflow: hidden;
-			border-radius: 8px;
-			height: 120px;
+		.property-image-cell {
+			padding-right: 16px;
 		}
 
 		.property-image {
-			width: 100%;
-			height: 100%;
+			width: 120px;
+			height: 90px;
 			object-fit: cover;
-			transition: transform 0.3s ease;
+			border-radius: 8px;
+			display: block;
+			background-color: #e5e7eb;
 		}
 
-		.property-image:hover {
-			transform: scale(1.05);
-		}
-
-		.property-info {
-			display: flex;
-			flex-direction: column;
+		.property-image-placeholder {
+			width: 120px;
+			height: 90px;
+			border-radius: 8px;
+			background-color: #e5e7eb;
+			color: #9ca3af;
+			font-size: 30px;
+			text-align: center;
+			line-height: 90px;
 		}
 
 		.property-title {
 			font-weight: 600;
 			font-size: 16px;
-			margin-bottom: 8px;
 			color: #1f2937;
+			margin-bottom: 2px;
+		}
+
+		.property-location {
+			color: #6b7280;
+			font-size: 13px;
+			margin-bottom: 6px;
 		}
 
 		.property-price {
 			font-weight: 700;
 			font-size: 18px;
-			color: #2563eb;
-			margin-bottom: 8px;
-			display: flex;
-			align-items: center;
+			margin-bottom: 6px;
 		}
 
-		.price-change {
-			margin-left: 8px;
-			font-size: 14px;
-			font-weight: 500;
-			padding: 2px 8px;
-			border-radius: 4px;
+		.property-old-price {
+			color: #9ca3af;
+			font-size: 13px;
+			margin-bottom: 6px;
 		}
 
-		.price-down {
-			background-color: rgba(16, 185, 129, 0.1);
-			color: #10b981;
-		}
-
-		.price-up {
-			background-color: rgba(239, 68, 68, 0.1);
-			color: #ef4444;
+		.property-meta {
+			color: #6b7280;
+			font-size: 13px;
+			margin-bottom: 10px;
 		}
 
 		.property-link {
-			display: inline-flex;
-			align-items: center;
-			background-color: #3b82f6;
-			color: white !important;
+			display: inline-block;
+			color: #ffffff !important;
 			text-decoration: none;
 			padding: 8px 16px;
 			border-radius: 8px;
 			font-weight: 500;
 			font-size: 14px;
-			transition: background-color 0.2s;
-			margin-top: auto;
-			align-self: flex-start;
-		}
-
-		.property-link:hover {
-			background-color: #2563eb;
 		}
 
 		.footer {
 			text-align: center;
 			color: #6b7280;
-			font-size: 14px;
-			margin-top: 16px;
+			font-size: 13px;
+			margin-top: 8px;
 		}
 
-		.footer a {
-			color: #3b82f6;
-			text-decoration: none;
-		}
-
-		.footer a:hover {
-			text-decoration: underline;
-		}
-
-		@@media only screen and (max-width: 600px) {
+		@@media only screen and (max-width: 480px) {
 			body {
 				padding: 12px;
 			}
 
-			.property-content {
-				grid-template-columns: 1fr;
+			.header h1 {
+				font-size: 21px;
 			}
 
-			.property-image-container {
-				height: 180px;
-				margin-bottom: 8px;
+			.property-item {
+				padding: 12px;
 			}
+		}
+		/* END SHARED EMAIL STYLES */
+
+		/* ACCENT & REPORT-SPECIFIC STYLES (blue) */
+		.header h1 {
+			color: #2563eb;
+		}
+
+		.summary {
+			border-left: 4px solid #3b82f6;
+		}
+
+		.portal-header {
+			background-color: #2563eb;
+		}
+
+		.portal-header .count {
+			color: #2563eb;
+		}
+
+		.section-header .count {
+			background-color: #2563eb;
+		}
+
+		.property-price {
+			color: #2563eb;
+		}
+
+		.property-link {
+			background-color: #2563eb;
+		}
+
+		.price-change {
+			font-size: 13px;
+			font-weight: 600;
+			padding: 2px 8px;
+			border-radius: 10px;
+			margin-left: 6px;
+		}
+
+		.price-down {
+			background-color: #d1fae5;
+			color: #065f46;
+		}
+
+		.price-up {
+			background-color: #fef3c7;
+			color: #92400e;
 		}
 	</style>
 </head>
 <body>
 	<div class="header">
+		<p class="eyebrow">Realitní monitoring</p>
 		<h1>Notifikace realitních nabídek</h1>
+		@if (!string.IsNullOrWhiteSpace(Model.TaskName))
+		{
+			<p><strong>@Model.TaskName</strong></p>
+		}
 		<p>Přehled změn ze dne @Model.ReportDate.ToString("dd.MM.yyyy HH:mm")</p>
 	</div>
 
@@ -243,33 +295,50 @@
 	@foreach (var result in Model.GetNotEmptyResults())
 	{
 		<div class="portal-section">
-			<div class="portal-header">
-				<h2>@result.SiteName</h2>
-				<span class="count">@result.TotalListingsCount</span>
-			</div>
+			<table role="presentation" class="portal-header" width="100%" cellpadding="0" cellspacing="0">
+				<tr>
+					<td><h2>@result.SiteName</h2></td>
+					<td align="right"><span class="count">@result.TotalListingsCount</span></td>
+				</tr>
+			</table>
 
 			@if (result.NewListingsCount > 0)
 			{
 				<!-- Nové nabídky -->
-				<div class="section-header">
-					<span>Nové nabídky</span>
-					<span class="count">@result.NewListingsCount</span>
-				</div>
+				<table role="presentation" class="section-header" width="100%" cellpadding="0" cellspacing="0">
+					<tr>
+						<td class="label">Nové nabídky</td>
+						<td align="right"><span class="count">@result.NewListingsCount</span></td>
+					</tr>
+				</table>
 				<ul class="property-list">
 
 					@foreach (var listing in result.NewListings)
 					{
 						<li class="property-item">
-							<div class="property-content">
-								<div class="property-image-container">
-									<img src="@listing.ImageUrl" alt="@listing.Location" class="property-image">
-								</div>
-								<div class="property-info">
-									<div class="property-title">@listing.Location</div>
-									<div class="property-price">@FormatPrice(listing.Price)</div>
-									<a href="@listing.Url" class="property-link">Zobrazit detail</a>
-								</div>
-							</div>
+							<table role="presentation" class="property-row" width="100%" cellpadding="0" cellspacing="0">
+								<tr>
+									<td class="property-image-cell" width="136" valign="top">
+										@if (!string.IsNullOrEmpty(listing.ImageUrl))
+										{
+											<img src="@listing.ImageUrl" alt="@listing.Location" class="property-image">
+										}
+										else
+										{
+											<div class="property-image-placeholder">&#127968;</div>
+										}
+									</td>
+									<td valign="top">
+										<div class="property-title">@(string.IsNullOrWhiteSpace(listing.Title) ? listing.Location : listing.Title)</div>
+										@if (!string.IsNullOrWhiteSpace(listing.Title) && !string.IsNullOrWhiteSpace(listing.Location))
+										{
+											<div class="property-location">&#128205; @listing.Location</div>
+										}
+										<div class="property-price">@FormatPrice(listing.Price)</div>
+										<a href="@listing.Url" class="property-link">Zobrazit detail</a>
+									</td>
+								</tr>
+							</table>
 						</li>
 					}
 				</ul>
@@ -278,39 +347,51 @@
 			@if (result.PriceChangedListingsCount > 0)
 			{
 				<!-- Změny cen -->
-				<div class="section-header">
-					<span>Změny cen</span>
-					<span class="count">@result.PriceChangedListingsCount</span>
-				</div>
+				<table role="presentation" class="section-header" width="100%" cellpadding="0" cellspacing="0">
+					<tr>
+						<td class="label">Změny cen</td>
+						<td align="right"><span class="count">@result.PriceChangedListingsCount</span></td>
+					</tr>
+				</table>
 				<ul class="property-list">
 
 					@foreach (var listing in result.PriceChangedListings)
 					{
 						<li class="property-item">
-							<div class="property-content">
-								<div class="property-image-container">
-									<img src="@listing.ImageUrl" alt="@listing.Location" class="property-image">
-								</div>
-								<div class="property-info">
-									<div class="property-title">@listing.Location</div>
-									<div class="property-price">
-										@FormatPrice(listing.Price)
-										@if (listing.PriceDiff < 0)
+							<table role="presentation" class="property-row" width="100%" cellpadding="0" cellspacing="0">
+								<tr>
+									<td class="property-image-cell" width="136" valign="top">
+										@if (!string.IsNullOrEmpty(listing.ImageUrl))
 										{
-											<span class="price-change price-down">↓ @FormatPrice(listing.PriceDiff)</span>
-										}
-										else if (listing.PriceDiff > 0)
-										{
-											<span class="price-change price-up">↑ +@FormatPrice(listing.PriceDiff)</span>
+											<img src="@listing.ImageUrl" alt="@listing.Location" class="property-image">
 										}
 										else
 										{
-											<text>(původně @FormatPrice(listing.OldPrice))</text>
+											<div class="property-image-placeholder">&#127968;</div>
 										}
-									</div>
-									<a href="@listing.Url" class="property-link">Zobrazit detail</a>
-								</div>
-							</div>
+									</td>
+									<td valign="top">
+										<div class="property-title">@(string.IsNullOrWhiteSpace(listing.Title) ? listing.Location : listing.Title)</div>
+										@if (!string.IsNullOrWhiteSpace(listing.Title) && !string.IsNullOrWhiteSpace(listing.Location))
+										{
+											<div class="property-location">&#128205; @listing.Location</div>
+										}
+										<div class="property-price">
+											@FormatPrice(listing.Price)
+											@if (listing.PriceDiff < 0)
+											{
+												<span class="price-change price-down">&#8595; @FormatPrice(listing.PriceDiff)@FormatPercent(listing.PriceDiff, listing.OldPrice)</span>
+											}
+											else if (listing.PriceDiff > 0)
+											{
+												<span class="price-change price-up">&#8593; +@FormatPrice(listing.PriceDiff)@FormatPercent(listing.PriceDiff, listing.OldPrice)</span>
+											}
+										</div>
+										<div class="property-old-price"><s>původně @FormatPrice(listing.OldPrice)</s></div>
+										<a href="@listing.Url" class="property-link">Zobrazit detail</a>
+									</td>
+								</tr>
+							</table>
 						</li>
 					}
 				</ul>
@@ -366,6 +447,19 @@
 		else
 		{
 			return "neuvedeno";
+		}
+	}
+
+	string FormatPercent(decimal? diff, decimal? oldPrice)
+	{
+		if (diff.HasValue && oldPrice.HasValue && oldPrice.Value != 0)
+		{
+			var percent = System.Math.Round(diff.Value / oldPrice.Value * 100, 1);
+			return $" ({percent.ToString("+0.#;-0.#", System.Globalization.CultureInfo.GetCultureInfo("cs-CZ"))} %)";
+		}
+		else
+		{
+			return string.Empty;
 		}
 	}
 }
