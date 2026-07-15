@@ -272,7 +272,7 @@
 		<h1>Zrušené realitní nabídky</h1>
 		@if (!string.IsNullOrWhiteSpace(Model.ReportName))
 		{
-			<p><strong>@Model.ReportName</strong></p>
+			<p><strong>@E(Model.ReportName)</strong></p>
 		}
 		<p>Období @Model.PeriodFrom.ToString("dd.MM.yyyy") – @Model.PeriodTo.ToString("dd.MM.yyyy")</p>
 	</div>
@@ -288,7 +288,7 @@
 		<div class="portal-section">
 			<table role="presentation" class="portal-header" width="100%" cellpadding="0" cellspacing="0">
 				<tr>
-					<td><h2>@section.ScraperTaskName</h2></td>
+					<td><h2>@E(section.ScraperTaskName)</h2></td>
 					<td align="right"><span class="count">@section.Listings.Count</span></td>
 				</tr>
 			</table>
@@ -302,7 +302,7 @@
 								<td class="property-image-cell" width="136" valign="top">
 									@if (listing.HasImage)
 									{
-										<img src="cid:@listing.ListingId" alt="@listing.Location" class="property-image">
+										<img src="cid:@listing.ListingId" alt="@E(listing.Location)" class="property-image">
 									}
 									else
 									{
@@ -310,14 +310,14 @@
 									}
 								</td>
 								<td valign="top">
-									<div class="property-title">@(string.IsNullOrWhiteSpace(listing.Title) ? listing.Location : listing.Title)</div>
+									<div class="property-title">@E(string.IsNullOrWhiteSpace(listing.Title) ? listing.Location : listing.Title)</div>
 									@if (!string.IsNullOrWhiteSpace(listing.Title) && !string.IsNullOrWhiteSpace(listing.Location))
 									{
-										<div class="property-location">&#128205; @listing.Location</div>
+										<div class="property-location">&#128205; @E(listing.Location)</div>
 									}
 									<div class="property-price">@FormatPrice(listing.Price) <span class="unavailable-badge">Již nedostupné</span></div>
 									<div class="property-meta">@FormatRemovedMeta(listing.CreatedAt, listing.RemovedAt)</div>
-									<a href="@listing.Url" class="property-link">Původní odkaz (již nemusí fungovat)</a>
+									<a href="@SafeUrl(listing.Url)" class="property-link">Původní odkaz (již nemusí fungovat)</a>
 								</td>
 							</tr>
 						</table>
@@ -393,5 +393,24 @@
 		{
 			return $"sledováno od {createdAt:dd.MM.yyyy}";
 		}
+	}
+
+	// RazorEngineCore na rozdíl od ASP.NET Razoru výrazy neenkóduje - scrapovaná data
+	// (titulek, lokalita, URL) je nutné enkódovat ručně.
+	string E(string value)
+	{
+		return System.Net.WebUtility.HtmlEncode(value ?? string.Empty);
+	}
+
+	string SafeUrl(string value)
+	{
+		if (!string.IsNullOrEmpty(value)
+			&& (value.StartsWith("http://", System.StringComparison.OrdinalIgnoreCase)
+				|| value.StartsWith("https://", System.StringComparison.OrdinalIgnoreCase)))
+		{
+			return System.Net.WebUtility.HtmlEncode(value);
+		}
+
+		return "#";
 	}
 }

@@ -279,7 +279,7 @@
 		<h1>Notifikace realitních nabídek</h1>
 		@if (!string.IsNullOrWhiteSpace(Model.TaskName))
 		{
-			<p><strong>@Model.TaskName</strong></p>
+			<p><strong>@E(Model.TaskName)</strong></p>
 		}
 		<p>Přehled změn ze dne @Model.ReportDate.ToString("dd.MM.yyyy HH:mm")</p>
 	</div>
@@ -321,7 +321,7 @@
 									<td class="property-image-cell" width="136" valign="top">
 										@if (!string.IsNullOrEmpty(listing.ImageUrl))
 										{
-											<img src="@listing.ImageUrl" alt="@listing.Location" class="property-image">
+											<img src="@SafeUrl(listing.ImageUrl)" alt="@E(listing.Location)" class="property-image">
 										}
 										else
 										{
@@ -329,13 +329,13 @@
 										}
 									</td>
 									<td valign="top">
-										<div class="property-title">@(string.IsNullOrWhiteSpace(listing.Title) ? listing.Location : listing.Title)</div>
+										<div class="property-title">@E(string.IsNullOrWhiteSpace(listing.Title) ? listing.Location : listing.Title)</div>
 										@if (!string.IsNullOrWhiteSpace(listing.Title) && !string.IsNullOrWhiteSpace(listing.Location))
 										{
-											<div class="property-location">&#128205; @listing.Location</div>
+											<div class="property-location">&#128205; @E(listing.Location)</div>
 										}
 										<div class="property-price">@FormatPrice(listing.Price)</div>
-										<a href="@listing.Url" class="property-link">Zobrazit detail</a>
+										<a href="@SafeUrl(listing.Url)" class="property-link">Zobrazit detail</a>
 									</td>
 								</tr>
 							</table>
@@ -363,7 +363,7 @@
 									<td class="property-image-cell" width="136" valign="top">
 										@if (!string.IsNullOrEmpty(listing.ImageUrl))
 										{
-											<img src="@listing.ImageUrl" alt="@listing.Location" class="property-image">
+											<img src="@SafeUrl(listing.ImageUrl)" alt="@E(listing.Location)" class="property-image">
 										}
 										else
 										{
@@ -371,10 +371,10 @@
 										}
 									</td>
 									<td valign="top">
-										<div class="property-title">@(string.IsNullOrWhiteSpace(listing.Title) ? listing.Location : listing.Title)</div>
+										<div class="property-title">@E(string.IsNullOrWhiteSpace(listing.Title) ? listing.Location : listing.Title)</div>
 										@if (!string.IsNullOrWhiteSpace(listing.Title) && !string.IsNullOrWhiteSpace(listing.Location))
 										{
-											<div class="property-location">&#128205; @listing.Location</div>
+											<div class="property-location">&#128205; @E(listing.Location)</div>
 										}
 										<div class="property-price">
 											@FormatPrice(listing.Price)
@@ -388,7 +388,7 @@
 											}
 										</div>
 										<div class="property-old-price"><s>původně @FormatPrice(listing.OldPrice)</s></div>
-										<a href="@listing.Url" class="property-link">Zobrazit detail</a>
+										<a href="@SafeUrl(listing.Url)" class="property-link">Zobrazit detail</a>
 									</td>
 								</tr>
 							</table>
@@ -461,5 +461,24 @@
 		{
 			return string.Empty;
 		}
+	}
+
+	// RazorEngineCore na rozdíl od ASP.NET Razoru výrazy neenkóduje - scrapovaná data
+	// (titulek, lokalita, URL) je nutné enkódovat ručně.
+	string E(string value)
+	{
+		return System.Net.WebUtility.HtmlEncode(value ?? string.Empty);
+	}
+
+	string SafeUrl(string value)
+	{
+		if (!string.IsNullOrEmpty(value)
+			&& (value.StartsWith("http://", System.StringComparison.OrdinalIgnoreCase)
+				|| value.StartsWith("https://", System.StringComparison.OrdinalIgnoreCase)))
+		{
+			return System.Net.WebUtility.HtmlEncode(value);
+		}
+
+		return "#";
 	}
 }

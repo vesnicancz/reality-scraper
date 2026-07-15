@@ -11,7 +11,8 @@ internal static class AuthenticationExtensions
 {
 	public static IServiceCollection AddOidcAuthentication(
 		this IServiceCollection services,
-		IConfiguration configuration)
+		IConfiguration configuration,
+		IWebHostEnvironment environment)
 	{
 		var authOptions = configuration
 			.GetSection(OidcAuthenticationOptions.SectionName)
@@ -40,8 +41,26 @@ internal static class AuthenticationExtensions
 		services.Configure<ForwardedHeadersOptions>(options =>
 		{
 			options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-			options.KnownIPNetworks.Clear();
-			options.KnownProxies.Clear();
+
+			// Bez známé proxy by middleware důvěřoval X-Forwarded-* od libovolného klienta.
+			// IP reverse proxy lze zadat v ForwardedHeaders:KnownProxies; bez konfigurace
+			// se akceptuje jen jedna úroveň proxy (ForwardLimit).
+			options.ForwardLimit = 1;
+			var knownProxies = configuration.GetSection("ForwardedHeaders:KnownProxies").Get<string[]>();
+			if (knownProxies is { Length: > 0 })
+			{
+				options.KnownIPNetworks.Clear();
+				options.KnownProxies.Clear();
+				foreach (var proxy in knownProxies)
+				{
+					options.KnownProxies.Add(System.Net.IPAddress.Parse(proxy));
+				}
+			}
+			else
+			{
+				options.KnownIPNetworks.Clear();
+				options.KnownProxies.Clear();
+			}
 		});
 
 		services
@@ -53,7 +72,9 @@ internal static class AuthenticationExtensions
 			.AddCookie(options =>
 			{
 				options.Cookie.HttpOnly = true;
-				options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+				options.Cookie.SecurePolicy = environment.IsDevelopment()
+					? CookieSecurePolicy.SameAsRequest
+					: CookieSecurePolicy.Always;
 				options.Cookie.SameSite = SameSiteMode.Lax;
 				options.ExpireTimeSpan = TimeSpan.FromHours(8);
 				options.SlidingExpiration = true;

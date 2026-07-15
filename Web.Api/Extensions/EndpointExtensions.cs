@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using RealityScraper.Web.Api.Endpoints;
+using RealityScraper.Web.Api.Infrastructure;
 
 namespace RealityScraper.Web.Api.Extensions;
 
@@ -26,11 +27,20 @@ internal static class EndpointExtensions
 	{
 		IEnumerable<IEndpoint> endpoints = app.Services.GetRequiredService<IEnumerable<IEndpoint>>();
 
-		IEndpointRouteBuilder builder = routeGroupBuilder is null ? app : routeGroupBuilder;
-
-		if (app.Configuration.IsAuthenticationEnabled() && routeGroupBuilder is null)
+		IEndpointRouteBuilder builder;
+		if (routeGroupBuilder is null)
 		{
-			builder = app.MapGroup(string.Empty).RequireAuthorization();
+			var group = app.MapGroup(string.Empty).RequireRateLimiting(RateLimitPolicies.Api);
+			if (app.Configuration.IsAuthenticationEnabled())
+			{
+				group.RequireAuthorization();
+			}
+
+			builder = group;
+		}
+		else
+		{
+			builder = routeGroupBuilder;
 		}
 
 		foreach (IEndpoint endpoint in endpoints)
