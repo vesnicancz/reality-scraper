@@ -3,22 +3,29 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="color-scheme" content="light">
+	<meta name="supported-color-schemes" content="light">
 	<title>Report zrušených realitních nabídek</title>
 	<style>
+		/* SHARED EMAIL STYLES — keep in sync with ListingReport.cshtml */
 		* {
 			margin: 0;
 			padding: 0;
 			box-sizing: border-box;
 		}
 
+		:root {
+			color-scheme: light;
+		}
+
 		body {
 			font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 			line-height: 1.5;
 			color: #1f2937;
-			max-width: 800px;
+			max-width: 640px;
 			margin: 0 auto;
 			padding: 20px;
-			background-color: #edeef0;
+			background-color: #f1f2f4;
 		}
 
 		.header {
@@ -26,54 +33,87 @@
 			margin-bottom: 24px;
 		}
 
+		.header .eyebrow {
+			color: #6b7280;
+			font-size: 12px;
+			font-weight: 600;
+			text-transform: uppercase;
+			letter-spacing: 2px;
+			margin-bottom: 4px;
+		}
+
 		.header h1 {
-			color: #dc2626;
 			font-size: 24px;
 			font-weight: 700;
-			margin-bottom: 8px;
+			margin-bottom: 6px;
 		}
 
 		.header p {
 			color: #6b7280;
-			font-size: 16px;
+			font-size: 15px;
 		}
 
 		.summary {
-			background-color: white;
+			background-color: #ffffff;
+			color: #1f2937;
 			padding: 16px;
 			margin-bottom: 24px;
-			border-radius: 8px;
-			box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-			border-left: 4px solid #ef4444;
+			border: 1px solid #e5e7eb;
+			border-radius: 10px;
 		}
 
 		.portal-section {
-			background-color: white;
+			background-color: #ffffff;
 			margin-bottom: 24px;
-			border-radius: 8px;
+			border: 1px solid #e5e7eb;
+			border-radius: 10px;
 			overflow: hidden;
-			box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 		}
 
 		.portal-header {
-			display: flex;
-			align-items: center;
-			padding: 16px;
-			background-color: #ef4444;
-			background: linear-gradient(to right, #ef4444, #dc2626);
-			color: white;
-			justify-content: space-between;
+			width: 100%;
+			border-collapse: collapse;
+		}
+
+		.portal-header td {
+			padding: 14px 16px;
 		}
 
 		.portal-header h2 {
+			color: #ffffff;
 			font-size: 18px;
 			font-weight: 600;
 		}
 
 		.portal-header .count {
-			background-color: white;
-			color: #ef4444;
+			background-color: #ffffff;
 			font-size: 14px;
+			font-weight: 600;
+			border-radius: 16px;
+			padding: 2px 10px;
+		}
+
+		.section-header {
+			width: 100%;
+			border-collapse: collapse;
+			background-color: #f3f4f6;
+		}
+
+		.section-header td {
+			padding: 12px 16px;
+			border-bottom: 1px solid #e5e7eb;
+		}
+
+		.section-header .label {
+			font-weight: 600;
+			font-size: 15px;
+			color: #1f2937;
+		}
+
+		.section-header .count {
+			color: #ffffff;
+			font-size: 13px;
+			font-weight: 600;
 			border-radius: 16px;
 			padding: 2px 10px;
 		}
@@ -86,101 +126,154 @@
 
 		.property-item {
 			padding: 16px;
-			border-bottom: 1px solid rgba(0,0,0,0.05);
+			border-bottom: 1px solid #e5e7eb;
 		}
 
 		.property-item:last-child {
 			border-bottom: none;
 		}
 
-		.property-content {
-			display: grid;
-			grid-template-columns: 160px 1fr;
-			gap: 16px;
+		.property-row {
+			width: 100%;
+			border-collapse: collapse;
 		}
 
-		.property-content.no-image {
-			grid-template-columns: 1fr;
-		}
-
-		.property-image-container {
-			position: relative;
-			overflow: hidden;
-			border-radius: 8px;
-			height: 120px;
+		.property-image-cell {
+			padding-right: 16px;
 		}
 
 		.property-image {
-			width: 100%;
-			height: 100%;
+			width: 120px;
+			height: 90px;
 			object-fit: cover;
+			border-radius: 8px;
+			display: block;
+			background-color: #e5e7eb;
 		}
 
-		.property-info {
-			display: flex;
-			flex-direction: column;
+		.property-image-placeholder {
+			width: 120px;
+			height: 90px;
+			border-radius: 8px;
+			background-color: #e5e7eb;
+			color: #9ca3af;
+			font-size: 30px;
+			text-align: center;
+			line-height: 90px;
 		}
 
 		.property-title {
 			font-weight: 600;
 			font-size: 16px;
-			margin-bottom: 8px;
 			color: #1f2937;
+			margin-bottom: 2px;
+		}
+
+		.property-location {
+			color: #6b7280;
+			font-size: 13px;
+			margin-bottom: 6px;
 		}
 
 		.property-price {
 			font-weight: 700;
 			font-size: 18px;
-			color: #dc2626;
-			margin-bottom: 8px;
+			margin-bottom: 6px;
 		}
 
-		.property-dates {
+		.property-old-price {
+			color: #9ca3af;
+			font-size: 13px;
+			margin-bottom: 6px;
+		}
+
+		.property-meta {
 			color: #6b7280;
-			font-size: 14px;
-			margin-bottom: 8px;
+			font-size: 13px;
+			margin-bottom: 10px;
 		}
 
 		.property-link {
-			display: inline-flex;
-			align-items: center;
-			background-color: #6b7280;
-			color: white !important;
+			display: inline-block;
+			color: #ffffff !important;
 			text-decoration: none;
 			padding: 8px 16px;
 			border-radius: 8px;
 			font-weight: 500;
 			font-size: 14px;
-			margin-top: auto;
-			align-self: flex-start;
 		}
 
 		.footer {
 			text-align: center;
 			color: #6b7280;
-			font-size: 14px;
-			margin-top: 16px;
+			font-size: 13px;
+			margin-top: 8px;
 		}
 
-		@@media only screen and (max-width: 600px) {
+		@@media only screen and (max-width: 480px) {
 			body {
 				padding: 12px;
 			}
 
-			.property-content {
-				grid-template-columns: 1fr;
+			.header h1 {
+				font-size: 21px;
 			}
 
-			.property-image-container {
-				height: 180px;
-				margin-bottom: 8px;
+			.property-item {
+				padding: 12px;
 			}
+		}
+		/* END SHARED EMAIL STYLES */
+
+		/* ACCENT & REPORT-SPECIFIC STYLES (red) */
+		.header h1 {
+			color: #dc2626;
+		}
+
+		.summary {
+			border-left: 4px solid #ef4444;
+		}
+
+		.portal-header {
+			background-color: #dc2626;
+		}
+
+		.portal-header .count {
+			color: #dc2626;
+		}
+
+		.property-price {
+			color: #dc2626;
+		}
+
+		.property-link {
+			background-color: #6b7280;
+		}
+
+		.property-image {
+			filter: grayscale(60%);
+			opacity: 0.85;
+		}
+
+		.unavailable-badge {
+			background-color: #fee2e2;
+			color: #991b1b;
+			font-size: 12px;
+			font-weight: 600;
+			padding: 2px 8px;
+			border-radius: 10px;
+			margin-left: 6px;
 		}
 	</style>
 </head>
 <body>
 	<div class="header">
+		<p class="eyebrow">Realitní monitoring</p>
 		<h1>Zrušené realitní nabídky</h1>
+		@if (!string.IsNullOrWhiteSpace(Model.ReportName))
+		{
+			<p><strong>@Model.ReportName</strong></p>
+		}
 		<p>Období @Model.PeriodFrom.ToString("dd.MM.yyyy") – @Model.PeriodTo.ToString("dd.MM.yyyy")</p>
 	</div>
 
@@ -193,32 +286,41 @@
 	@foreach (var section in Model.Sections)
 	{
 		<div class="portal-section">
-			<div class="portal-header">
-				<h2>@section.ScraperTaskName</h2>
-				<span class="count">@section.Listings.Count</span>
-			</div>
+			<table role="presentation" class="portal-header" width="100%" cellpadding="0" cellspacing="0">
+				<tr>
+					<td><h2>@section.ScraperTaskName</h2></td>
+					<td align="right"><span class="count">@section.Listings.Count</span></td>
+				</tr>
+			</table>
 
 			<ul class="property-list">
 				@foreach (var listing in section.Listings)
 				{
 					<li class="property-item">
-						<div class="property-content @(listing.HasImage ? "" : "no-image")">
-							@if (listing.HasImage)
-							{
-								<div class="property-image-container">
-									<img src="cid:@listing.ListingId" alt="@listing.Location" class="property-image">
-								</div>
-							}
-							<div class="property-info">
-								<div class="property-title">@(string.IsNullOrWhiteSpace(listing.Location) ? listing.Title : listing.Location)</div>
-								<div class="property-price">@FormatPrice(listing.Price)</div>
-								<div class="property-dates">
-									Zrušeno: <strong>@(listing.RemovedAt?.ToString("dd.MM.yyyy") ?? "–")</strong>
-									&middot; sledováno od @listing.CreatedAt.ToString("dd.MM.yyyy")
-								</div>
-								<a href="@listing.Url" class="property-link">Původní odkaz (již nemusí fungovat)</a>
-							</div>
-						</div>
+						<table role="presentation" class="property-row" width="100%" cellpadding="0" cellspacing="0">
+							<tr>
+								<td class="property-image-cell" width="136" valign="top">
+									@if (listing.HasImage)
+									{
+										<img src="cid:@listing.ListingId" alt="@listing.Location" class="property-image">
+									}
+									else
+									{
+										<div class="property-image-placeholder">&#127968;</div>
+									}
+								</td>
+								<td valign="top">
+									<div class="property-title">@(string.IsNullOrWhiteSpace(listing.Title) ? listing.Location : listing.Title)</div>
+									@if (!string.IsNullOrWhiteSpace(listing.Title) && !string.IsNullOrWhiteSpace(listing.Location))
+									{
+										<div class="property-location">&#128205; @listing.Location</div>
+									}
+									<div class="property-price">@FormatPrice(listing.Price) <span class="unavailable-badge">Již nedostupné</span></div>
+									<div class="property-meta">@FormatRemovedMeta(listing.CreatedAt, listing.RemovedAt)</div>
+									<a href="@listing.Url" class="property-link">Původní odkaz (již nemusí fungovat)</a>
+								</td>
+							</tr>
+						</table>
 					</li>
 				}
 			</ul>
@@ -273,6 +375,23 @@
 		else
 		{
 			return "neuvedeno";
+		}
+	}
+
+	string FormatRemovedMeta(System.DateTimeOffset createdAt, System.DateTimeOffset? removedAt)
+	{
+		if (removedAt.HasValue)
+		{
+			var days = (int)(removedAt.Value - createdAt).TotalDays;
+			if (days < 0)
+			{
+				days = 0;
+			}
+			return $"Zrušeno {removedAt.Value:dd.MM.yyyy} · sledováno {GetPluralFormWithNumber(days, "den", "dny", "dní")}";
+		}
+		else
+		{
+			return $"sledováno od {createdAt:dd.MM.yyyy}";
 		}
 	}
 }
