@@ -10,10 +10,10 @@ internal sealed class RunScraperTaskNowEndpoint : IEndpoint
 	{
 		app.MapPost("/api/scraper-tasks/{id:guid}/run-now", async (
 			Guid id,
-			ICommandHandler<RunScraperTaskNowCommand> commandHandler,
+			ICommandHandler<RunTaskNowCommand> commandHandler,
 			CancellationToken cancellationToken) =>
 		{
-			var command = new RunScraperTaskNowCommand(id);
+			var command = new RunTaskNowCommand(id);
 
 			var result = await commandHandler.Handle(command, cancellationToken);
 

@@ -27,7 +27,7 @@ internal sealed class DeleteScraperTaskCommandHandler : ICommandHandler<DeleteSc
 			return Result.Failure(Error.NotFound("ScraperTask.NotFound", $"ScraperTask with ID {command.Id} was not found."));
 		}
 
-		scraperTask.RaiseDomainEvents(new ScraperTaskDeletedEvent(scraperTask.Id, scraperTask.Name));
+		scraperTask.RaiseDomainEvent(new ScraperTaskDeletedEvent(scraperTask.Id, scraperTask.Name));
 
 		scraperTaskRepository.Delete(scraperTask);
 		await unitOfWork.SaveChangesAsync(cancellationToken);

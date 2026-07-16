@@ -11,11 +11,13 @@ public abstract class BaseScraperService : IRealityScraperService
 {
 	protected readonly ILogger logger;
 	protected readonly IWebDriverFactory webDriverFactory;
+	private readonly IUrlSafetyValidator urlSafetyValidator;
 
-	protected BaseScraperService(ILogger logger, IWebDriverFactory webDriverFactory)
+	protected BaseScraperService(ILogger logger, IWebDriverFactory webDriverFactory, IUrlSafetyValidator urlSafetyValidator)
 	{
 		this.logger = logger;
 		this.webDriverFactory = webDriverFactory;
+		this.urlSafetyValidator = urlSafetyValidator;
 	}
 
 	public abstract string SiteName { get; }
@@ -51,6 +53,16 @@ public abstract class BaseScraperService : IRealityScraperService
 		var url = scraperConfiguration.Url;
 		var success = true;
 		var failedListingsCount = 0;
+
+		// Cílová URL pochází z uživatelského vstupu (cíl scraper úlohy) - před navigací
+		// ověříme, že nemíří do interní sítě (SSRF). Při nepovoleném cíli scrape
+		// ukončíme jako neúspěšný, aby se nespustila detekce vyřazených inzerátů.
+		if (!Uri.TryCreate(url, UriKind.Absolute, out var targetUri)
+			|| !await urlSafetyValidator.IsPublicHttpTargetAsync(targetUri, cancellationToken))
+		{
+			logger.LogError("Cílová URL '{Url}' není platná nebo míří na nepovolený cíl, scrapování se přeskakuje.", url);
+			return new ScraperRunResult(false, listings, failedListingsCount);
+		}
 
 		IWebDriver? driver = null;
 		try

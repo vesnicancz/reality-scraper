@@ -268,6 +268,44 @@ public class RemovedListingsReportJobTests
 	}
 
 	[Fact]
+	public async Task ExecuteAsync_OversizeImage_IsSkippedButSmallerOnesStillAttached()
+	{
+		// arrange
+		var scraperTask = CreateScraperTask();
+		var reportTask = CreateReportTask(scraperTask);
+		var oversize = CreateRemovedListing(Now.AddDays(-1)); // novější -> zpracován první
+		var small = CreateRemovedListing(Now.AddDays(-2));
+
+		listingRepositoryMock
+			.Setup(x => x.GetRemovedInPeriodAsync(It.IsAny<Guid>(), It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+			.ReturnsAsync([oversize, small]);
+
+		// Obrázek nad rozpočtem (>10 MB) sám o sobě nesmí zastavit vkládání dalších.
+		listingImageReaderMock
+			.Setup(x => x.TryReadImageAsync(oversize.Id, It.IsAny<CancellationToken>()))
+			.ReturnsAsync(new byte[(11 * 1024 * 1024)]);
+		listingImageReaderMock
+			.Setup(x => x.TryReadImageAsync(small.Id, It.IsAny<CancellationToken>()))
+			.ReturnsAsync([1, 2, 3]);
+
+		IReadOnlyList<EmailAttachmentData>? sentAttachments = null;
+		mailerServiceMock
+			.Setup(x => x.SendRemovedListingsReportAsync(It.IsAny<RemovedListingsReport>(), It.IsAny<List<string>>(), It.IsAny<IReadOnlyList<EmailAttachmentData>>(), It.IsAny<CancellationToken>()))
+			.Callback<RemovedListingsReport, List<string>, IReadOnlyList<EmailAttachmentData>, CancellationToken>((_, _, a, _) => sentAttachments = a)
+			.ReturnsAsync(true);
+
+		var sut = CreateSut();
+
+		// act
+		await sut.ExecuteAsync(reportTask.Id, CancellationToken.None);
+
+		// assert
+		Assert.NotNull(sentAttachments);
+		var attachment = Assert.Single(sentAttachments);
+		Assert.Equal(small.Id.ToString(), attachment.ContentId);
+	}
+
+	[Fact]
 	public async Task ExecuteAsync_NoRecipients_NoEmailAndAnchorAdvanced()
 	{
 		// arrange

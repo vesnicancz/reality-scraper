@@ -154,7 +154,9 @@ public class RemovedListingsReportJob : IScheduledJob
 
 			if (totalBytes + imageBytes.Length > MaxEmbeddedImagesBytes)
 			{
-				break;
+				// Jeden velký obrázek nezastaví vkládání dalších (menších) v rámci rozpočtu;
+				// tvrdým stropem zůstává jen počet příloh (MaxEmbeddedImages).
+				continue;
 			}
 
 			totalBytes += imageBytes.Length;

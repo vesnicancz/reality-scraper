@@ -31,10 +31,14 @@ public static class Program
 			loggerConfig.WriteTo.Sink(new TaskLogSink(services.GetRequiredService<ITaskLogWriter>()));
 		});
 		builder.Services.AddPresentation();
+		builder.Services.AddForwardedHeadersConfiguration(builder.Configuration);
 		builder.Services.AddOidcAuthentication(builder.Configuration, builder.Environment);
 		builder.Services.AddHealthChecks();
 
 		var app = builder.Build();
+
+		// Fail-closed: v produkci bez zapnuté autentizace a bez vědomého AllowAnonymous nestartujeme.
+		app.EnsureAuthenticationConfigured();
 
 		await app.ApplyMigrationsAsync();
 
@@ -56,7 +60,6 @@ public static class Program
 		}
 
 		// blazor: start
-		//app.UseStatusCodePagesWithReExecute("/not-found", createScopeForErrors: true); //.net 10
 		app.UseStatusCodePagesWithReExecute("/not-found");
 		if (!app.Environment.IsDevelopment())
 		{
@@ -84,7 +87,8 @@ public static class Program
 		}
 		else if (!app.Environment.IsDevelopment())
 		{
-			app.Logger.LogWarning("Autentizace je vypnutá - UI i API běží bez přihlášení. Pro produkční nasazení nastavte Authentication:Enabled=true.");
+			// Sem se v produkci dostaneme jen s vědomě nastaveným Authentication:AllowAnonymous=true.
+			app.Logger.LogWarning("Autentizace je vypnutá (AllowAnonymous) - UI i API běží bez přihlášení. Pro produkční nasazení nastavte Authentication:Enabled=true.");
 		}
 		// blazor: end
 

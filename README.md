@@ -23,7 +23,7 @@ SharedKernel/       – Bázové třídy (Entity, AggregateRoot, Result<T>, IDom
 Domain/             – Doménové entity, enumy, události
 Application/        – CQRS handlery (commands, queries), validace (FluentValidation)
 Infrastructure/     – EF Core repositáře, Selenium services, e-mail, scheduler
-Web.Api/            – ASP.NET Core backend, REST endpointy, Blazor server
+Web.Api/            – ASP.NET Core backend, REST endpointy, host Blazor WASM (interaktivní render)
 Web.Client/         – Blazor WebAssembly klient
 Web.Shared/         – Sdílené DTO a validační modely
 ```
@@ -32,9 +32,12 @@ Web.Shared/         – Sdílené DTO a validační modely
 
 - `Listing` – Realitní nabídka (URL, cena, lokace, metadata)
 - `PriceHistory` – Historie změn cen
-- `ScraperTask` – Konfigurace naplánované úlohy
+- `ScraperTask` – Konfigurace naplánované scrapovací úlohy
 - `ScraperTaskRecipient` – E-mailoví příjemci notifikací
 - `ScraperTaskTarget` – Cílové URL a typ portálu
+- `RemovedListingsReportTask` – Konfigurace úlohy reportu vyřazených inzerátů
+- `ReportTaskRecipient` – Příjemci reportu vyřazených inzerátů
+- `ReportTaskSource` – Zdrojové scraper úlohy zahrnuté do reportu
 
 ## Tech stack
 
@@ -44,7 +47,7 @@ Web.Shared/         – Sdílené DTO a validační modely
 | Frontend | Blazor WebAssembly, Havit Bootstrap komponenty |
 | Databáze | PostgreSQL (Npgsql) |
 | ORM | Entity Framework Core 10 |
-| Scrapování | Selenium WebDriver 4.41 |
+| Scrapování | Selenium WebDriver 4.46 |
 | E-maily | Resend, RazorEngineCore |
 | Plánování | Cronos |
 | Validace | FluentValidation |
@@ -164,10 +167,10 @@ dotnet test
 
 Projekt obsahuje 4 testovací projekty:
 
-- `Application.Tests` – Testy handlerů a features
-- `Domain.Tests` – Testy doménových entit
-- `Infrastructure.Tests` – Testy služeb a repositářů
-- `IntegrationTests` – Integrační testy
+- `Application.Tests` – Testy handlerů, features, scrapingu a validace
+- `Infrastructure.Tests` – Testy služeb a utilit (mailing, plánovač, URL safety)
+- `Domain.Tests` – připravená kostra (zatím bez testů)
+- `IntegrationTests` – připravená kostra pro integrační testy (zatím bez testů)
 
 ## CI/CD
 

@@ -24,6 +24,7 @@ public class SchedulerHostedService : BackgroundService
 	private readonly List<ScheduledTaskInfo> scheduledTasks = new();
 	private readonly TimeSpan maxSleepInterval = TimeSpan.FromHours(1);
 	private readonly TimeSpan terminationTimeout = TimeSpan.FromMinutes(5);
+	private readonly TimeSpan loopErrorBackoff = TimeSpan.FromSeconds(30);
 
 	public SchedulerHostedService(
 		IServiceScopeFactory serviceScopeFactory,
@@ -46,27 +47,60 @@ public class SchedulerHostedService : BackgroundService
 	{
 		logger.LogInformation("Služba scheduleru spuštěna");
 
-		// Initial load from database
-		await RefreshTasksFromDatabaseAsync(stoppingToken);
+		// Počáteční načtení probíhá uvnitř smyčky, aby přechodná chyba databáze
+		// (výpadek, timeout, restart) nevyhodila výjimku z ExecuteAsync a neshodila
+		// celý hostitel (výchozí BackgroundServiceExceptionBehavior je StopHost).
+		var initialized = false;
 
 		while (!stoppingToken.IsCancellationRequested)
 		{
-			var (timeToNextTask, nextTaskDueAt) = CalculateTimeToNextTask();
-
-			logger.LogTrace("Scheduler spí po dobu {SleepTime}, další úloha: {NextDue}", timeToNextTask, nextTaskDueAt);
-
-			// Wait for either: a refresh signal (task changed) or timeout (next task is due)
-			var wasSignaled = await refreshSignal.WaitForRefreshAsync(timeToNextTask, stoppingToken);
-
-			if (wasSignaled)
+			try
 			{
-				logger.LogInformation("Přijat signál o změně úloh, obnovuji seznam z databáze");
-				await RefreshTasksFromDatabaseAsync(stoppingToken);
+				if (!initialized)
+				{
+					await RefreshTasksFromDatabaseAsync(stoppingToken);
+					initialized = true;
+				}
+
+				var (timeToNextTask, nextTaskDueAt) = CalculateTimeToNextTask();
+
+				logger.LogTrace("Scheduler spí po dobu {SleepTime}, další úloha: {NextDue}", timeToNextTask, nextTaskDueAt);
+
+				// Wait for either: a refresh signal (task changed) or timeout (next task is due)
+				var wasSignaled = await refreshSignal.WaitForRefreshAsync(timeToNextTask, stoppingToken);
+
+				if (wasSignaled)
+				{
+					logger.LogInformation("Přijat signál o změně úloh, obnovuji seznam z databáze");
+					await RefreshTasksFromDatabaseAsync(stoppingToken);
+				}
+				else
+				{
+					// Timeout expired — execute due tasks
+					await CheckAndExecuteScheduledTasksAsync(stoppingToken);
+				}
 			}
-			else
+			catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
 			{
-				// Timeout expired — execute due tasks
-				await CheckAndExecuteScheduledTasksAsync(stoppingToken);
+				// Řízené ukončení služby
+				break;
+			}
+			catch (Exception ex)
+			{
+				// Nikdy nenechat neočekávanou chybu probublat ven a shodit hostitel;
+				// po krátké pauze smyčku zopakujeme. Vynutíme kompletní obnovu z DB -
+				// pokud chyba nastala po přijetí (a tedy spotřebování) refresh signálu,
+				// tímto se ztracená změna při dalším průchodu znovu načte.
+				initialized = false;
+				logger.LogError(ex, "Neočekávaná chyba ve smyčce scheduleru, pokračuji po {Backoff}s", loopErrorBackoff.TotalSeconds);
+				try
+				{
+					await Task.Delay(loopErrorBackoff, stoppingToken);
+				}
+				catch (OperationCanceledException)
+				{
+					break;
+				}
 			}
 		}
 

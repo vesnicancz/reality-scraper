@@ -42,7 +42,6 @@ public static class DependencyInjection
 
 		services.AddAuthorization();
 		services.AddCascadingAuthenticationState();
-		//services.AddScoped<IdentityRedirectManager>();
 
 		// HttpClient for SSR (so components can inject HttpClient during server render)
 		services.AddHttpContextAccessor();

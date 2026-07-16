@@ -37,14 +37,12 @@ public static class InfrastructureServiceRegistration
 	private static IServiceCollection AddServices(this IServiceCollection services, IConfiguration configuration)
 	{
 		// configuration
-		services.Configure<SmtpOptions>(configuration.GetSection("SmtpSettings"));
 		services.Configure<ResendOptions>(configuration.GetSection("ResendSettings"));
 		services.Configure<SeleniumOptions>(configuration.GetSection("SeleniumSettings"));
 
 		services.AddHttpClient();
 
 		// mail settings
-		//services.AddTransient<IEmailService, SmtpEmailService>();
 		services.AddHttpClient<ResendClient>();
 		services.Configure<ResendClientOptions>(o =>
 		{
@@ -58,6 +56,7 @@ public static class InfrastructureServiceRegistration
 		services.AddTransient<IEmailGenerator, RazorEmailGenerator>();
 
 		services.AddSingleton<ListingImagePathResolver>();
+		services.AddTransient<IUrlSafetyValidator, UrlSafetyValidator>();
 		services.AddTransient<IImageDownloadService, ImageDownloadService>();
 		services.AddTransient<IListingImageReader, ListingImageReader>();
 		services.AddTransient<IWebDriverFactory, SeleniumChromeDriverFactory>();

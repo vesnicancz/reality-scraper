@@ -38,31 +38,6 @@ internal static class AuthenticationExtensions
 			throw new InvalidOperationException("Authentication:Scopes must contain 'openid' when authentication is enabled.");
 		}
 
-		services.Configure<ForwardedHeadersOptions>(options =>
-		{
-			options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-
-			// Bez známé proxy by middleware důvěřoval X-Forwarded-* od libovolného klienta.
-			// IP reverse proxy lze zadat v ForwardedHeaders:KnownProxies; bez konfigurace
-			// se akceptuje jen jedna úroveň proxy (ForwardLimit).
-			options.ForwardLimit = 1;
-			var knownProxies = configuration.GetSection("ForwardedHeaders:KnownProxies").Get<string[]>();
-			if (knownProxies is { Length: > 0 })
-			{
-				options.KnownIPNetworks.Clear();
-				options.KnownProxies.Clear();
-				foreach (var proxy in knownProxies)
-				{
-					options.KnownProxies.Add(System.Net.IPAddress.Parse(proxy));
-				}
-			}
-			else
-			{
-				options.KnownIPNetworks.Clear();
-				options.KnownProxies.Clear();
-			}
-		});
-
 		services
 			.AddAuthentication(options =>
 			{
@@ -104,9 +79,62 @@ internal static class AuthenticationExtensions
 		return services;
 	}
 
+	/// <summary>
+	/// Konfiguruje důvěru k X-Forwarded-* hlavičkám. Aplikuje se nezávisle na tom, zda je
+	/// zapnutá autentizace - rate limiter i HTTPS redirect potřebují správnou klientskou IP
+	/// a schéma i v anonymním režimu za reverzní proxy.
+	/// </summary>
+	public static IServiceCollection AddForwardedHeadersConfiguration(
+		this IServiceCollection services,
+		IConfiguration configuration)
+	{
+		services.Configure<ForwardedHeadersOptions>(options =>
+		{
+			options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+
+			// Bez známé proxy by middleware důvěřoval X-Forwarded-* od libovolného klienta.
+			// IP reverse proxy lze zadat v ForwardedHeaders:KnownProxies; bez konfigurace
+			// se akceptuje jen jedna úroveň proxy (ForwardLimit).
+			options.ForwardLimit = 1;
+			options.KnownIPNetworks.Clear();
+			options.KnownProxies.Clear();
+			var knownProxies = configuration.GetSection("ForwardedHeaders:KnownProxies").Get<string[]>();
+			if (knownProxies is { Length: > 0 })
+			{
+				foreach (var proxy in knownProxies)
+				{
+					options.KnownProxies.Add(System.Net.IPAddress.Parse(proxy));
+				}
+			}
+		});
+
+		return services;
+	}
+
 	public static bool IsAuthenticationEnabled(this IConfiguration configuration)
 	{
 		return configuration.GetValue<bool>($"{OidcAuthenticationOptions.SectionName}:Enabled");
+	}
+
+	/// <summary>
+	/// V produkčním prostředí odmítne start, pokud je autentizace vypnutá a není vědomě
+	/// povolen anonymní přístup (Authentication:AllowAnonymous=true). Brání nechtěnému
+	/// nasazení kompletně nechráněného API a UI (fail-closed).
+	/// </summary>
+	public static void EnsureAuthenticationConfigured(this WebApplication app)
+	{
+		if (app.Configuration.IsAuthenticationEnabled() || app.Environment.IsDevelopment())
+		{
+			return;
+		}
+
+		var allowAnonymous = app.Configuration.GetValue<bool>($"{OidcAuthenticationOptions.SectionName}:AllowAnonymous");
+		if (!allowAnonymous)
+		{
+			throw new InvalidOperationException(
+				"Autentizace je v produkčním prostředí vypnutá (Authentication:Enabled=false), takže API i UI by běžely bez přihlášení. " +
+				"Zapněte autentizaci nastavením Authentication:Enabled=true, nebo vědomě povolte anonymní přístup nastavením Authentication:AllowAnonymous=true.");
+		}
 	}
 
 	public static WebApplication UseOidcAuthentication(this WebApplication app)

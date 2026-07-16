@@ -11,10 +11,10 @@ internal sealed class RunReportTaskNowEndpoint : IEndpoint
 		// Run-now command pracuje nad TaskBase, funguje tedy pro všechny typy tasků
 		app.MapPost("/api/report-tasks/{id:guid}/run-now", async (
 			Guid id,
-			ICommandHandler<RunScraperTaskNowCommand> commandHandler,
+			ICommandHandler<RunTaskNowCommand> commandHandler,
 			CancellationToken cancellationToken) =>
 		{
-			var command = new RunScraperTaskNowCommand(id);
+			var command = new RunTaskNowCommand(id);
 
 			var result = await commandHandler.Handle(command, cancellationToken);
 

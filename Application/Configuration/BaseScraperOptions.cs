@@ -15,4 +15,19 @@ public class BaseScraperOptions
 	public required string ImageSelector { get; set; }
 
 	public required string NextPageSelector { get; set; }
+
+	/// <summary>
+	/// Ověří, že jsou vyplněné všechny povinné CSS selektory. Volá se při startu
+	/// (ValidateOnStart), aby chybná konfigurace selhala hned, ne až ve scrape smyčce.
+	/// </summary>
+	public virtual bool HasRequiredSelectors()
+	{
+		return !string.IsNullOrWhiteSpace(ListingSelector)
+			&& !string.IsNullOrWhiteSpace(DetailLinkSelector)
+			&& !string.IsNullOrWhiteSpace(TitleSelector)
+			&& !string.IsNullOrWhiteSpace(PriceSelector)
+			&& !string.IsNullOrWhiteSpace(LocationSelector)
+			&& !string.IsNullOrWhiteSpace(ImageSelector)
+			&& !string.IsNullOrWhiteSpace(NextPageSelector);
+	}
 }

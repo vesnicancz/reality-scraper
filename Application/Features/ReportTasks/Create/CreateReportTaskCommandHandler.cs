@@ -54,7 +54,7 @@ internal sealed class CreateReportTaskCommandHandler : ICommandHandler<CreateRep
 			reportTask.AddSource(new ReportTaskSource(scraperTaskId));
 		}
 
-		reportTask.RaiseDomainEvents(new ReportTaskCreatedEvent(reportTask.Id));
+		reportTask.RaiseDomainEvent(new ReportTaskCreatedEvent(reportTask.Id));
 
 		reportTaskRepository.Add(reportTask);
 
