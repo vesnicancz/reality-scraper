@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using System.Threading.RateLimiting;
 using Havit.Blazor.Components.Web;
+using Havit.Blazor.Components.Web.Bootstrap;
 using Microsoft.AspNetCore.RateLimiting;
 using RealityScraper.Web.Api.Extensions;
 using RealityScraper.Web.Api.Infrastructure;
@@ -65,6 +66,7 @@ public static class DependencyInjection
 
 		services.AddHxServices();
 		services.AddHxMessenger();
+		services.AddHxMessageBoxHost();
 
 		return services;
 	}
