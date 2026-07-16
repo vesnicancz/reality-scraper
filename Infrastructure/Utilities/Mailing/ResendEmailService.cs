@@ -23,7 +23,7 @@ public class ResendEmailService : IEmailService
 		this.logger = logger;
 	}
 
-	public Task SendEmailNotificationAsync(string subject, string mailBody, List<string> recipients, CancellationToken cancellationToken)
+	public Task<bool> SendEmailNotificationAsync(string subject, string mailBody, List<string> recipients, CancellationToken cancellationToken)
 	{
 		return SendEmailNotificationAsync(subject, mailBody, recipients, Array.Empty<EmailAttachmentData>(), cancellationToken);
 	}

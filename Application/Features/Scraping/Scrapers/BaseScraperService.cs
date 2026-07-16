@@ -40,11 +40,17 @@ public abstract class BaseScraperService : IRealityScraperService
 		IWebDriver driver, string baseUrl, int currentPage,
 		IReadOnlyList<IWebDriverElement> nextButtons, CancellationToken cancellationToken);
 
+	/// <summary>
+	/// Pojistka proti nekonečné stránkovací smyčce (např. trvale přítomné tlačítko "další").
+	/// </summary>
+	protected const int MaxPages = 100;
+
 	public async Task<ScraperRunResult> ScrapeListingsAsync(ScraperConfiguration scraperConfiguration, CancellationToken cancellationToken)
 	{
 		var listings = new List<ScraperListingItem>();
 		var url = scraperConfiguration.Url;
 		var success = true;
+		var failedListingsCount = 0;
 
 		IWebDriver? driver = null;
 		try
@@ -93,7 +99,7 @@ public abstract class BaseScraperService : IRealityScraperService
 						var locationElement = await element.FindElementAsync(Options.LocationSelector, cancellationToken);
 						var location = await locationElement.GetTextAsync(cancellationToken);
 
-						var price = ParseNullableDecimal(priceVal.Replace("Kč", "").Replace(" ", ""));
+						var price = PriceParser.ParseNullablePrice(priceVal);
 
 						var imageUrl = string.Empty;
 						try
@@ -118,13 +124,25 @@ public abstract class BaseScraperService : IRealityScraperService
 
 						listings.Add(listing);
 					}
+					catch (OperationCanceledException)
+					{
+						throw;
+					}
 					catch (Exception ex)
 					{
+						failedListingsCount++;
 						logger.LogWarning(ex, "Chyba při zpracování inzerátu");
 					}
 				}
 
 				page++;
+
+				if (page > MaxPages)
+				{
+					logger.LogWarning("Dosažen limit {MaxPages} stránek, stránkování se ukončuje.", MaxPages);
+					load = false;
+					continue;
+				}
 
 				var nextButtons = await driver.FindElementsAsync(Options.NextPageSelector, cancellationToken);
 				if (nextButtons.Count > 0)
@@ -151,15 +169,6 @@ public abstract class BaseScraperService : IRealityScraperService
 			driver?.Dispose();
 		}
 
-		return new ScraperRunResult(success, listings);
-	}
-
-	protected static decimal? ParseNullableDecimal(string value)
-	{
-		if (decimal.TryParse(value, out decimal result))
-		{
-			return result;
-		}
-		return null;
+		return new ScraperRunResult(success, listings, failedListingsCount);
 	}
 }

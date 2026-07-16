@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Text.Json;
 using Havit.Blazor.Components.Web;
 using Havit.Blazor.Components.Web.Bootstrap;
 using Microsoft.AspNetCore.Components;
@@ -9,6 +10,7 @@ namespace RealityScraper.Web.Client.Pages.ReportTasks;
 public partial class ReportTaskListPage(
 	HttpClient http,
 	IHxMessengerService messenger,
+	IHxMessageBoxService messageBox,
 	NavigationManager nav)
 {
 	private HxGrid<ReportTaskResult> grid = null!;
@@ -29,7 +31,7 @@ public partial class ReportTaskListPage(
 				TotalCount = tasks.Count
 			};
 		}
-		catch (HttpRequestException)
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or TaskCanceledException)
 		{
 			messenger.AddError("Nepodařilo se načíst seznam reportů.");
 			return new GridDataProviderResult<ReportTaskResult>
@@ -54,7 +56,7 @@ public partial class ReportTaskListPage(
 			logOffcanvasTitle = $"Logy – {task.Name}";
 			await logOffcanvas.ShowAsync();
 		}
-		catch (HttpRequestException)
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or TaskCanceledException)
 		{
 			messenger.AddError("Nepodařilo se načíst logy.");
 		}
@@ -81,7 +83,7 @@ public partial class ReportTaskListPage(
 
 			await grid.RefreshDataAsync();
 		}
-		catch (HttpRequestException)
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or TaskCanceledException)
 		{
 			messenger.AddError($"Nepodařilo se spustit report '{task.Name}'.");
 		}
@@ -89,6 +91,12 @@ public partial class ReportTaskListPage(
 
 	private async Task HandleDeleteClick(ReportTaskResult task)
 	{
+		var confirmed = await messageBox.ConfirmAsync("Smazat report", $"Opravdu chcete smazat report '{task.Name}'?");
+		if (!confirmed)
+		{
+			return;
+		}
+
 		try
 		{
 			using var response = await http.DeleteAsync($"/api/report-tasks/{task.Id}");
@@ -102,7 +110,7 @@ public partial class ReportTaskListPage(
 				messenger.AddError("Nepodařilo se smazat report.");
 			}
 		}
-		catch (HttpRequestException)
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or TaskCanceledException)
 		{
 			messenger.AddError("Nepodařilo se smazat report.");
 		}

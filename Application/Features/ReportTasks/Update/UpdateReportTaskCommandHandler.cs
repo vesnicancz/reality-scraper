@@ -85,7 +85,8 @@ internal sealed class UpdateReportTaskCommandHandler : ICommandHandler<UpdateRep
 
 		reportTask.RaiseDomainEvents(new ReportTaskUpdatedEvent(reportTask.Id));
 
-		reportTaskRepository.Update(reportTask);
+		// Entita je trackovaná (načtená z DB) - EF změny detekuje sám,
+		// Update by vynutil UPDATE všech sloupců.
 		await unitOfWork.SaveChangesAsync(cancellationToken);
 
 		return Result.Success(ReportTaskMapper.MapToDetailDto(reportTask));

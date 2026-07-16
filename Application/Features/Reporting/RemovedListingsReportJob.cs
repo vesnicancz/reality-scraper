@@ -78,8 +78,8 @@ public class RemovedListingsReportJob : IScheduledJob
 					Location = l.Location,
 					Price = l.Price,
 					Url = l.Url,
-					CreatedAt = l.CreatedAt,
-					RemovedAt = l.RemovedAt
+					CreatedAt = dateTimeProvider.ToApplicationTime(l.CreatedAt),
+					RemovedAt = l.RemovedAt.HasValue ? dateTimeProvider.ToApplicationTime(l.RemovedAt.Value) : null
 				}).ToList()
 			});
 		}
@@ -106,8 +106,8 @@ public class RemovedListingsReportJob : IScheduledJob
 		{
 			ReportName = reportTask.Name,
 			ReportDate = dateTimeProvider.ToApplicationTime(now),
-			PeriodFrom = from,
-			PeriodTo = to,
+			PeriodFrom = dateTimeProvider.ToApplicationTime(from),
+			PeriodTo = dateTimeProvider.ToApplicationTime(to),
 			Sections = sections
 		};
 

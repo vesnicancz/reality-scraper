@@ -31,7 +31,7 @@ public static class Program
 			loggerConfig.WriteTo.Sink(new TaskLogSink(services.GetRequiredService<ITaskLogWriter>()));
 		});
 		builder.Services.AddPresentation();
-		builder.Services.AddOidcAuthentication(builder.Configuration);
+		builder.Services.AddOidcAuthentication(builder.Configuration, builder.Environment);
 		builder.Services.AddHealthChecks();
 
 		var app = builder.Build();
@@ -69,12 +69,23 @@ public static class Program
 
 		app.UseOidcAuthentication();
 
+		app.UseRateLimiter();
+
 		app.UseAntiforgery();
 		app.MapStaticAssets();
-		app.MapRazorComponents<App>()
+		var razorComponents = app.MapRazorComponents<App>()
 			.AddInteractiveWebAssemblyRenderMode()
-			.AddAdditionalAssemblies(typeof(Client._Imports).Assembly)
-			.RequireAuthorization();
+			.AddAdditionalAssemblies(typeof(Client._Imports).Assembly);
+		if (app.Configuration.IsAuthenticationEnabled())
+		{
+			// Bez zapnuté autentizace neběží autorizační middleware a metadata
+			// RequireAuthorization by shodila každý request na Blazor stránky.
+			razorComponents.RequireAuthorization();
+		}
+		else if (!app.Environment.IsDevelopment())
+		{
+			app.Logger.LogWarning("Autentizace je vypnutá - UI i API běží bez přihlášení. Pro produkční nasazení nastavte Authentication:Enabled=true.");
+		}
 		// blazor: end
 
 		app.MapHealthChecks("/health");

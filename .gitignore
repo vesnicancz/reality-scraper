@@ -419,8 +419,13 @@ FodyWeavers.xsd
 .fleet/
 
 # Custom ignores
+# Obě varianty velikosti písmen - na case-sensitive FS (Linux/CI) by pravidlo
+# psané malými písmeny soubor se secrety nezachytilo.
 /**/appsettings.development.json
+/**/appsettings.Development.json
 /**/appsettings.production.json
+/**/appsettings.Production.json
+/**/appsettings.*.local.json
 /**/App_Data
 /**/Properties/launchSettings.json
 

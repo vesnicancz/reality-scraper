@@ -75,7 +75,8 @@ internal sealed class UpdateScraperTaskCommandHandler : ICommandHandler<UpdateSc
 
 		scraperTask.RaiseDomainEvents(new ScraperTaskUpdatedEvent(scraperTask.Id));
 
-		scraperTaskRepository.Update(scraperTask);
+		// Entita je trackovaná (načtená z DB) - EF změny detekuje sám,
+		// Update by vynutil UPDATE všech sloupců.
 		await unitOfWork.SaveChangesAsync(cancellationToken);
 
 		return Result.Success(ScraperTaskMapper.MapToDetailDto(scraperTask));

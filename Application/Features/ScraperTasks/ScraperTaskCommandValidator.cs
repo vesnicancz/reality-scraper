@@ -24,6 +24,10 @@ internal sealed class ScraperTaskCommandValidator : AbstractValidator<IScraperTa
 		RuleForEach(x => x.Recipients)
 			.SetValidator(new ScraperTaskRecipientInputValidator());
 
+		RuleFor(x => x.Targets)
+			.NotEmpty()
+			.WithMessage("At least one target is required.");
+
 		RuleForEach(x => x.Targets)
 			.SetValidator(new ScraperTaskTargetInputValidator());
 	}

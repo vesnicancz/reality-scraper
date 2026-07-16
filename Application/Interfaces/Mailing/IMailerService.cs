@@ -5,7 +5,10 @@ namespace RealityScraper.Application.Interfaces.Mailing;
 
 public interface IMailerService
 {
-	Task SendListingReportAsync(ScrapingReport scrapingReport, List<string> recipients, CancellationToken cancellationToken);
+	/// <summary>
+	/// Odešle report nových a cenově změněných inzerátů. Vrací true, pokud se odeslání podařilo.
+	/// </summary>
+	Task<bool> SendListingReportAsync(ScrapingReport scrapingReport, List<string> recipients, CancellationToken cancellationToken);
 
 	/// <summary>
 	/// Odešle report vyřazených inzerátů. Vrací true, pokud se odeslání podařilo.

@@ -19,7 +19,7 @@ internal sealed class RunReportTaskNowEndpoint : IEndpoint
 			var result = await commandHandler.Handle(command, cancellationToken);
 
 			return result.IsSuccess
-				? Results.Ok()
+				? Results.Accepted()
 				: CustomResults.Problem(result);
 		});
 	}

@@ -1,5 +1,7 @@
 ﻿using System.Reflection;
+using System.Threading.RateLimiting;
 using Havit.Blazor.Components.Web;
+using Microsoft.AspNetCore.RateLimiting;
 using RealityScraper.Web.Api.Extensions;
 using RealityScraper.Web.Api.Infrastructure;
 
@@ -12,6 +14,19 @@ public static class DependencyInjection
 		services.AddEndpointsApiExplorer();
 
 		services.AddAntiforgery();
+
+		services.AddRateLimiter(options =>
+		{
+			options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+			options.AddPolicy(RateLimitPolicies.Api, httpContext => RateLimitPartition.GetFixedWindowLimiter(
+				httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+				_ => new FixedWindowRateLimiterOptions
+				{
+					PermitLimit = 100,
+					Window = TimeSpan.FromMinutes(1),
+					QueueLimit = 0
+				}));
+		});
 
 		services.AddExceptionHandler<GlobalExceptionHandler>();
 		services.AddProblemDetails();

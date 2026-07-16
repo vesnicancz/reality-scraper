@@ -21,7 +21,13 @@ public class ListingNotificationService : IListingNotificationService
 	{
 		if (report.NewListingsCount > 0 || report.PriceChangedListingsCount > 0)
 		{
-			await mailerService.SendListingReportAsync(report, recipients, cancellationToken);
+			var sent = await mailerService.SendListingReportAsync(report, recipients, cancellationToken);
+			if (!sent)
+			{
+				// Výjimka zabrání uložení inzerátů jako viděných - další běh notifikaci zopakuje
+				throw new InvalidOperationException($"Odeslání notifikace úlohy '{report.TaskName}' se nezdařilo.");
+			}
+
 			logger.LogInformation("Notifikace odeslána.");
 		}
 		else
