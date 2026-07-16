@@ -7,20 +7,20 @@ using RealityScraper.SharedKernel;
 
 namespace RealityScraper.Application.Features.ScraperTasks.RunNow;
 
-internal sealed class RunScraperTaskNowCommandHandler : ICommandHandler<RunScraperTaskNowCommand>
+internal sealed class RunTaskNowCommandHandler : ICommandHandler<RunTaskNowCommand>
 {
 	private readonly ITaskRepository taskRepository;
 	private readonly IUnitOfWork unitOfWork;
 	private readonly IDateTimeProvider dateTimeProvider;
 	private readonly ISchedulerRefreshSignal schedulerRefreshSignal;
-	private readonly ILogger<RunScraperTaskNowCommandHandler> logger;
+	private readonly ILogger<RunTaskNowCommandHandler> logger;
 
-	public RunScraperTaskNowCommandHandler(
+	public RunTaskNowCommandHandler(
 		ITaskRepository taskRepository,
 		IUnitOfWork unitOfWork,
 		IDateTimeProvider dateTimeProvider,
 		ISchedulerRefreshSignal schedulerRefreshSignal,
-		ILogger<RunScraperTaskNowCommandHandler> logger)
+		ILogger<RunTaskNowCommandHandler> logger)
 	{
 		this.taskRepository = taskRepository;
 		this.unitOfWork = unitOfWork;
@@ -29,7 +29,7 @@ internal sealed class RunScraperTaskNowCommandHandler : ICommandHandler<RunScrap
 		this.logger = logger;
 	}
 
-	public async Task<Result> Handle(RunScraperTaskNowCommand command, CancellationToken cancellationToken)
+	public async Task<Result> Handle(RunTaskNowCommand command, CancellationToken cancellationToken)
 	{
 		var task = await taskRepository.GetByIdAsync(command.Id, cancellationToken);
 		if (task == null)

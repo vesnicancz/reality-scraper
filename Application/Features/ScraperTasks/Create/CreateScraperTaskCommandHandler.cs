@@ -46,7 +46,7 @@ internal sealed class CreateScraperTaskCommandHandler : ICommandHandler<CreateSc
 			scraperTask.AddTarget(new ScraperTaskTarget((ScrapersEnum)target.ScraperType, target.Url));
 		}
 
-		scraperTask.RaiseDomainEvents(new ScraperTaskCreatedEvent(scraperTask.Id));
+		scraperTask.RaiseDomainEvent(new ScraperTaskCreatedEvent(scraperTask.Id));
 
 		scraperTaskRepository.Add(scraperTask);
 

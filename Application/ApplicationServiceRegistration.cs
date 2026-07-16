@@ -24,12 +24,16 @@ public static class DependencyInjection
 	{
 		RegisterMessaging(services);
 
-		//// Registrace validátorů
-		//services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
-
-		// konfigurace
-		services.Configure<RealityIdnesScraperOptions>(configuration.GetSection("RealityIdnesScraper"));
-		services.Configure<SRealityScraperOptions>(configuration.GetSection("SRealityScraper"));
+		// konfigurace - validace při startu, aby chybějící CSS selektor selhal hned,
+		// ne až hluboko ve scrape smyčce
+		services.AddOptions<RealityIdnesScraperOptions>()
+			.Bind(configuration.GetSection("RealityIdnesScraper"))
+			.Validate(o => o.HasRequiredSelectors(), "RealityIdnesScraper: chybí povinné CSS selektory.")
+			.ValidateOnStart();
+		services.AddOptions<SRealityScraperOptions>()
+			.Bind(configuration.GetSection("SRealityScraper"))
+			.Validate(o => o.HasRequiredSelectors(), "SRealityScraper: chybí povinné CSS selektory.")
+			.ValidateOnStart();
 
 		services.AddTransient<ScrapingReportBuilder>();
 

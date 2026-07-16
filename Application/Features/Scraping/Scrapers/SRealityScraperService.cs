@@ -21,8 +21,9 @@ public class SRealityScraperService : BaseScraperService
 	public SRealityScraperService(
 		ILogger<SRealityScraperService> logger,
 		IOptions<SRealityScraperOptions> options,
-		IWebDriverFactory webDriverFactory)
-		: base(logger, webDriverFactory)
+		IWebDriverFactory webDriverFactory,
+		IUrlSafetyValidator urlSafetyValidator)
+		: base(logger, webDriverFactory, urlSafetyValidator)
 	{
 		this.options = options.Value;
 	}

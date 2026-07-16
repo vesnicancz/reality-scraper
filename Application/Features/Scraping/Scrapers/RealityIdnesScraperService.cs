@@ -21,8 +21,9 @@ public class RealityIdnesScraperService : BaseScraperService
 	public RealityIdnesScraperService(
 		ILogger<RealityIdnesScraperService> logger,
 		IOptions<RealityIdnesScraperOptions> options,
-		IWebDriverFactory webDriverFactory)
-		: base(logger, webDriverFactory)
+		IWebDriverFactory webDriverFactory,
+		IUrlSafetyValidator urlSafetyValidator)
+		: base(logger, webDriverFactory, urlSafetyValidator)
 	{
 		this.options = options.Value;
 	}

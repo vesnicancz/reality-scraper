@@ -27,7 +27,7 @@ internal sealed class DeleteReportTaskCommandHandler : ICommandHandler<DeleteRep
 			return Result.Failure(Error.NotFound("ReportTask.NotFound", $"ReportTask with ID {command.Id} was not found."));
 		}
 
-		reportTask.RaiseDomainEvents(new ReportTaskDeletedEvent(reportTask.Id, reportTask.Name));
+		reportTask.RaiseDomainEvent(new ReportTaskDeletedEvent(reportTask.Id, reportTask.Name));
 
 		reportTaskRepository.Delete(reportTask);
 		await unitOfWork.SaveChangesAsync(cancellationToken);
