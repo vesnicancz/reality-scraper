@@ -1,0 +1,116 @@
+@page "/listings"
+<PageTitle>Reality</PageTitle>
+
+<h3>Reality</h3>
+
+<div class="row g-2 mb-3">
+    <div class="col-12 col-md-3">
+        <HxSelect TItem="StateFilterOption" TValue="bool?"
+                  @bind-Value="activeFilter"
+                  @bind-Value:after="RefreshGridAsync"
+                  Label="Stav"
+                  Data="stateFilterOptions"
+                  TextSelector="o => o.Name"
+                  ValueSelector="o => (bool?)o.Value"
+                  NullText="Vše"
+                  Nullable="true" />
+    </div>
+    <div class="col-12 col-md-4">
+        <HxSelect TItem="ScraperTaskResult" TValue="Guid?"
+                  @bind-Value="scraperTaskFilter"
+                  @bind-Value:after="RefreshGridAsync"
+                  Label="Scraper task"
+                  Data="scraperTasks"
+                  TextSelector="t => t.Name"
+                  ValueSelector="t => (Guid?)t.Id"
+                  NullText="Všechny tasky"
+                  Nullable="true" />
+    </div>
+    <div class="col-12 col-md-5">
+        <HxInputText @bind-Value="searchTerm"
+                     @bind-Value:after="RefreshGridAsync"
+                     Label="Hledat"
+                     Placeholder="Název nebo lokalita..." />
+    </div>
+</div>
+
+<HxGrid @ref="grid" TItem="ListingResult" DataProvider="LoadData" Responsive="true">
+    <Columns>
+        <HxGridColumn HeaderText="Náhled">
+            <ItemTemplate Context="listing">
+                @if (!string.IsNullOrEmpty(listing.ImageUrl))
+                {
+                    <img src="@listing.ImageUrl" alt="@listing.Title" width="80" height="60" loading="lazy" style="object-fit: cover; border-radius: 4px;" />
+                }
+            </ItemTemplate>
+        </HxGridColumn>
+        <HxGridColumn HeaderText="Název">
+            <ItemTemplate Context="listing">
+                <a href="@listing.Url" target="_blank" rel="noopener">@listing.Title</a>
+            </ItemTemplate>
+        </HxGridColumn>
+        <HxGridColumn HeaderText="Lokalita" ItemTextSelector="l => l.Location" />
+        <HxGridColumn HeaderText="Cena">
+            <ItemTemplate Context="listing">
+                @FormatPrice(listing.Price)
+            </ItemTemplate>
+        </HxGridColumn>
+        <HxGridColumn HeaderText="Task" ItemTextSelector="l => l.ScraperTaskName" />
+        <HxGridColumn HeaderText="Nalezeno">
+            <ItemTemplate Context="listing">
+                @TimeZoneHelper.FormatLocal(listing.CreatedAt)
+            </ItemTemplate>
+        </HxGridColumn>
+        <HxGridColumn HeaderText="Naposledy viděno">
+            <ItemTemplate Context="listing">
+                @TimeZoneHelper.FormatLocal(listing.LastSeenAt)
+            </ItemTemplate>
+        </HxGridColumn>
+        <HxGridColumn HeaderText="Stav">
+            <ItemTemplate Context="listing">
+                @if (listing.RemovedAt == null)
+                {
+                    <HxBadge Color="ThemeColor.Success">Aktivní</HxBadge>
+                }
+                else
+                {
+                    <HxBadge Color="ThemeColor.Secondary" Tooltip="@($"Odstraněno {TimeZoneHelper.FormatLocal(listing.RemovedAt)}")">Odstraněno</HxBadge>
+                }
+            </ItemTemplate>
+        </HxGridColumn>
+        <HxGridColumn HeaderText="Akce">
+            <ItemTemplate Context="listing">
+                <HxButton Icon="BootstrapIcon.GraphUp" Color="ThemeColor.Info" Size="ButtonSize.Small" Outline="true" Tooltip="Historie cen" OnClick="() => HandleShowPriceHistoryClick(listing)" />
+            </ItemTemplate>
+        </HxGridColumn>
+    </Columns>
+</HxGrid>
+
+<HxOffcanvas @ref="priceHistoryOffcanvas" Title="@priceHistoryOffcanvasTitle">
+    <BodyTemplate>
+        @if (selectedPriceHistory == null || selectedPriceHistory.Count == 0)
+        {
+            <p class="text-muted">Žádná historie cen není k dispozici.</p>
+        }
+        else
+        {
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Datum</th>
+                        <th class="text-end">Cena</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var record in selectedPriceHistory)
+                    {
+                        <tr>
+                            <td>@TimeZoneHelper.FormatLocal(record.RecordedAt)</td>
+                            <td class="text-end">@FormatPrice(record.Price)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </BodyTemplate>
+</HxOffcanvas>

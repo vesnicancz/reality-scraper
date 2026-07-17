@@ -11,4 +11,8 @@ public interface IListingRepository
 	Task<List<Listing>> GetByScraperTaskIdAsync(Guid scraperTaskId, CancellationToken cancellationToken);
 
 	Task<List<Listing>> GetRemovedInPeriodAsync(Guid scraperTaskId, DateTimeOffset fromExclusive, DateTimeOffset toInclusive, CancellationToken cancellationToken);
+
+	Task<(List<Listing> Items, int TotalCount)> GetPagedAsync(bool? isActive, Guid? scraperTaskId, string? searchTerm, int skip, int take, CancellationToken cancellationToken);
+
+	Task<Listing?> GetWithPriceHistoryAsync(Guid id, CancellationToken cancellationToken);
 }
