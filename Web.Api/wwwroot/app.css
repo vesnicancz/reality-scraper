@@ -4,10 +4,10 @@
 	--font-primary: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
 	--font-mono: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
 	/* Barevná paleta */
-	--color-primary: #6366f1;
-	--color-primary-hover: #5558e3;
-	--color-primary-light: #eef2ff;
-	--color-secondary: #8b5cf6;
+	--color-primary: #0f766e;
+	--color-primary-hover: #0c5d56;
+	--color-primary-light: #f0fdfa;
+	--color-secondary: #0d9488;
 	--color-accent: #06b6d4;
 	--color-success: #10b981;
 	--color-warning: #f59e0b;
@@ -21,8 +21,6 @@
 	--color-text-light: #94a3b8;
 	--color-border: #e2e8f0;
 	--color-border-light: #f1f5f9;
-	/* Layout */
-	--sidebar-width: 280px;
 	/* Spacing */
 	--spacing-xs: 0.5rem;
 	--spacing-sm: 0.75rem;
@@ -123,7 +121,7 @@ a, .btn-link {
 }
 
 	.btn-primary:hover {
-		background: linear-gradient(135deg, var(--color-primary-hover) 0%, #7c3aed 100%);
+		background: linear-gradient(135deg, var(--color-primary-hover) 0%, var(--color-primary) 100%);
 		box-shadow: var(--shadow-md);
 		transform: translateY(-1px);
 	}
@@ -161,7 +159,7 @@ a, .btn-link {
 .btn-link.nav-link:focus,
 .form-control:focus,
 .form-check-input:focus {
-	box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+	box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15);
 	outline: none;
 }
 
@@ -177,7 +175,7 @@ a, .btn-link {
 
 	.form-control:focus, .form-select:focus {
 		border-color: var(--color-primary);
-		box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+		box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.1);
 		outline: none;
 	}
 
@@ -196,7 +194,7 @@ a, .btn-link {
 	}
 
 .card-header {
-	background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+	background: linear-gradient(135deg, rgba(15, 118, 110, 0.05) 0%, rgba(13, 148, 136, 0.05) 100%);
 	border-bottom: 1px solid var(--color-border-light);
 	padding: var(--spacing-lg);
 	font-weight: 600;
