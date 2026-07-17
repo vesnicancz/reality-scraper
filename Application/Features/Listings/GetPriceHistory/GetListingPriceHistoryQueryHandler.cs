@@ -26,6 +26,14 @@ internal sealed class GetListingPriceHistoryQueryHandler : IQueryHandler<GetList
 			.Select(ListingMapper.MapToPriceHistoryDto)
 			.ToList();
 
+		// PriceHistories obsahují jen uzavřené cenové úseky — aktuální cena je na listingu
+		result.Add(new PriceHistoryDto
+		{
+			Price = listing.Price,
+			RecordedAt = listing.PriceFrom,
+			IsCurrent = true
+		});
+
 		return Result.Success(result);
 	}
 }

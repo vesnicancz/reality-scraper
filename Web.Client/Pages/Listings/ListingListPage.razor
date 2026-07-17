@@ -86,31 +86,61 @@
     </Columns>
 </HxGrid>
 
-<HxOffcanvas @ref="priceHistoryOffcanvas" Title="@priceHistoryOffcanvasTitle">
+<HxOffcanvas @ref="priceHistoryOffcanvas" Title="@priceHistoryOffcanvasTitle" Size="OffcanvasSize.Large">
     <BodyTemplate>
-        @if (selectedPriceHistory == null || selectedPriceHistory.Count == 0)
+        @if (priceHistoryRows == null || priceHistoryRows.Count == 0)
         {
             <p class="text-muted">Žádná historie cen není k dispozici.</p>
         }
         else
         {
-            <table class="table table-sm">
+            <div class="table-responsive">
+            <table class="table table-sm align-middle">
                 <thead>
                     <tr>
-                        <th>Datum</th>
+                        <th>Od</th>
                         <th class="text-end">Cena</th>
+                        <th class="text-end">Změna</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var record in selectedPriceHistory)
+                    @foreach (var row in priceHistoryRows)
                     {
                         <tr>
-                            <td>@TimeZoneHelper.FormatLocal(record.RecordedAt)</td>
-                            <td class="text-end">@FormatPrice(record.Price)</td>
+                            <td class="text-nowrap">
+                                @TimeZoneHelper.FormatLocal(row.From)
+                                @if (row.IsCurrent)
+                                {
+                                    <HxBadge Color="ThemeColor.Success" CssClass="ms-2">Aktuální</HxBadge>
+                                }
+                            </td>
+                            <td class="text-end text-nowrap @(row.IsCurrent ? "fw-semibold" : null)">@FormatPrice(row.Price)</td>
+                            <td class="text-end">
+                                @if (row.Difference is { } difference && difference != 0)
+                                {
+                                    <span class="text-nowrap @(difference > 0 ? "text-danger" : "text-success")">
+                                        <HxIcon Icon="@(difference > 0 ? BootstrapIcon.CaretUpFill : BootstrapIcon.CaretDownFill)" />
+                                        @FormatSignedPrice(difference)
+                                        @if (row.DifferencePercent is { } percent)
+                                        {
+                                            <span> (@FormatSignedPercent(percent))</span>
+                                        }
+                                    </span>
+                                }
+                                else if (row.Difference == 0)
+                                {
+                                    <span class="text-muted">beze změny</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+                            </td>
                         </tr>
                     }
                 </tbody>
             </table>
+            </div>
         }
     </BodyTemplate>
 </HxOffcanvas>

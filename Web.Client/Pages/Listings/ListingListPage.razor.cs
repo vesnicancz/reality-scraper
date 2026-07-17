@@ -28,7 +28,7 @@ public partial class ListingListPage(
 	private bool? activeFilter = true;
 	private Guid? scraperTaskFilter;
 	private string? searchTerm;
-	private List<PriceHistoryResult>? selectedPriceHistory;
+	private List<PriceHistoryRow>? priceHistoryRows;
 	private string priceHistoryOffcanvasTitle = "Historie cen";
 
 	protected override async Task OnInitializedAsync()
@@ -95,7 +95,8 @@ public partial class ListingListPage(
 	{
 		try
 		{
-			selectedPriceHistory = await http.GetFromJsonAsync<List<PriceHistoryResult>>($"/api/listings/{listing.Id}/price-history");
+			var history = await http.GetFromJsonAsync<List<PriceHistoryResult>>($"/api/listings/{listing.Id}/price-history") ?? [];
+			priceHistoryRows = BuildPriceHistoryRows(history);
 			priceHistoryOffcanvasTitle = $"Historie cen – {listing.Title}";
 			await priceHistoryOffcanvas.ShowAsync();
 		}
@@ -105,12 +106,58 @@ public partial class ListingListPage(
 		}
 	}
 
+	private static List<PriceHistoryRow> BuildPriceHistoryRows(List<PriceHistoryResult> history)
+	{
+		var rows = new List<PriceHistoryRow>(history.Count);
+		decimal? previousPrice = null;
+
+		foreach (var record in history.OrderBy(h => h.RecordedAt))
+		{
+			decimal? difference = null;
+			decimal? differencePercent = null;
+			if (record.Price.HasValue && previousPrice.HasValue)
+			{
+				difference = record.Price.Value - previousPrice.Value;
+				if (previousPrice.Value != 0)
+				{
+					differencePercent = difference.Value / previousPrice.Value * 100;
+				}
+			}
+
+			rows.Add(new PriceHistoryRow(record.RecordedAt, record.Price, difference, differencePercent, record.IsCurrent));
+			previousPrice = record.Price;
+		}
+
+		// nejnovější cena (aktuální) nahoře
+		rows.Reverse();
+		return rows;
+	}
+
 	private static string FormatPrice(decimal? price)
 	{
 		return price.HasValue
 			? string.Create(czechCulture, $"{price.Value:N0} Kč")
 			: "—";
 	}
+
+	private static string FormatSignedPrice(decimal difference)
+	{
+		var sign = difference > 0 ? "+" : "−";
+		return string.Create(czechCulture, $"{sign}{Math.Abs(difference):N0} Kč");
+	}
+
+	private static string FormatSignedPercent(decimal percent)
+	{
+		var sign = percent > 0 ? "+" : "−";
+		return string.Create(czechCulture, $"{sign}{Math.Abs(percent):N1} %");
+	}
+
+	private sealed record PriceHistoryRow(
+		DateTimeOffset From,
+		decimal? Price,
+		decimal? Difference,
+		decimal? DifferencePercent,
+		bool IsCurrent);
 
 	private record StateFilterOption(bool Value, string Name);
 }
