@@ -37,7 +37,8 @@ public static class ListingDtoMapper
 		return new PriceHistoryResult
 		{
 			Price = dto.Price,
-			RecordedAt = dto.RecordedAt
+			RecordedAt = dto.RecordedAt,
+			IsCurrent = dto.IsCurrent
 		};
 	}
 }
