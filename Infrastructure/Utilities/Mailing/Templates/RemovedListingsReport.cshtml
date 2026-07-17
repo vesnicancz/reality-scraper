@@ -143,8 +143,8 @@
 		}
 
 		.property-image {
-			width: 120px;
-			height: 90px;
+			width: 160px;
+			height: 120px;
 			object-fit: cover;
 			border-radius: 8px;
 			display: block;
@@ -152,14 +152,14 @@
 		}
 
 		.property-image-placeholder {
-			width: 120px;
-			height: 90px;
+			width: 160px;
+			height: 120px;
 			border-radius: 8px;
 			background-color: #e5e7eb;
 			color: #9ca3af;
-			font-size: 30px;
+			font-size: 40px;
 			text-align: center;
-			line-height: 90px;
+			line-height: 120px;
 		}
 
 		.property-title {
@@ -299,7 +299,7 @@
 					<li class="property-item">
 						<table role="presentation" class="property-row" width="100%" cellpadding="0" cellspacing="0">
 							<tr>
-								<td class="property-image-cell" width="136" valign="top">
+								<td class="property-image-cell" width="176" valign="top">
 									@if (listing.HasImage)
 									{
 										<img src="cid:@listing.ListingId" alt="@E(listing.Location)" class="property-image">
