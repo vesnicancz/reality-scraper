@@ -10,6 +10,11 @@ public interface IListingRepository
 
 	Task<List<Listing>> GetByScraperTaskIdAsync(Guid scraperTaskId, CancellationToken cancellationToken);
 
+	/// <summary>
+	/// Živé inzeráty (dosud nevyřazené) se zadanou URL obrázku, napříč všemi scraper úlohami.
+	/// </summary>
+	Task<List<Listing>> GetActiveWithImageUrlAsync(CancellationToken cancellationToken);
+
 	Task<List<Listing>> GetRemovedInPeriodAsync(Guid scraperTaskId, DateTimeOffset fromExclusive, DateTimeOffset toInclusive, CancellationToken cancellationToken);
 
 	Task<(List<Listing> Items, int TotalCount)> GetPagedAsync(bool? isActive, Guid? scraperTaskId, string? searchTerm, int skip, int take, CancellationToken cancellationToken);
