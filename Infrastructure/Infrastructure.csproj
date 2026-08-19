@@ -22,7 +22,6 @@
     <PackageReference Include="Resend" />
     <PackageReference Include="Selenium.Support" />
     <PackageReference Include="Selenium.WebDriver" />
-    <PackageReference Include="WebDriverManager" />
   </ItemGroup>
 
   <ItemGroup>
