@@ -30,7 +30,7 @@ jobs:
     - name: Build
       run: dotnet build --no-restore -c Release
     - name: Test
-      run: dotnet test --no-build -c Release --verbosity normal --logger "trx" --collect:"XPlat Code Coverage" --results-directory ./TestResults
+      run: dotnet test --no-build -c Release --verbosity normal --report-trx --coverage --coverage-output-format cobertura --results-directory ./TestResults
     - name: Upload test results
       if: ${{ !cancelled() }}
       uses: actions/upload-artifact@v7
@@ -38,5 +38,5 @@ jobs:
         name: test-results
         path: |
           ./TestResults/**/*.trx
-          ./TestResults/**/coverage.cobertura.xml
+          ./TestResults/**/*.cobertura.xml
         if-no-files-found: ignore
