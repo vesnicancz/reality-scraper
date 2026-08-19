@@ -7,4 +7,9 @@ public interface IListingImageReader
 	/// Vrací null, pokud obrázek není k dispozici.
 	/// </summary>
 	Task<byte[]?> TryReadImageAsync(Guid listingId, CancellationToken cancellationToken);
+
+	/// <summary>
+	/// Levná kontrola, zda je obrázek inzerátu nakešovaný, bez načítání jeho obsahu.
+	/// </summary>
+	bool ImageExists(Guid listingId);
 }

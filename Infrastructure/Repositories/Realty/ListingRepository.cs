@@ -27,6 +27,15 @@ internal class ListingRepository : Repository<Listing>, IListingRepository
 			.ToListAsync(cancellationToken);
 	}
 
+	public Task<List<Listing>> GetActiveWithImageUrlAsync(CancellationToken cancellationToken)
+	{
+		return dbContext
+			.Set<Listing>()
+			.AsNoTracking()
+			.Where(x => x.RemovedAt == null && x.ImageUrl != "")
+			.ToListAsync(cancellationToken);
+	}
+
 	public async Task<(List<Listing> Items, int TotalCount)> GetPagedAsync(bool? isActive, Guid? scraperTaskId, string? searchTerm, int skip, int take, CancellationToken cancellationToken)
 	{
 		var query = dbContext

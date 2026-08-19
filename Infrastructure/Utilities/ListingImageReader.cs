@@ -14,6 +14,11 @@ public class ListingImageReader : IListingImageReader
 		this.logger = logger;
 	}
 
+	public bool ImageExists(Guid listingId)
+	{
+		return File.Exists(pathResolver.GetImageFilePath(listingId));
+	}
+
 	public async Task<byte[]?> TryReadImageAsync(Guid listingId, CancellationToken cancellationToken)
 	{
 		var imageFilePath = pathResolver.GetImageFilePath(listingId);
