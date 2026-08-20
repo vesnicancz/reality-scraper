@@ -48,10 +48,11 @@
     <Columns>
         <HxGridColumn HeaderText="Náhled">
             <ItemTemplate Context="listing">
-                @if (!string.IsNullOrEmpty(listing.ImageUrl))
-                {
-                    <img src="@listing.ImageUrl" alt="@listing.Title" width="80" height="60" loading="lazy" style="object-fit: cover; border-radius: 4px;" />
-                }
+                @* Nejdřív náš nakešovaný snímek, teprve při 404 hotlink na portál a nakonec placeholder. *@
+                <img src="@($"/api/listings/{listing.Id}/image")"
+                     data-portal-url="@listing.ImageUrl"
+                     onerror="listingThumbnailFallback(this)"
+                     alt="@listing.Title" width="80" height="60" loading="lazy" style="object-fit: cover; border-radius: 4px;" />
             </ItemTemplate>
         </HxGridColumn>
         <HxGridColumn HeaderText="Název">

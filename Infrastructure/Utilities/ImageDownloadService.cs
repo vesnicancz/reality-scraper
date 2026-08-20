@@ -1,6 +1,8 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using RealityScraper.Application.Interfaces.Scraping;
 using RealityScraper.Domain.Entities.Realty;
+using RealityScraper.Infrastructure.Configuration;
 
 namespace RealityScraper.Infrastructure.Utilities;
 
@@ -10,15 +12,22 @@ public class ImageDownloadService : IImageDownloadService
 	private const long MaxImageSizeBytes = 10 * 1024 * 1024;
 	private static readonly TimeSpan DownloadTimeout = TimeSpan.FromSeconds(30);
 
+	// HttpClient sám žádný User-Agent neposílá a část CDN takový požadavek odmítne (typicky 403).
+	// Použije se stejná identita, jakou při scrapu vidí portál - obrázky se stahují z týchž serverů,
+	// takže rozejít ta dvě nastavení by znamenalo tichý výpadek stahování.
+	private const string FallbackUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36";
+
 	private readonly IHttpClientFactory httpClientFactory;
 	private readonly ListingImagePathResolver pathResolver;
 	private readonly IUrlSafetyValidator urlSafetyValidator;
+	private readonly string userAgent;
 	private readonly ILogger<ImageDownloadService> logger;
 
 	public ImageDownloadService(
 		IHttpClientFactory httpClientFactory,
 		ListingImagePathResolver pathResolver,
 		IUrlSafetyValidator urlSafetyValidator,
+		IOptions<SeleniumOptions> seleniumOptions,
 		ILogger<ImageDownloadService> logger
 		)
 	{
@@ -26,6 +35,9 @@ public class ImageDownloadService : IImageDownloadService
 		this.pathResolver = pathResolver;
 		this.urlSafetyValidator = urlSafetyValidator;
 		this.logger = logger;
+
+		var configuredUserAgent = seleniumOptions.Value.UserAgent;
+		userAgent = string.IsNullOrWhiteSpace(configuredUserAgent) ? FallbackUserAgent : configuredUserAgent;
 	}
 
 	public async Task DownloadImageAsync(Listing listing, CancellationToken cancellationToken)
@@ -52,6 +64,9 @@ public class ImageDownloadService : IImageDownloadService
 		using var httpClient = httpClientFactory.CreateClient();
 		httpClient.Timeout = DownloadTimeout;
 		httpClient.MaxResponseContentBufferSize = MaxImageSizeBytes;
+
+		// TryAddWithoutValidation, aby překlep v konfiguraci neshodil stahování výjimkou.
+		httpClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", userAgent);
 		byte[] imageBytes;
 
 		using (var response = await httpClient.GetAsync(imageUri, cancellationToken))

@@ -17,13 +17,14 @@ public record ScrapingReport
 	public bool ScrapingSucceeded { get; init; }
 
 	/// <summary>
-	/// Externí ID všech inzerátů viděných v tomto běhu (napříč portály).
+	/// Inzeráty viděné v tomto běhu (napříč portály), klíčem je externí ID. Nesou čerstvě
+	/// nascrapované hodnoty, aby šlo obnovit údaje, které se na portálu během života inzerátu mění.
 	/// </summary>
-	public IReadOnlySet<string> SeenExternalIds { get; init; } = new HashSet<string>();
+	public IReadOnlyDictionary<string, ScraperListingItem> SeenListings { get; init; } = new Dictionary<string, ScraperListingItem>();
 
 	/// <summary>
 	/// Počet inzerátů, které se během scrapování nepodařilo zpracovat (selhaly selektory).
-	/// Nenulová hodnota znamená, že SeenExternalIds nemusí být úplné.
+	/// Nenulová hodnota znamená, že SeenListings nemusí být úplné.
 	/// </summary>
 	public int FailedListingsCount { get; init; }
 

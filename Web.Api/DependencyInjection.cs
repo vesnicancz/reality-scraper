@@ -23,7 +23,9 @@ public static class DependencyInjection
 				httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
 				_ => new FixedWindowRateLimiterOptions
 				{
-					PermitLimit = 100,
+					// Jedna stránka gridu Reality znamená ~16 requestů (data + náhled na řádek),
+					// při stovce za minutu by prolistování pár stránek shodilo i datový request.
+					PermitLimit = 300,
 					Window = TimeSpan.FromMinutes(1),
 					QueueLimit = 0
 				}));

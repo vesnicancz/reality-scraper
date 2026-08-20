@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Moq;
 using RealityScraper.Application.Features.Scraping;
+using RealityScraper.Application.Features.Scraping.Model;
 using RealityScraper.Application.Features.Scraping.Model.Report;
 using RealityScraper.Application.Interfaces.Repositories.Realty;
 using RealityScraper.Domain.Entities.Realty;
@@ -54,7 +55,16 @@ public class RemovedListingDetectorTests
 			TaskName = "task",
 			ScrapingSucceeded = succeeded,
 			Results = results,
-			SeenExternalIds = new HashSet<string>(seenExternalIds)
+			SeenListings = seenExternalIds.ToDictionary(
+				externalId => externalId,
+				externalId => new ScraperListingItem
+				{
+					Title = "Title",
+					Location = "Location",
+					Url = "Url",
+					ImageUrl = string.Empty,
+					ExternalId = externalId
+				})
 		};
 	}
 
