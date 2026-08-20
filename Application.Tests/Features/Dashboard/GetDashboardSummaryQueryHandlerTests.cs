@@ -101,6 +101,27 @@ public class GetDashboardSummaryQueryHandlerTests
 	}
 
 	[Fact]
+	public async Task Handle_AsksForSameNumberOfItemsInBothPanels()
+	{
+		// Arrange
+		var takes = new List<int>();
+		listingRepositoryMock
+			.Setup(x => x.GetPagedAsync(It.IsAny<bool?>(), It.IsAny<Guid?>(), It.IsAny<string?>(), It.IsAny<int>(), Capture.In(takes), It.IsAny<CancellationToken>()))
+			.ReturnsAsync(([], 0));
+		listingRepositoryMock
+			.Setup(x => x.GetRecentPriceDropsAsync(It.IsAny<DateTimeOffset>(), Capture.In(takes), It.IsAny<CancellationToken>()))
+			.ReturnsAsync([]);
+		var sut = CreateSut();
+
+		// Act
+		await sut.Handle(new GetDashboardSummaryQuery(), CancellationToken.None);
+
+		// Assert - oba seznamy stojí na dashboardu vedle sebe, takže musí být stejně dlouhé.
+		Assert.Equal(2, takes.Count);
+		Assert.Equal(takes[0], takes[1]);
+	}
+
+	[Fact]
 	public async Task Handle_ReturnsCountsFromRepository()
 	{
 		// Arrange
