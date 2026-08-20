@@ -31,7 +31,7 @@ public class RemovedListingDetector : IRemovedListingDetector
 		// vyřazeného) se aktualizuje i při částečném selhání scrapování.
 		foreach (var listing in listings)
 		{
-			if (report.SeenExternalIds.Contains(listing.ExternalId))
+			if (report.SeenListings.ContainsKey(listing.ExternalId))
 			{
 				listing.LastSeenAt = now;
 				if (listing.RemovedAt != null)
@@ -49,7 +49,7 @@ public class RemovedListingDetector : IRemovedListingDetector
 			return;
 		}
 
-		// Nezpracované inzeráty (selhané selektory) nejsou v SeenExternalIds a vypadaly by
+		// Nezpracované inzeráty (selhané selektory) nejsou v SeenListings a vypadaly by
 		// jako vyřazené, přestože na portálu stále existují.
 		if (report.FailedListingsCount > 0)
 		{
@@ -65,7 +65,7 @@ public class RemovedListingDetector : IRemovedListingDetector
 		// prázdný výsledek kteréhokoli z nich by mohl chybně vyřadit jeho inzeráty.
 		if (activeListings.Count > 0)
 		{
-			if (report.SeenExternalIds.Count == 0)
+			if (report.SeenListings.Count == 0)
 			{
 				logger.LogWarning("Scrapování úlohy '{TaskName}' nevrátilo žádné inzeráty, ale v databázi je {Count} aktivních. Detekce vyřazených se přeskakuje.", report.TaskName, activeListings.Count);
 				return;
@@ -91,7 +91,7 @@ public class RemovedListingDetector : IRemovedListingDetector
 
 		foreach (var listing in listings)
 		{
-			if (!report.SeenExternalIds.Contains(listing.ExternalId) && listing.RemovedAt == null)
+			if (!report.SeenListings.ContainsKey(listing.ExternalId) && listing.RemovedAt == null)
 			{
 				listing.RemovedAt = now;
 				removedCount++;

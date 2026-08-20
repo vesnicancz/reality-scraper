@@ -17,7 +17,7 @@ public class ScrapingReportBuilder
 	private Dictionary<string, Listing>? existingListingsByExternalId;
 	private readonly Dictionary<string, ScraperResultBuilder> scraperBuilders = new();
 	private readonly HashSet<string> processedListings = new(); // Klíč "siteName|externalId" - prevence duplikátů mezi targety téhož portálu
-	private readonly HashSet<string> seenExternalIds = new();
+	private readonly Dictionary<string, ScraperListingItem> seenListings = new();
 
 	private readonly IListingRepository listingRepository;
 	private readonly IDateTimeProvider dateTimeProvider;
@@ -43,7 +43,7 @@ public class ScrapingReportBuilder
 		existingListingsByExternalId = null;
 		scraperBuilders.Clear();
 		processedListings.Clear();
-		seenExternalIds.Clear();
+		seenListings.Clear();
 		return this;
 	}
 
@@ -148,7 +148,13 @@ public class ScrapingReportBuilder
 
 		builder.IncrementTotalCount();
 		processedListings.Add(listingKey);
-		seenExternalIds.Add(listing.ExternalId);
+
+		// Čerstvě nascrapovaná data si necháme i u nezměněných inzerátů - na portálu se během
+		// života inzerátu mění titulní fotka a bez toho by uložená URL zůstala navždy ta první.
+		// Indexer, ne Add() - stejné externí ID může přijít ze dvou portálů (processedListings
+		// hlídá duplicity jen v rámci jednoho portálu) a Add() by shodil celý běh.
+		seenListings[listing.ExternalId] = listing;
+
 		return this;
 	}
 
@@ -177,7 +183,7 @@ public class ScrapingReportBuilder
 			TaskName = scraperTaskName,
 			Results = results,
 			ScrapingSucceeded = allScrapersSucceeded,
-			SeenExternalIds = new HashSet<string>(seenExternalIds),
+			SeenListings = new Dictionary<string, ScraperListingItem>(seenListings),
 			FailedListingsCount = failedListingsCount,
 			AnyTargetEmpty = anyTargetEmpty
 		};

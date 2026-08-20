@@ -59,12 +59,12 @@ public class ScrapingReportBuilderTests
 		// arrange
 		var listings1 = new List<ScraperListingItem>
 		{
-			new ScraperListingItem { Title = "T1", Price = 1000, Location = "L1", Url = "U1", ExternalId = "Ext1", ImageUrl = string.Empty }
+			new ScraperListingItem { Title = "T1", Price = 1000, Location = "L1", Url = "U1", ExternalId = "Ext1", ImageUrl = "https://cdn/a.jpg" }
 		};
 
 		var listings2 = new List<ScraperListingItem>
 		{
-			new ScraperListingItem { Title = "T1", Price = 1000, Location = "L1", Url = "U2", ExternalId = "Ext1", ImageUrl = string.Empty }
+			new ScraperListingItem { Title = "T1", Price = 1000, Location = "L1", Url = "U2", ExternalId = "Ext1", ImageUrl = "https://cdn/b.jpg" }
 		};
 
 		var sut = CreateBuilder();
@@ -79,7 +79,11 @@ public class ScrapingReportBuilderTests
 		Assert.Equal(2, result.NewListingsCount);
 		Assert.Equal(2, result.TotalListingsCount);
 		Assert.All(result.Results, r => Assert.Equal(1, r.TotalListingsCount));
-		Assert.Equal(new HashSet<string> { "Ext1" }, result.SeenExternalIds);
+
+		// SeenListings je mapa podle externího ID, takže duplicitu drží jen jednou a vyhrává
+		// poslední portál. Add() by na duplicitním klíči shodil celý běh.
+		Assert.Equal(["Ext1"], result.SeenListings.Keys);
+		Assert.Equal("https://cdn/b.jpg", result.SeenListings["Ext1"].ImageUrl);
 	}
 
 	[Fact]
@@ -171,7 +175,7 @@ public class ScrapingReportBuilderTests
 	}
 
 	[Fact]
-	public async Task ScrapingReportBuilder_Build_PropagatesSuccessAndSeenExternalIds()
+	public async Task ScrapingReportBuilder_Build_PropagatesSuccessAndSeenListings()
 	{
 		// arrange
 		var listings = new List<ScraperListingItem>
@@ -189,7 +193,7 @@ public class ScrapingReportBuilderTests
 
 		// assert
 		Assert.True(result.ScrapingSucceeded);
-		Assert.Equal(new HashSet<string> { "Ext1", "Ext2" }, result.SeenExternalIds);
+		Assert.Equal(["Ext1", "Ext2"], result.SeenListings.Keys.Order());
 	}
 
 	[Fact]
@@ -236,6 +240,49 @@ public class ScrapingReportBuilderTests
 
 		// assert
 		Assert.True(result.ScrapingSucceeded);
+	}
+
+	[Fact]
+	public async Task ScrapingReportBuilder_ProcessScraperResults_SeenListingsCarryFreshImageUrlOfUnchangedListing()
+	{
+		// arrange - existující inzerát beze změny ceny, portál mu ale vyměnil titulní fotku
+		var listings = new List<ScraperListingItem>
+		{
+			new ScraperListingItem { Title = "T1", Price = 1000, Location = "L1", Url = "U1", ExternalId = "Ext1", ImageUrl = "https://cdn/new.jpg" }
+		};
+
+		var sut = CreateBuilder([new Listing { ExternalId = "Ext1", Price = 1000, ImageUrl = "https://cdn/old.jpg" }]);
+		sut.ForScrapingReport(Guid.NewGuid(), "task");
+
+		// act
+		await sut.ProcessScraperResultsAsync("siteName", new ScraperRunResult(true, listings), CancellationToken.None);
+		var result = sut.Build();
+
+		// assert - nezměněný inzerát není ani nový, ani cenově změněný, přesto musí čerstvá URL projít dál
+		Assert.Equal(0, result.NewListingsCount);
+		Assert.Equal(0, result.PriceChangedListingsCount);
+		Assert.Equal("https://cdn/new.jpg", result.SeenListings["Ext1"].ImageUrl);
+	}
+
+	[Fact]
+	public async Task ScrapingReportBuilder_ForScrapingReport_ClearsSeenListings()
+	{
+		// arrange
+		var listings = new List<ScraperListingItem>
+		{
+			new ScraperListingItem { Title = "T1", Price = 1000, Location = "L1", Url = "U1", ExternalId = "Ext1", ImageUrl = string.Empty }
+		};
+
+		var sut = CreateBuilder();
+		sut.ForScrapingReport(Guid.NewGuid(), "task");
+		await sut.ProcessScraperResultsAsync("siteName", new ScraperRunResult(true, listings), CancellationToken.None);
+
+		// act
+		sut.ForScrapingReport(Guid.NewGuid(), "task2");
+		var result = sut.Build();
+
+		// assert
+		Assert.Empty(result.SeenListings);
 	}
 
 	private static ScrapingReportBuilder CreateBuilder(List<Listing>? existingListings = null)
