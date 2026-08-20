@@ -128,6 +128,12 @@ public partial class ListingListPage(
 			}
 
 			messenger.AddInformation(BuildBackfillMessage(result));
+
+			if (result.DownloadedCount > 0)
+			{
+				// Náhledy v gridu se čtou z lokální cache, po dotažení je potřeba si je znovu vyžádat.
+				await RefreshGridAsync();
+			}
 		}
 		catch (Exception ex) when (ex is HttpRequestException or JsonException or TaskCanceledException)
 		{
