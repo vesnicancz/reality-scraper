@@ -1,4 +1,4 @@
-using RealityScraper.Domain.Entities.Realty;
+﻿using RealityScraper.Domain.Entities.Realty;
 
 namespace RealityScraper.Application.Features.Listings;
 
@@ -16,6 +16,7 @@ internal static class ListingMapper
 			ImageUrl = entity.ImageUrl,
 			CreatedAt = entity.CreatedAt,
 			LastSeenAt = entity.LastSeenAt,
+			PriceFrom = entity.PriceFrom,
 			RemovedAt = entity.RemovedAt,
 			ScraperTaskId = entity.ScraperTaskId,
 			ScraperTaskName = scraperTaskName

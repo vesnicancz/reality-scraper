@@ -1,4 +1,4 @@
-@page "/listings"
+﻿@page "/listings"
 <PageTitle>Reality</PageTitle>
 
 <h3>Reality</h3>
@@ -63,7 +63,7 @@
         <HxGridColumn HeaderText="Lokalita" ItemTextSelector="l => l.Location" />
         <HxGridColumn HeaderText="Cena">
             <ItemTemplate Context="listing">
-                @FormatPrice(listing.Price)
+                @PriceFormatter.FormatPrice(listing.Price)
             </ItemTemplate>
         </HxGridColumn>
         <HxGridColumn HeaderText="Task" ItemTextSelector="l => l.ScraperTaskName" />
@@ -125,16 +125,16 @@
                                     <HxBadge Color="ThemeColor.Success" CssClass="ms-2">Aktuální</HxBadge>
                                 }
                             </td>
-                            <td class="text-end text-nowrap @(row.IsCurrent ? "fw-semibold" : null)">@FormatPrice(row.Price)</td>
+                            <td class="text-end text-nowrap @(row.IsCurrent ? "fw-semibold" : null)">@PriceFormatter.FormatPrice(row.Price)</td>
                             <td class="text-end">
                                 @if (row.Difference is { } difference && difference != 0)
                                 {
                                     <span class="text-nowrap @(difference > 0 ? "text-danger" : "text-success")">
                                         <HxIcon Icon="@(difference > 0 ? BootstrapIcon.CaretUpFill : BootstrapIcon.CaretDownFill)" />
-                                        @FormatSignedPrice(difference)
+                                        @PriceFormatter.FormatSignedPrice(difference)
                                         @if (row.DifferencePercent is { } percent)
                                         {
-                                            <span> (@FormatSignedPercent(percent))</span>
+                                            <span> (@PriceFormatter.FormatSignedPercent(percent))</span>
                                         }
                                     </span>
                                 }

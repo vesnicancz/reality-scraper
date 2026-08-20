@@ -1,3 +1,214 @@
 ﻿@page "/"
+<PageTitle>Přehled</PageTitle>
 
-<h3>Homepage</h3>
+<h1 class="h3">Přehled</h1>
+
+@if (failedTaskNames.Count > 0)
+{
+    <HxAlert Color="ThemeColor.Warning" CssClass="d-flex align-items-center gap-2">
+        <HxIcon Icon="BootstrapIcon.ExclamationTriangleFill" />
+        <span>
+            Poslední běh selhal u těchto úloh: <strong>@string.Join(", ", failedTaskNames)</strong>.
+            Log najdete v jejich detailu.
+        </span>
+    </HxAlert>
+}
+
+@* KPI dlaždice *@
+<div class="row g-3 mb-4">
+    @foreach (var tile in BuildTiles())
+    {
+        <div class="col-6 col-xl-3" @key="tile.Label">
+            <div class="card h-100 kpi-card" title="@tile.Tooltip">
+                <div class="card-body">
+                    <div class="kpi-label">@tile.Label</div>
+                    @if (loadingSummary)
+                    {
+                        <div class="placeholder-glow"><span class="placeholder kpi-placeholder"></span></div>
+                    }
+                    else
+                    {
+                        <div class="kpi-value @tile.ValueCssClass">@tile.Value</div>
+                    }
+                    <div class="kpi-note">@tile.Note</div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@* Stav úloh *@
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Stav úloh</span>
+        <a href="scraper-tasks">spravovat →</a>
+    </div>
+    <div class="card-body p-0">
+        @if (loadingTasks)
+        {
+            <div class="p-3 placeholder-glow">
+                <span class="placeholder col-12 mb-2"></span>
+                <span class="placeholder col-12"></span>
+            </div>
+        }
+        else if (taskRows.Count == 0)
+        {
+            <div class="p-4 text-center">
+                <p class="text-muted mb-3">Zatím nemáte žádnou úlohu – bez ní se nic nescrapuje.</p>
+                <HxButton Text="Vytvořit scraper task" Icon="BootstrapIcon.PlusLg" Color="ThemeColor.Primary" OnClick="HandleCreateTaskClick" />
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Úloha</th>
+                            <th>Stav</th>
+                            <th>Poslední běh</th>
+                            <th>Následující běh</th>
+                            <th class="text-end">Akce</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in taskRows)
+                        {
+                            <tr @key="row.Id">
+                                <td>
+                                    <a href="@row.DetailUrl">@row.Name</a>
+                                    <div class="text-muted small">@row.KindLabel · @row.CronExpression</div>
+                                </td>
+                                <td class="text-nowrap">
+                                    @if (!row.Enabled)
+                                    {
+                                        <HxBadge Color="ThemeColor.Secondary">Vypnuto</HxBadge>
+                                    }
+                                    else if (row.LastRunSucceeded == true)
+                                    {
+                                        <HxBadge Color="ThemeColor.Success">OK</HxBadge>
+                                    }
+                                    else if (row.LastRunSucceeded == false)
+                                    {
+                                        <HxBadge Color="ThemeColor.Danger">Chyba</HxBadge>
+                                    }
+                                    else
+                                    {
+                                        @* Úloha, která ještě neběžela, není chyba - proto text, ne stavový badge. *@
+                                        <span class="text-muted small">zatím neběželo</span>
+                                    }
+                                </td>
+                                <td class="text-nowrap">@TimeZoneHelper.FormatLocal(row.LastRunAt)</td>
+                                <td class="text-nowrap">@(row.Enabled ? TimeZoneHelper.FormatLocal(row.NextRunAt) : "—")</td>
+                                <td class="text-end">
+                                    <HxButton Icon="BootstrapIcon.PlayFill" Color="ThemeColor.Success" Size="ButtonSize.Small" Outline="true"
+                                              Tooltip="Spustit teď" Enabled="runningTaskId != row.Id" OnClick="() => HandleRunNowClick(row)" />
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="row g-3">
+    @* Nejnovější inzeráty *@
+    <div class="col-12 col-xl-6">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Nejnovější inzeráty</span>
+                <a href="listings">zobrazit vše →</a>
+            </div>
+            <div class="card-body">
+                @if (loadingSummary)
+                {
+                    <div class="placeholder-glow">
+                        <span class="placeholder col-12 mb-3 listing-placeholder"></span>
+                        <span class="placeholder col-12 listing-placeholder"></span>
+                    </div>
+                }
+                else if (summary is null || summary.LatestListings.Count == 0)
+                {
+                    <p class="text-muted mb-0">Zatím nebyl nalezen žádný inzerát.</p>
+                }
+                else
+                {
+                    @foreach (var listing in summary.LatestListings)
+                    {
+                        <div class="listing-row" @key="listing.Id">
+                            @* Nejdřív náš nakešovaný snímek, teprve při 404 hotlink na portál a nakonec placeholder. *@
+                            <img class="listing-thumb"
+                                 src="@($"/api/listings/{listing.Id}/image")"
+                                 data-portal-url="@listing.ImageUrl"
+                                 onerror="listingThumbnailFallback(this)"
+                                 alt="@listing.Title" width="160" height="120" loading="lazy" />
+                            <div class="listing-body">
+                                <a class="listing-title" href="@listing.Url" target="_blank" rel="noopener">@listing.Title</a>
+                                <div class="text-muted small">@listing.Location</div>
+                                <div class="listing-price">@PriceFormatter.FormatPrice(listing.Price)</div>
+                                <div class="text-muted small">@listing.ScraperTaskName · nalezeno @TimeZoneHelper.FormatLocal(listing.CreatedAt)</div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+
+    @* Poslední zlevnění *@
+    <div class="col-12 col-xl-6">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Poslední zlevnění</span>
+                <a href="listings">zobrazit vše →</a>
+            </div>
+            <div class="card-body">
+                @if (loadingSummary)
+                {
+                    <div class="placeholder-glow">
+                        <span class="placeholder col-12 mb-3 listing-placeholder"></span>
+                        <span class="placeholder col-12 listing-placeholder"></span>
+                    </div>
+                }
+                else if (summary is null || summary.RecentPriceDrops.Count == 0)
+                {
+                    <p class="text-muted mb-0">Za posledních @WindowDays dní nikdo nezlevnil.</p>
+                }
+                else
+                {
+                    @foreach (var drop in summary.RecentPriceDrops)
+                    {
+                        <div class="listing-row" @key="drop.Listing.Id">
+                            <img class="listing-thumb"
+                                 src="@($"/api/listings/{drop.Listing.Id}/image")"
+                                 data-portal-url="@drop.Listing.ImageUrl"
+                                 onerror="listingThumbnailFallback(this)"
+                                 alt="@drop.Listing.Title" width="160" height="120" loading="lazy" />
+                            <div class="listing-body">
+                                <a class="listing-title" href="@drop.Listing.Url" target="_blank" rel="noopener">@drop.Listing.Title</a>
+                                <div class="text-muted small">@drop.Listing.Location</div>
+                                <div class="listing-price">
+                                    <span class="listing-price-old">@PriceFormatter.FormatPrice(drop.PreviousPrice)</span>
+                                    <span class="text-nowrap">@PriceFormatter.FormatPrice(drop.Listing.Price)</span>
+                                </div>
+                                <div class="small text-nowrap">
+                                    <span class="text-success">
+                                        <HxIcon Icon="BootstrapIcon.CaretDownFill" />
+                                        @PriceFormatter.FormatSignedPrice(GetDifference(drop))
+                                        @if (GetDifferencePercent(drop) is { } percent)
+                                        {
+                                            <span>(@PriceFormatter.FormatSignedPercent(percent))</span>
+                                        }
+                                    </span>
+                                    <span class="text-muted">· @TimeZoneHelper.FormatLocal(drop.Listing.PriceFrom)</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>

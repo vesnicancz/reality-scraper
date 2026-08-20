@@ -1,8 +1,8 @@
-using System.Globalization;
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
 using System.Text.Json;
 using Havit.Blazor.Components.Web;
 using Havit.Blazor.Components.Web.Bootstrap;
+using RealityScraper.Web.Shared;
 using RealityScraper.Web.Shared.Models.Listings;
 using RealityScraper.Web.Shared.Models.Maintenance;
 using RealityScraper.Web.Shared.Models.ScraperTasks;
@@ -14,8 +14,6 @@ public partial class ListingListPage(
 	IHxMessengerService messenger)
 {
 	private const int DefaultPageSize = 15;
-
-	private static readonly CultureInfo czechCulture = CultureInfo.GetCultureInfo("cs-CZ");
 
 	private static readonly List<StateFilterOption> stateFilterOptions =
 	[
@@ -194,25 +192,6 @@ public partial class ListingListPage(
 		// nejnovější cena (aktuální) nahoře
 		rows.Reverse();
 		return rows;
-	}
-
-	private static string FormatPrice(decimal? price)
-	{
-		return price.HasValue
-			? string.Create(czechCulture, $"{price.Value:N0} Kč")
-			: "—";
-	}
-
-	private static string FormatSignedPrice(decimal difference)
-	{
-		var sign = difference > 0 ? "+" : "−";
-		return string.Create(czechCulture, $"{sign}{Math.Abs(difference):N0} Kč");
-	}
-
-	private static string FormatSignedPercent(decimal percent)
-	{
-		var sign = percent > 0 ? "+" : "−";
-		return string.Create(czechCulture, $"{sign}{Math.Abs(percent):N1} %");
 	}
 
 	private sealed record PriceHistoryRow(
