@@ -11,9 +11,12 @@ internal sealed class GetDashboardSummaryQueryHandler : IQueryHandler<GetDashboa
 	/// <summary>Klouzavé okno změnových ukazatelů – posledních 168 hodin, ne kalendářní týden.</summary>
 	private const int WindowDays = 7;
 
-	private const int LatestListingsCount = 6;
-
-	private const int PriceDropsCount = 5;
+	/// <summary>
+	/// Počet položek v obou seznamech na dashboardu. Nejnovější inzeráty a poslední zlevnění
+	/// stojí vedle sebe a mají stejně vysoké řádky, takže se drží na společném čísle - jinak
+	/// jeden sloupec bezdůvodně přesahuje druhý.
+	/// </summary>
+	private const int ListingsPerPanel = 6;
 
 	private readonly IListingRepository listingRepository;
 	private readonly IScraperTaskRepository scraperTaskRepository;
@@ -41,10 +44,10 @@ internal sealed class GetDashboardSummaryQueryHandler : IQueryHandler<GetDashboa
 			scraperTaskId: null,
 			searchTerm: null,
 			skip: 0,
-			take: LatestListingsCount,
+			take: ListingsPerPanel,
 			cancellationToken);
 
-		var priceDrops = await listingRepository.GetRecentPriceDropsAsync(since, PriceDropsCount, cancellationToken);
+		var priceDrops = await listingRepository.GetRecentPriceDropsAsync(since, ListingsPerPanel, cancellationToken);
 
 		var scraperTasks = await scraperTaskRepository.GetAllAsync(cancellationToken);
 		var taskNamesById = scraperTasks.ToDictionary(t => t.Id, t => t.Name);
