@@ -4,6 +4,7 @@ using System.Text.Json;
 using Havit.Blazor.Components.Web;
 using Havit.Blazor.Components.Web.Bootstrap;
 using RealityScraper.Web.Shared.Models.Listings;
+using RealityScraper.Web.Shared.Models.Maintenance;
 using RealityScraper.Web.Shared.Models.ScraperTasks;
 
 namespace RealityScraper.Web.Client.Pages.Listings;
@@ -30,6 +31,7 @@ public partial class ListingListPage(
 	private string? searchTerm;
 	private List<PriceHistoryRow>? priceHistoryRows;
 	private string priceHistoryOffcanvasTitle = "Historie cen";
+	private bool backfillRunning;
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -104,6 +106,61 @@ public partial class ListingListPage(
 		{
 			messenger.AddError("Nepodařilo se načíst historii cen.");
 		}
+	}
+
+	private async Task HandleBackfillImagesClick()
+	{
+		backfillRunning = true;
+		try
+		{
+			using var response = await http.PostAsync("/api/maintenance/listing-images/backfill", null);
+			if (!response.IsSuccessStatusCode)
+			{
+				messenger.AddError("Nepodařilo se dotáhnout chybějící náhledy.");
+				return;
+			}
+
+			var result = await response.Content.ReadFromJsonAsync<BackfillListingImagesResult>();
+			if (result == null)
+			{
+				messenger.AddError("Nepodařilo se dotáhnout chybějící náhledy.");
+				return;
+			}
+
+			messenger.AddInformation(BuildBackfillMessage(result));
+		}
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or TaskCanceledException)
+		{
+			messenger.AddError("Nepodařilo se dotáhnout chybějící náhledy.");
+		}
+		finally
+		{
+			backfillRunning = false;
+		}
+	}
+
+	private static string BuildBackfillMessage(BackfillListingImagesResult result)
+	{
+		// RemainingCount roste až po vyčerpání limitu jednoho běhu, takže nulové
+		// stažení i selhání znamená, že opravdu nebylo co dotahovat.
+		if (result.DownloadedCount == 0 && result.FailedCount == 0)
+		{
+			return $"Všechny živé inzeráty mají náhled (prověřeno {result.CheckedCount}).";
+		}
+
+		var message = $"Dotaženo {result.DownloadedCount} náhledů (prověřeno {result.CheckedCount}).";
+
+		if (result.FailedCount > 0)
+		{
+			message += $" Nepodařilo se: {result.FailedCount}.";
+		}
+
+		if (result.RemainingCount > 0)
+		{
+			message += $" Zbývá {result.RemainingCount} – spusťte akci znovu.";
+		}
+
+		return message;
 	}
 
 	private static List<PriceHistoryRow> BuildPriceHistoryRows(List<PriceHistoryResult> history)

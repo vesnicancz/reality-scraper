@@ -34,6 +34,16 @@
     </div>
 </div>
 
+<div class="d-flex justify-content-end mb-3">
+    <HxButton Text="Dotáhnout chybějící náhledy"
+              Icon="BootstrapIcon.Images"
+              Color="ThemeColor.Primary"
+              Outline="true"
+              OnClick="HandleBackfillImagesClick"
+              Enabled="!backfillRunning"
+              Tooltip="Stáhne chybějící náhledy k živým inzerátům z jejich uložené URL." />
+</div>
+
 <HxGrid @ref="grid" TItem="ListingResult" DataProvider="LoadData" Responsive="true">
     <Columns>
         <HxGridColumn HeaderText="Náhled">
