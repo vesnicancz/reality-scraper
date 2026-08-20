@@ -1,4 +1,4 @@
-namespace RealityScraper.Application.Features.Listings;
+﻿namespace RealityScraper.Application.Features.Listings;
 
 public class ListingDto
 {
@@ -17,6 +17,9 @@ public class ListingDto
 	public DateTimeOffset CreatedAt { get; set; }
 
 	public DateTimeOffset LastSeenAt { get; set; }
+
+	/// <summary>Od kdy platí aktuální cena – u nezlevněného inzerátu je shodné s CreatedAt.</summary>
+	public DateTimeOffset PriceFrom { get; set; }
 
 	public DateTimeOffset? RemovedAt { get; set; }
 

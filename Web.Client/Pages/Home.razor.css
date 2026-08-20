@@ -1,0 +1,94 @@
+﻿/* KPI dlaždice */
+.kpi-card .card-body {
+	padding: var(--spacing-md) var(--spacing-lg);
+}
+
+.kpi-label {
+	font-size: 0.8125rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+	color: var(--color-text-muted);
+}
+
+.kpi-value {
+	font-size: 2rem;
+	font-weight: 700;
+	line-height: 1.2;
+	color: var(--color-text);
+}
+
+.kpi-note {
+	font-size: 0.8125rem;
+	color: var(--color-text-light);
+}
+
+.kpi-placeholder {
+	width: 4rem;
+	height: 2rem;
+	border-radius: var(--radius-sm);
+}
+
+/* Seznam inzerátů */
+.listing-row {
+	display: flex;
+	gap: var(--spacing-md);
+	padding: var(--spacing-sm) 0;
+	border-bottom: 1px solid var(--color-border-light);
+}
+
+.listing-row:first-child {
+	padding-top: 0;
+}
+
+.listing-row:last-child {
+	padding-bottom: 0;
+	border-bottom: none;
+}
+
+.listing-thumb {
+	flex: 0 0 auto;
+	width: 160px;
+	height: 120px;
+	object-fit: cover;
+	border-radius: var(--radius-md);
+	background-color: var(--color-border-light);
+}
+
+.listing-body {
+	min-width: 0;
+}
+
+.listing-title {
+	display: block;
+	font-weight: 600;
+	line-height: 1.35;
+}
+
+.listing-price {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: var(--spacing-xs);
+	margin-top: var(--spacing-xs);
+	font-weight: 600;
+}
+
+.listing-price-old {
+	font-weight: 400;
+	color: var(--color-text-light);
+	text-decoration: line-through;
+}
+
+.listing-placeholder {
+	height: 120px;
+	border-radius: var(--radius-md);
+}
+
+/* Na úzkém displeji by náhled 160 px sebral text skoro celou šířku. */
+@media (max-width: 575.98px) {
+	.listing-thumb {
+		width: 96px;
+		height: 72px;
+	}
+}

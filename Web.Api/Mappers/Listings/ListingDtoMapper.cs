@@ -1,4 +1,4 @@
-using RealityScraper.Application.Features.Listings;
+﻿using RealityScraper.Application.Features.Listings;
 using RealityScraper.Web.Shared.Models.Listings;
 
 namespace RealityScraper.Web.Api.Mappers.Listings;
@@ -26,6 +26,7 @@ public static class ListingDtoMapper
 			ImageUrl = dto.ImageUrl,
 			CreatedAt = dto.CreatedAt,
 			LastSeenAt = dto.LastSeenAt,
+			PriceFrom = dto.PriceFrom,
 			RemovedAt = dto.RemovedAt,
 			ScraperTaskId = dto.ScraperTaskId,
 			ScraperTaskName = dto.ScraperTaskName
