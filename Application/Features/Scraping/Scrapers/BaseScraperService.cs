@@ -53,6 +53,7 @@ public abstract class BaseScraperService : IRealityScraperService
 		var url = scraperConfiguration.Url;
 		var success = true;
 		var failedListingsCount = 0;
+		var skippedListingsCount = 0;
 
 		// Cílová URL pochází z uživatelského vstupu (cíl scraper úlohy) - před navigací
 		// ověříme, že nemíří do interní sítě (SSRF). Při nepovoleném cíli scrape
@@ -61,7 +62,7 @@ public abstract class BaseScraperService : IRealityScraperService
 			|| !await urlSafetyValidator.IsPublicHttpTargetAsync(targetUri, cancellationToken))
 		{
 			logger.LogError("Cílová URL '{Url}' není platná nebo míří na nepovolený cíl, scrapování se přeskakuje.", url);
-			return new ScraperRunResult(false, listings, failedListingsCount);
+			return new ScraperRunResult(false, listings, failedListingsCount, skippedListingsCount);
 		}
 
 		IWebDriver? driver = null;
@@ -99,6 +100,11 @@ public abstract class BaseScraperService : IRealityScraperService
 
 						if (!ValidateExternalId(externalId))
 						{
+							// Karta bez použitelného ID - reklamní blok vsunutý mezi inzeráty nebo developerský
+							// projekt. Není to chyba a takový záznam do DB nevstoupí. Počítá se proto, že náhlý
+							// nepoměr by znamenal změnu tvaru URL detailu, kdy přestanou procházet i pravé inzeráty.
+							skippedListingsCount++;
+							logger.LogDebug("Inzerát bez použitelného ID přeskočen, odkaz '{DetailUrl}'.", detailUrl);
 							continue;
 						}
 
@@ -181,6 +187,12 @@ public abstract class BaseScraperService : IRealityScraperService
 			driver?.Dispose();
 		}
 
-		return new ScraperRunResult(success, listings, failedListingsCount);
+		if (skippedListingsCount > 0)
+		{
+			logger.LogInformation("{SiteName}: {SkippedCount} karet bez použitelného ID přeskočeno, zpracováno {ListingCount}.",
+				SiteName, skippedListingsCount, listings.Count);
+		}
+
+		return new ScraperRunResult(success, listings, failedListingsCount, skippedListingsCount);
 	}
 }

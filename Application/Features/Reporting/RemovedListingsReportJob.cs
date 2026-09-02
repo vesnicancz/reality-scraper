@@ -88,17 +88,20 @@ public class RemovedListingsReportJob : IScheduledJob
 
 		if (sections.Count == 0 || recipients.Count == 0)
 		{
+			// Období se schválně nezavírá - nahlášené je jen to, co odešlo e-mailem. RemovedAt nese
+			// okamžik, kdy si detekce vyřazení všimla, ne kdy nabídka zmizela, a ta detekce může být
+			// při nepoužitelném scrapu na několik běhů pozastavená. Razítka pak dorazí až po termínu
+			// reportu a při posunutém období by se do žádného e-mailu nedostala - tiše by zůstala
+			// ležet v databázi. Takhle je příští report dobere, jen s delším obdobím.
 			if (sections.Count == 0)
 			{
-				logger.LogInformation("Report '{Name}': v období nebyly vyřazeny žádné inzeráty, e-mail se neposílá.", reportTask.Name);
+				logger.LogInformation("Report '{Name}': v období {From} – {To} nebyly vyřazeny žádné inzeráty, e-mail se neposílá a období zůstává otevřené.", reportTask.Name, from, to);
 			}
 			else
 			{
-				logger.LogWarning("Report '{Name}': nejsou nastaveni žádní příjemci, e-mail se neposílá.", reportTask.Name);
+				logger.LogWarning("Report '{Name}': nejsou nastaveni žádní příjemci, e-mail se neposílá a období zůstává otevřené.", reportTask.Name);
 			}
 
-			reportTask.SetLastSuccessfulReportAt(to);
-			await unitOfWork.SaveChangesAsync(cancellationToken);
 			return;
 		}
 

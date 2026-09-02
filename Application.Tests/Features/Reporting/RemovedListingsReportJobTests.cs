@@ -131,11 +131,12 @@ public class RemovedListingsReportJobTests
 	}
 
 	[Fact]
-	public async Task ExecuteAsync_NoRemovedListings_NoEmailAndAnchorAdvanced()
+	public async Task ExecuteAsync_NoRemovedListings_NoEmailAndAnchorNotAdvanced()
 	{
 		// arrange
+		var anchor = Now.AddDays(-7);
 		var scraperTask = CreateScraperTask();
-		var reportTask = CreateReportTask(scraperTask);
+		var reportTask = CreateReportTask(scraperTask, lastSuccessfulReportAt: anchor);
 
 		listingRepositoryMock
 			.Setup(x => x.GetRemovedInPeriodAsync(It.IsAny<Guid>(), It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
@@ -150,8 +151,8 @@ public class RemovedListingsReportJobTests
 		mailerServiceMock.Verify(
 			x => x.SendRemovedListingsReportAsync(It.IsAny<RemovedListingsReport>(), It.IsAny<List<string>>(), It.IsAny<IReadOnlyList<EmailAttachmentData>>(), It.IsAny<CancellationToken>()),
 			Times.Never);
-		Assert.Equal(Now, reportTask.LastSuccessfulReportAt);
-		unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+		Assert.Equal(anchor, reportTask.LastSuccessfulReportAt);
+		unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
 	}
 
 	[Fact]
@@ -306,11 +307,12 @@ public class RemovedListingsReportJobTests
 	}
 
 	[Fact]
-	public async Task ExecuteAsync_NoRecipients_NoEmailAndAnchorAdvanced()
+	public async Task ExecuteAsync_NoRecipients_NoEmailAndAnchorNotAdvanced()
 	{
 		// arrange
+		var anchor = Now.AddDays(-7);
 		var scraperTask = CreateScraperTask();
-		var reportTask = CreateReportTask(scraperTask, recipientEmail: null);
+		var reportTask = CreateReportTask(scraperTask, lastSuccessfulReportAt: anchor, recipientEmail: null);
 
 		listingRepositoryMock
 			.Setup(x => x.GetRemovedInPeriodAsync(It.IsAny<Guid>(), It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
@@ -325,6 +327,45 @@ public class RemovedListingsReportJobTests
 		mailerServiceMock.Verify(
 			x => x.SendRemovedListingsReportAsync(It.IsAny<RemovedListingsReport>(), It.IsAny<List<string>>(), It.IsAny<IReadOnlyList<EmailAttachmentData>>(), It.IsAny<CancellationToken>()),
 			Times.Never);
+		Assert.Equal(anchor, reportTask.LastSuccessfulReportAt);
+	}
+
+	/// <summary>
+	/// Regrese na chybějící nedělní report: detekce vyřazených byla týden pozastavená, razítka
+	/// dorazila až po termínu reportu a s posunutým obdobím by se do žádného e-mailu nedostala.
+	/// Prázdný report proto období nechává otevřené a příští běh pokrývá celou mezeru.
+	/// </summary>
+	[Fact]
+	public async Task ExecuteAsync_EmptyPeriod_NextRunStillCoversIt()
+	{
+		// arrange
+		var anchor = Now.AddDays(-7);
+		var scraperTask = CreateScraperTask();
+		var reportTask = CreateReportTask(scraperTask, lastSuccessfulReportAt: anchor);
+
+		listingRepositoryMock
+			.SetupSequence(x => x.GetRemovedInPeriodAsync(It.IsAny<Guid>(), It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+			.ReturnsAsync([])
+			.ReturnsAsync([CreateRemovedListing(Now.AddDays(-1))]);
+
+		listingImageReaderMock
+			.Setup(x => x.TryReadImageAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+			.ReturnsAsync((byte[]?)null);
+
+		mailerServiceMock
+			.Setup(x => x.SendRemovedListingsReportAsync(It.IsAny<RemovedListingsReport>(), It.IsAny<List<string>>(), It.IsAny<IReadOnlyList<EmailAttachmentData>>(), It.IsAny<CancellationToken>()))
+			.ReturnsAsync(true);
+
+		var sut = CreateSut();
+
+		// act - prázdný běh a po něm běh, ve kterém už razítka existují
+		await sut.ExecuteAsync(reportTask.Id, CancellationToken.None);
+		await sut.ExecuteAsync(reportTask.Id, CancellationToken.None);
+
+		// assert - obě volání vyšla ze stejného, nezavřeného začátku období
+		listingRepositoryMock.Verify(
+			x => x.GetRemovedInPeriodAsync(scraperTask.Id, anchor, Now, It.IsAny<CancellationToken>()),
+			Times.Exactly(2));
 		Assert.Equal(Now, reportTask.LastSuccessfulReportAt);
 	}
 }

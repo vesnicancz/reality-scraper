@@ -13,6 +13,7 @@ public class ScrapingReportBuilder
 	private string scraperTaskName = string.Empty;
 	private bool allScrapersSucceeded = true;
 	private int failedListingsCount;
+	private int skippedListingsCount;
 	private bool anyTargetEmpty;
 	private Dictionary<string, Listing>? existingListingsByExternalId;
 	private readonly Dictionary<string, ScraperResultBuilder> scraperBuilders = new();
@@ -39,6 +40,7 @@ public class ScrapingReportBuilder
 		scraperTaskName = taskName;
 		allScrapersSucceeded = true;
 		failedListingsCount = 0;
+		skippedListingsCount = 0;
 		anyTargetEmpty = false;
 		existingListingsByExternalId = null;
 		scraperBuilders.Clear();
@@ -70,6 +72,7 @@ public class ScrapingReportBuilder
 		}
 
 		failedListingsCount += scraperResult.FailedListingsCount;
+		skippedListingsCount += scraperResult.SkippedListingsCount;
 
 		if (scraperResult.Success && listings.Count == 0)
 		{
@@ -185,6 +188,7 @@ public class ScrapingReportBuilder
 			ScrapingSucceeded = allScrapersSucceeded,
 			SeenListings = new Dictionary<string, ScraperListingItem>(seenListings),
 			FailedListingsCount = failedListingsCount,
+			SkippedListingsCount = skippedListingsCount,
 			AnyTargetEmpty = anyTargetEmpty
 		};
 	}
