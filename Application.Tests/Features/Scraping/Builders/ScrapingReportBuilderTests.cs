@@ -175,6 +175,27 @@ public class ScrapingReportBuilderTests
 	}
 
 	[Fact]
+	public async Task ScrapingReportBuilder_Build_SumsSkippedListingsCountAcrossTargets()
+	{
+		// arrange
+		var listings = new List<ScraperListingItem>
+		{
+			new ScraperListingItem { Title = "T1", Price = 1000, Location = "L1", Url = "U1", ExternalId = "Ext1", ImageUrl = string.Empty }
+		};
+
+		var sut = CreateBuilder();
+		sut.ForScrapingReport(Guid.NewGuid(), "task");
+
+		// act
+		await sut.ProcessScraperResultsAsync("siteA", new ScraperRunResult(true, listings, SkippedListingsCount: 2), CancellationToken.None);
+		await sut.ProcessScraperResultsAsync("siteA", new ScraperRunResult(true, listings, SkippedListingsCount: 15), CancellationToken.None);
+		var result = sut.Build();
+
+		// assert
+		Assert.Equal(17, result.SkippedListingsCount);
+	}
+
+	[Fact]
 	public async Task ScrapingReportBuilder_Build_PropagatesSuccessAndSeenListings()
 	{
 		// arrange

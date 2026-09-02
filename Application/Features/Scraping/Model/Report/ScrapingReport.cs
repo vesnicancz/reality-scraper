@@ -29,8 +29,16 @@ public record ScrapingReport
 	public int FailedListingsCount { get; init; }
 
 	/// <summary>
-	/// True, pokud některý cíl doběhl úspěšně, ale nevrátil žádný inzerát.
-	/// Jeho inzeráty pak nelze bezpečně odlišit od vyřazených.
+	/// Počet karet vynechaných kvůli nepoužitelnému ID - typicky reklamní bloky vsunuté mezi
+	/// inzeráty a developerské projekty. Ty do databáze nikdy nevstoupí, takže samotná nenulová
+	/// hodnota nic neznamená; vypovídající je až její podíl na všech prohlédnutých kartách.
+	/// </summary>
+	public int SkippedListingsCount { get; init; }
+
+	/// <summary>
+	/// True, pokud některý cíl doběhl úspěšně, ale nevrátil žádný inzerát. Může jít o rozbitý
+	/// dotaz i o legitimní stav (úzký filtr, malá obec), takže to samo o sobě není chyba - jen
+	/// důvod pro opatrnější režim detekce vyřazených.
 	/// </summary>
 	public bool AnyTargetEmpty { get; init; }
 
