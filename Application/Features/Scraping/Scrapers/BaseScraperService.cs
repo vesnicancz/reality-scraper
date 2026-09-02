@@ -38,6 +38,24 @@ public abstract class BaseScraperService : IRealityScraperService
 		return !string.IsNullOrEmpty(externalId);
 	}
 
+	/// <summary>
+	/// Odvodí externí ID inzerátu z odkazu na detail. Výchozí implementace bere poslední neprázdný
+	/// segment cesty bez lomítek, takže na tvaru s koncovým lomítkem ani bez něj nezáleží.
+	/// </summary>
+	/// <remarks>
+	/// POZOR: výsledek se ukládá do databáze jako <c>Listing.ExternalId</c> a slouží k párování
+	/// scrapu proti uloženým inzerátům. Každá změna téhle derivace proto vyžaduje ve stejném
+	/// nasazení i datovou migraci uložených hodnot - jinak první běh nespáruje nic, všechny
+	/// inzeráty se označí za vyřazené a hned založí znovu jako nové, bez cenové historie.
+	/// Precedens je migrace NormalizeListingExternalId.
+	/// </remarks>
+	protected virtual string? ExtractExternalId(Uri detailUri)
+	{
+		return detailUri.Segments
+			.Select(segment => segment.Trim('/'))
+			.LastOrDefault(segment => segment.Length > 0);
+	}
+
 	protected abstract Task<bool> NavigateToNextPageAsync(
 		IWebDriver driver, string baseUrl, int currentPage,
 		IReadOnlyList<IWebDriverElement> nextButtons, CancellationToken cancellationToken);
@@ -94,8 +112,7 @@ public abstract class BaseScraperService : IRealityScraperService
 						string? externalId = null;
 						if (!string.IsNullOrEmpty(detailUrl))
 						{
-							var uri = new Uri(detailUrl);
-							externalId = uri.Segments.Last();
+							externalId = ExtractExternalId(new Uri(detailUrl));
 						}
 
 						if (!ValidateExternalId(externalId))
