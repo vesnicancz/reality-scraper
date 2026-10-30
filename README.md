@@ -47,7 +47,7 @@ Web.Shared/         – Sdílené DTO a validační modely
 | Frontend | Blazor WebAssembly, Havit Bootstrap komponenty |
 | Databáze | PostgreSQL (Npgsql) |
 | ORM | Entity Framework Core 10 |
-| Scrapování | Selenium WebDriver 4.49 |
+| Scrapování | Selenium WebDriver 4.52 |
 | E-maily | Resend, RazorEngineCore |
 | Plánování | Cronos |
 | Validace | FluentValidation |
