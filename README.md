@@ -52,6 +52,7 @@ Web.Shared/         – Sdílené DTO a validační modely
 | Plánování | Cronos |
 | Validace | FluentValidation |
 | Logování | Serilog |
+| Observabilita | OpenTelemetry (OTLP: trace, metriky, logy) |
 | API dokumentace | Scalar (OpenAPI) |
 | Testy | xUnit v3, Moq, FluentAssertions |
 
@@ -158,6 +159,39 @@ otestování workflow „Promote image to stable" přeznačí stejný digest na 
 prostředí tedy pulluje `:test`, produkce `:stable`.
 
 Kontejner běží pod neprivilegovaným uživatelem (UID 1654), exponuje port `5000` a obsahuje health check na `/health`.
+
+### Observabilita (OpenTelemetry)
+
+Export je volitelný a zapíná se jen nastavením `OTEL_EXPORTER_OTLP_ENDPOINT`. Bez něj se nic
+neregistruje a aplikace se chová jako dřív.
+
+```yaml
+environment:
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317   # gRPC; pro HTTP 4318 + OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+  OTEL_SERVICE_NAME: reality-scraper                       # výchozí hodnota
+  OTEL_RESOURCE_ATTRIBUTES: deployment.environment=production
+```
+
+- **Trace** – kořenový span `Task <typ>` pro každý běh úlohy ze scheduleru, pod ním `Scrape <portál>`
+  (`Open browser`, `Navigate`, `Parse page`), `Process report`, `Send email`, SQL dotazy (Npgsql)
+  a odchozí HTTP. Příkazy WebDriveru se z trace filtrují (tisíce spanů na běh), `/health`
+  a statické soubory Blazoru také.
+- **Logy** – Serilog sink posílá logy přes OTLP s `TraceId`/`SpanId`, konzole i log úlohy v UI zůstávají.
+- **Metriky** – vestavěné (ASP.NET Core, HttpClient, Npgsql, `System.Runtime`) a vlastní meter
+  `RealityScraper`. V Prometheu (po OTLP překladu názvů):
+
+| Metrika | Tagy | Popis |
+|---|---|---|
+| `reality_scraper_task_runs_total` | `task_type`, `outcome` | Běhy plánovaných úloh |
+| `reality_scraper_task_duration_seconds` | `task_type`, `outcome` | Délka běhu úlohy (histogram) |
+| `reality_scraper_scraper_duration_seconds` | `scraper_site`, `outcome` | Délka scrapování jednoho cíle |
+| `reality_scraper_scraper_pages_total` | `scraper_site` | Prošlé stránky výpisu |
+| `reality_scraper_listings_scraped_total` | `scraper_site`, `listing_result` (`ok`/`failed`/`skipped`) | Zpracované karty inzerátů |
+| `reality_scraper_listings_changes_total` | `scraper_site`, `listing_change` (`new`/`price_changed`) | Nové inzeráty a změny cen (po uložení) |
+| `reality_scraper_emails_sent_total` | `outcome` | Odeslané e-maily (jeden na příjemce) |
+
+`outcome` je `success`, `failure` nebo `canceled`. Histogramy nesou exemplary s `trace_id`,
+takže z grafu v Grafaně jde prokliknout na konkrétní běh v Tempu.
 
 ## Testy
 

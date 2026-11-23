@@ -1,5 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Diagnostics;
+using Microsoft.Extensions.Logging;
 using RealityScraper.Application.Configuration;
+using RealityScraper.Application.Diagnostics;
 using RealityScraper.Application.Features.Scraping.Configuration;
 using RealityScraper.Application.Features.Scraping.Model;
 using RealityScraper.Application.Interfaces.Scraping;
@@ -67,6 +69,41 @@ public abstract class BaseScraperService : IRealityScraperService
 
 	public async Task<ScraperRunResult> ScrapeListingsAsync(ScraperConfiguration scraperConfiguration, CancellationToken cancellationToken)
 	{
+		using var activity = ScraperTelemetry.ActivitySource.StartActivity($"Scrape {SiteName}");
+		activity?.SetTag(ScraperTelemetry.Tags.Site, SiteName);
+		activity?.SetTag("url.full", scraperConfiguration.Url);
+
+		var siteTag = new KeyValuePair<string, object?>(ScraperTelemetry.Tags.Site, SiteName);
+		var startTimestamp = Stopwatch.GetTimestamp();
+		var outcome = ScraperTelemetry.Outcomes.Canceled;
+
+		try
+		{
+			var result = await ScrapeListingsCoreAsync(scraperConfiguration, activity, cancellationToken);
+			outcome = result.Success ? ScraperTelemetry.Outcomes.Success : ScraperTelemetry.Outcomes.Failure;
+
+			ScraperTelemetry.ListingsScraped.Add(result.Listings.Count, siteTag, new(ScraperTelemetry.Tags.ListingResult, "ok"));
+			ScraperTelemetry.ListingsScraped.Add(result.FailedListingsCount, siteTag, new(ScraperTelemetry.Tags.ListingResult, "failed"));
+			ScraperTelemetry.ListingsScraped.Add(result.SkippedListingsCount, siteTag, new(ScraperTelemetry.Tags.ListingResult, "skipped"));
+
+			activity?.SetTag("scraper.listings.ok", result.Listings.Count);
+			activity?.SetTag("scraper.listings.failed", result.FailedListingsCount);
+			activity?.SetTag("scraper.listings.skipped", result.SkippedListingsCount);
+
+			return result;
+		}
+		finally
+		{
+			ScraperTelemetry.ScraperDuration.Record(
+				Stopwatch.GetElapsedTime(startTimestamp).TotalSeconds,
+				siteTag,
+				new(ScraperTelemetry.Tags.Outcome, outcome));
+			activity?.SetTag(ScraperTelemetry.Tags.Outcome, outcome);
+		}
+	}
+
+	private async Task<ScraperRunResult> ScrapeListingsCoreAsync(ScraperConfiguration scraperConfiguration, Activity? activity, CancellationToken cancellationToken)
+	{
 		var listings = new List<ScraperListingItem>();
 		var url = scraperConfiguration.Url;
 		var success = true;
@@ -80,93 +117,108 @@ public abstract class BaseScraperService : IRealityScraperService
 			|| !await urlSafetyValidator.IsPublicHttpTargetAsync(targetUri, cancellationToken))
 		{
 			logger.LogError("Cílová URL '{Url}' není platná nebo míří na nepovolený cíl, scrapování se přeskakuje.", url);
+			activity.SetError(description: "Nepovolená cílová URL");
 			return new ScraperRunResult(false, listings, failedListingsCount, skippedListingsCount);
 		}
 
 		IWebDriver? driver = null;
 		try
 		{
-			driver = webDriverFactory.CreateDriver();
+			using (ScraperTelemetry.ActivitySource.StartActivity("Open browser"))
+			{
+				driver = webDriverFactory.CreateDriver();
+			}
 
-			logger.LogTrace("Načítám stránku: {url}", url);
-			await driver.NavigateToUrlAsync(url, cancellationToken);
+			using (var navigateActivity = ScraperTelemetry.ActivitySource.StartActivity("Navigate"))
+			{
+				navigateActivity?.SetTag(ScraperTelemetry.Tags.Page, 1);
+				logger.LogTrace("Načítám stránku: {url}", url);
+				await driver.NavigateToUrlAsync(url, cancellationToken);
 
-			await Task.Delay(2000, cancellationToken);
+				await Task.Delay(2000, cancellationToken);
 
-			await OnPreScrapingAsync(driver, cancellationToken);
+				await OnPreScrapingAsync(driver, cancellationToken);
+			}
 
 			var load = true;
 			int page = 1;
 			while (load)
 			{
-				var listingElements = await driver.FindElementsAsync(Options.ListingSelector, cancellationToken);
-				logger.LogInformation("Stránka {Page}: nalezeno {Count} inzerátů", page, listingElements.Count);
-
-				foreach (var element in listingElements)
+				ScraperTelemetry.ScraperPages.Add(1, new KeyValuePair<string, object?>(ScraperTelemetry.Tags.Site, SiteName));
+				using (var pageActivity = ScraperTelemetry.ActivitySource.StartActivity("Parse page"))
 				{
-					try
+					pageActivity?.SetTag(ScraperTelemetry.Tags.Page, page);
+
+					var listingElements = await driver.FindElementsAsync(Options.ListingSelector, cancellationToken);
+					logger.LogInformation("Stránka {Page}: nalezeno {Count} inzerátů", page, listingElements.Count);
+					pageActivity?.SetTag("scraper.page.listings", listingElements.Count);
+
+					foreach (var element in listingElements)
 					{
-						var detailElement = await element.FindElementAsync(Options.DetailLinkSelector, cancellationToken);
-						var detailUrl = await detailElement.GetAttributeAsync("href", cancellationToken);
-
-						string? externalId = null;
-						if (!string.IsNullOrEmpty(detailUrl))
-						{
-							externalId = ExtractExternalId(new Uri(detailUrl));
-						}
-
-						if (!ValidateExternalId(externalId))
-						{
-							// Karta bez použitelného ID - reklamní blok vsunutý mezi inzeráty nebo developerský
-							// projekt. Není to chyba a takový záznam do DB nevstoupí. Počítá se proto, že náhlý
-							// nepoměr by znamenal změnu tvaru URL detailu, kdy přestanou procházet i pravé inzeráty.
-							skippedListingsCount++;
-							logger.LogDebug("Inzerát bez použitelného ID přeskočen, odkaz '{DetailUrl}'.", detailUrl);
-							continue;
-						}
-
-						var titleElement = await element.FindElementAsync(Options.TitleSelector, cancellationToken);
-						var title = await titleElement.GetTextAsync(cancellationToken);
-
-						var priceElement = await element.FindElementAsync(Options.PriceSelector, cancellationToken);
-						var priceVal = await priceElement.GetTextAsync(cancellationToken);
-
-						var locationElement = await element.FindElementAsync(Options.LocationSelector, cancellationToken);
-						var location = await locationElement.GetTextAsync(cancellationToken);
-
-						var price = PriceParser.ParseNullablePrice(priceVal);
-
-						var imageUrl = string.Empty;
 						try
 						{
-							var imgElement = await element.FindElementAsync(Options.ImageSelector, cancellationToken);
-							imageUrl = await imgElement.GetAttributeAsync(ImageAttribute, cancellationToken);
+							var detailElement = await element.FindElementAsync(Options.DetailLinkSelector, cancellationToken);
+							var detailUrl = await detailElement.GetAttributeAsync("href", cancellationToken);
+
+							string? externalId = null;
+							if (!string.IsNullOrEmpty(detailUrl))
+							{
+								externalId = ExtractExternalId(new Uri(detailUrl));
+							}
+
+							if (!ValidateExternalId(externalId))
+							{
+								// Karta bez použitelného ID - reklamní blok vsunutý mezi inzeráty nebo developerský
+								// projekt. Není to chyba a takový záznam do DB nevstoupí. Počítá se proto, že náhlý
+								// nepoměr by znamenal změnu tvaru URL detailu, kdy přestanou procházet i pravé inzeráty.
+								skippedListingsCount++;
+								logger.LogDebug("Inzerát bez použitelného ID přeskočen, odkaz '{DetailUrl}'.", detailUrl);
+								continue;
+							}
+
+							var titleElement = await element.FindElementAsync(Options.TitleSelector, cancellationToken);
+							var title = await titleElement.GetTextAsync(cancellationToken);
+
+							var priceElement = await element.FindElementAsync(Options.PriceSelector, cancellationToken);
+							var priceVal = await priceElement.GetTextAsync(cancellationToken);
+
+							var locationElement = await element.FindElementAsync(Options.LocationSelector, cancellationToken);
+							var location = await locationElement.GetTextAsync(cancellationToken);
+
+							var price = PriceParser.ParseNullablePrice(priceVal);
+
+							var imageUrl = string.Empty;
+							try
+							{
+								var imgElement = await element.FindElementAsync(Options.ImageSelector, cancellationToken);
+								imageUrl = await imgElement.GetAttributeAsync(ImageAttribute, cancellationToken);
+							}
+							catch (Exception ex)
+							{
+								logger.LogDebug(ex, "Nepodařilo se získat obrázek pro inzerát {ExternalId}", externalId);
+							}
+
+							var listing = new ScraperListingItem
+							{
+								Title = title ?? string.Empty,
+								Price = price,
+								Location = location ?? string.Empty,
+								Url = detailUrl ?? string.Empty,
+								ImageUrl = imageUrl ?? string.Empty,
+								ExternalId = externalId ?? string.Empty
+							};
+
+							listings.Add(listing);
+						}
+						catch (OperationCanceledException)
+						{
+							throw;
 						}
 						catch (Exception ex)
 						{
-							logger.LogDebug(ex, "Nepodařilo se získat obrázek pro inzerát {ExternalId}", externalId);
+							failedListingsCount++;
+							logger.LogWarning(ex, "Chyba při zpracování inzerátu");
 						}
-
-						var listing = new ScraperListingItem
-						{
-							Title = title ?? string.Empty,
-							Price = price,
-							Location = location ?? string.Empty,
-							Url = detailUrl ?? string.Empty,
-							ImageUrl = imageUrl ?? string.Empty,
-							ExternalId = externalId ?? string.Empty
-						};
-
-						listings.Add(listing);
-					}
-					catch (OperationCanceledException)
-					{
-						throw;
-					}
-					catch (Exception ex)
-					{
-						failedListingsCount++;
-						logger.LogWarning(ex, "Chyba při zpracování inzerátu");
 					}
 				}
 
@@ -182,6 +234,8 @@ public abstract class BaseScraperService : IRealityScraperService
 				var nextButtons = await driver.FindElementsAsync(Options.NextPageSelector, cancellationToken);
 				if (nextButtons.Count > 0)
 				{
+					using var navigateActivity = ScraperTelemetry.ActivitySource.StartActivity("Navigate");
+					navigateActivity?.SetTag(ScraperTelemetry.Tags.Page, page);
 					load = await NavigateToNextPageAsync(driver, url, page, nextButtons, cancellationToken);
 				}
 				else
@@ -197,6 +251,7 @@ public abstract class BaseScraperService : IRealityScraperService
 		catch (Exception ex)
 		{
 			logger.LogError(ex, "Chyba při scrapování dat z realitního portálu");
+			activity.SetError(ex);
 			success = false;
 		}
 		finally

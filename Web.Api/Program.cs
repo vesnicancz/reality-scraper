@@ -29,7 +29,9 @@ public static class Program
 			loggerConfig.Enrich.FromLogContext();
 			loggerConfig.WriteTo.Console(formatProvider: CultureInfo.InvariantCulture);
 			loggerConfig.WriteTo.Sink(new TaskLogSink(services.GetRequiredService<ITaskLogWriter>()));
+			loggerConfig.WriteToOpenTelemetry(context.Configuration);
 		});
+		builder.Services.AddOpenTelemetryExport(builder.Configuration);
 		builder.Services.AddPresentation();
 		builder.Services.AddForwardedHeadersConfiguration(builder.Configuration);
 		builder.Services.AddOidcAuthentication(builder.Configuration, builder.Environment);
