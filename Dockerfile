@@ -4,13 +4,13 @@
 # Note: a single COPY + publish is intentional. Splitting into a csproj-only
 # restore layer (for caching) breaks Blazor static web asset composition and
 # drops _framework/blazor.web.js from the published output.
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:11.0 AS build
 WORKDIR /src
 COPY . .
 RUN dotnet publish Web.Api/Web.Api.csproj -c Release -o /app/publish /p:UseAppHost=false
 
 # --- Runtime stage ---
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:11.0 AS runtime
 WORKDIR /app
 EXPOSE 5000
 

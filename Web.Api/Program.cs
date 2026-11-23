@@ -47,10 +47,6 @@ public static class Program
 		if (app.Environment.IsDevelopment())
 		{
 			app.UseOpenApiWithScalarUi();
-
-			// blazor: start
-			app.UseWebAssemblyDebugging();
-			// blazor: end
 		}
 		else
 		{
