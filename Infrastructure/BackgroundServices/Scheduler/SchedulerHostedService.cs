@@ -1,6 +1,8 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.Diagnostics;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using RealityScraper.Application.Diagnostics;
 using RealityScraper.Application.Features.Scheduler;
 using RealityScraper.Application.Interfaces.Logging;
 using RealityScraper.Application.Interfaces.Scheduler;
@@ -211,6 +213,14 @@ public class SchedulerHostedService : BackgroundService
 		taskInfo.IsRunning = true;
 		taskLogStore.StartCapture(taskInfo.Id);
 		var succeeded = true;
+		var outcome = ScraperTelemetry.Outcomes.Failure;
+		var startTimestamp = Stopwatch.GetTimestamp();
+
+		// Úloha ze scheduleru nemá rodiče - je kořenem trace, pod který se věší scrapery, SQL i HTTP.
+		using var activity = ScraperTelemetry.ActivitySource.StartActivity($"Task {taskInfo.TaskType}");
+		activity?.SetTag(ScraperTelemetry.Tags.TaskId, taskInfo.Id);
+		activity?.SetTag(ScraperTelemetry.Tags.TaskName, taskInfo.Name);
+		activity?.SetTag(ScraperTelemetry.Tags.TaskType, taskInfo.TaskType.ToString());
 
 		try
 		{
@@ -234,6 +244,7 @@ public class SchedulerHostedService : BackgroundService
 					catch (Exception ex)
 					{
 						logger.LogError(ex, "Chyba při provádění úlohy '{Name}'", taskInfo.Name);
+						activity.SetError(ex);
 						succeeded = false;
 					}
 
@@ -257,17 +268,24 @@ public class SchedulerHostedService : BackgroundService
 
 					taskInfo.LastRunTime = lastRunTime;
 					taskInfo.NextRunTime = nextRunTime;
+
+					if (succeeded)
+					{
+						outcome = ScraperTelemetry.Outcomes.Success;
+					}
 				}
 			}
 		}
 		catch (OperationCanceledException)
 		{
+			outcome = ScraperTelemetry.Outcomes.Canceled;
 			taskLogStore.GetAndClear(taskInfo.Id);
 			throw;
 		}
 		catch (Exception ex)
 		{
 			logger.LogError(ex, "Chyba při ukládání výsledků úlohy '{Name}'", taskInfo.Name);
+			activity.SetError(ex);
 			taskLogStore.GetAndClear(taskInfo.Id);
 
 			// Prevent tight retry loop on persistent errors
@@ -278,6 +296,12 @@ public class SchedulerHostedService : BackgroundService
 		finally
 		{
 			taskInfo.IsRunning = false;
+
+			var taskTypeTag = new KeyValuePair<string, object?>(ScraperTelemetry.Tags.TaskType, taskInfo.TaskType.ToString());
+			var outcomeTag = new KeyValuePair<string, object?>(ScraperTelemetry.Tags.Outcome, outcome);
+			ScraperTelemetry.TaskRuns.Add(1, taskTypeTag, outcomeTag);
+			ScraperTelemetry.TaskDuration.Record(Stopwatch.GetElapsedTime(startTimestamp).TotalSeconds, taskTypeTag, outcomeTag);
+			activity?.SetTag(ScraperTelemetry.Tags.Outcome, outcome);
 		}
 	}
 

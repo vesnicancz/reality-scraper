@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using RealityScraper.Application.Diagnostics;
 using RealityScraper.Application.Interfaces.Mailing;
 using RealityScraper.Infrastructure.Configuration;
 using Resend;
@@ -38,6 +39,11 @@ public class ResendEmailService : IEmailService
 
 		var allSucceeded = true;
 
+		// Adresy příjemců do trace schválně nedáváme (osobní údaje), stačí jejich počet.
+		using var activity = ScraperTelemetry.ActivitySource.StartActivity("Send email");
+		activity?.SetTag(ScraperTelemetry.Tags.RecipientCount, recipients.Count);
+		activity?.SetTag("email.attachment_count", attachments.Count);
+
 		try
 		{
 			var fromAddress = !string.IsNullOrWhiteSpace(options.FromName) ? $"{options.FromName} <{options.FromEmail}>" : options.FromEmail;
@@ -69,10 +75,13 @@ public class ResendEmailService : IEmailService
 				if (response.Success)
 				{
 					logger.LogTrace("E-mail úspěšně odeslán na {RecipientEmail}.", recipientEmail);
+					ScraperTelemetry.EmailsSent.Add(1, new KeyValuePair<string, object?>(ScraperTelemetry.Tags.Outcome, ScraperTelemetry.Outcomes.Success));
 				}
 				else
 				{
 					logger.LogWarning(response.Exception, "Nepodařilo se odeslat e-mail na {RecipientEmail}.", recipientEmail);
+					ScraperTelemetry.EmailsSent.Add(1, new KeyValuePair<string, object?>(ScraperTelemetry.Tags.Outcome, ScraperTelemetry.Outcomes.Failure));
+					activity.SetError(response.Exception, "Odeslání e-mailu selhalo");
 					allSucceeded = false;
 				}
 			}
@@ -84,6 +93,7 @@ public class ResendEmailService : IEmailService
 		catch (Exception ex)
 		{
 			logger.LogError(ex, "Chyba při odesílání e-mailu přes Resend.");
+			activity.SetError(ex);
 			allSucceeded = false;
 		}
 
