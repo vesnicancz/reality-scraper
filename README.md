@@ -2,13 +2,13 @@
 
 [![.NET Build](https://github.com/vesnicancz/reality-scraper/actions/workflows/dotnet.yml/badge.svg)](https://github.com/vesnicancz/reality-scraper/actions/workflows/dotnet.yml)
 
-.NET 10 aplikace pro automatické monitorování českých realitních portálů. Sleduje nové nabídky a změny cen na portálech **SReality** a **Reality iDNES** a zasílá e-mailové notifikace.
+.NET 11 aplikace pro automatické monitorování českých realitních portálů. Sleduje nové nabídky a změny cen na portálech **SReality** a **Reality iDNES** a zasílá e-mailové notifikace.
 
 ## Funkce
 
 - **Webové scrapování** – Selenium-based automatizace prohlížeče pro SReality a Reality iDNES
 - **Detekce změn** – Porovnání nových dat s databází, sledování nových nabídek a cenové historie
-- **E-mailové notifikace** – HTML e-maily generované přes Razor šablony (Resend / SMTP)
+- **E-mailové notifikace** – HTML e-maily generované přes Razor šablony (Resend)
 - **Plánování úloh** – Cron výrazy pro pravidelné spouštění scrapování
 - **REST API + Web UI** – Správa úloh přes API a Blazor WebAssembly dashboard
 - **Stahování obrázků** – Automatické ukládání obrázků z nabídek
@@ -43,25 +43,25 @@ Web.Shared/         – Sdílené DTO a validační modely
 
 | Kategorie | Technologie |
 |---|---|
-| Runtime | .NET 10, ASP.NET Core 10 |
+| Runtime | .NET 11, ASP.NET Core 11 |
 | Frontend | Blazor WebAssembly, Havit Bootstrap komponenty |
 | Databáze | PostgreSQL (Npgsql) |
-| ORM | Entity Framework Core 10 |
-| Scrapování | Selenium WebDriver 4.53 |
+| ORM | Entity Framework Core 11 |
+| Scrapování | Selenium WebDriver 4.54 |
 | E-maily | Resend, RazorEngineCore |
 | Plánování | Cronos |
 | Validace | FluentValidation |
 | Logování | Serilog |
 | Observabilita | OpenTelemetry (OTLP: trace, metriky, logy) |
 | API dokumentace | Scalar (OpenAPI) |
-| Testy | xUnit v3, Moq, FluentAssertions |
+| Testy | xUnit v3, Moq |
 
 ## Požadavky
 
-- .NET 10 SDK
+- .NET 11 SDK
 - PostgreSQL
 - Chrome/Chromium pro Selenium (nebo Selenium Standalone kontejner)
-- E-mailová služba – Resend API klíč nebo SMTP server
+- E-mailová služba – Resend API klíč
 
 ## Konfigurace
 
@@ -86,12 +86,12 @@ Konfigurace v `appsettings.json`:
 
 ## Autentizace (volitelná)
 
-Aplikace podporuje volitelnou autentizaci přes **OpenID Connect** (OIDC). Ve výchozím stavu je autentizace vypnutá a aplikace funguje bez přihlášení.
+Aplikace podporuje volitelnou autentizaci přes **OpenID Connect** (OIDC). Ve výchozím stavu je vypnutá: v Development běží aplikace bez přihlášení, v ostatních prostředích (včetně Docker image) bez ní odmítne nastartovat, pokud není vědomě nastaveno `Authentication:AllowAnonymous=true`.
 
 Po zapnutí (`"Enabled": true`) se aktivuje:
 - OIDC Authorization Code flow s cookie session
 - Aplikační API endpointy vyžadují přihlášení (kromě `/health` a `/account/*`)
-- Blazor stránky s `[Authorize]` přesměrují na login
+- Všechny Blazor stránky přesměrují na login
 - Endpointy `/account/login`, `/account/logout`, `/account/user-info`
 
 ### Konfigurace
@@ -203,8 +203,8 @@ Projekt obsahuje 4 testovací projekty:
 
 - `Application.Tests` – Testy handlerů, features, scrapingu a validace
 - `Infrastructure.Tests` – Testy služeb a utilit (mailing, plánovač, URL safety)
-- `Domain.Tests` – připravená kostra (zatím bez testů)
-- `IntegrationTests` – připravená kostra pro integrační testy (zatím bez testů)
+- `Domain.Tests` – Testy doménových entit
+- `IntegrationTests` – Testy EF Core modelu (bez běžící databáze)
 
 ## CI/CD
 
@@ -212,6 +212,7 @@ GitHub Actions workflow:
 
 - **Build & Test** – Automaticky při push na `master` a pull requestech
 - **Publish Docker** – Manuální dispatch, build a push do GitHub Container Registry
+- **Promote** – Manuální dispatch, přeznačení otestovaného image na `:stable`
 - **PR Assignment** – Automatické přiřazení autora PR
 
 ## Licence
